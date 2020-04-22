@@ -23,6 +23,7 @@ namespace ADS.Bot.V1.Bots
         private readonly DialogSet dialogs;
         private BotState _userState;
         private BotAccessors _botAccessors;
+        //Hey there!
 
         // Initializes a new instance of the "WelcomeUserBot" class.
         public BenBot(UserState userState, BotAccessors botAccessors, ActiveLeadDialog activeLeadDialog)
