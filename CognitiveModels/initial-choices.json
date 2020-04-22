@@ -1,0 +1,57 @@
+{
+    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+    "type": "AdaptiveCard",
+    "version": "1.0",
+    "body": [
+        {
+            "type": "TextBlock",
+            "size": "Medium",
+            "weight": "Bolder",
+            "text": "Here are some possible Topics!",
+            "horizontalAlignment": "Center"
+        },
+        {
+            "type": "TextBlock",
+            "text": "Pick from these - or just ask a question!"
+        },
+        {
+            "type": "Input.ChoiceSet",
+            "id": "MultiSelectVal",
+            "isMultiSelect": true,
+            "value": "",
+            "choices": [
+                {
+                    "title": "Check our Inventory",
+                    "value": "1"
+                },
+                {
+                    "title": " Explore Financing",
+                    "value": "2"
+                },
+                {
+                    "title": "Evaluate a Trade-In",
+                    "value": "3"
+                },
+                {
+                    "title": "Explore Special Deals",
+                    "value": "4"
+                }
+            ]
+        },
+        {
+            "type": "Input.Text",
+            "placeholder": "Placeholder text",
+            "value": "enter a question here...",
+            "id": "topicQuestion"
+        }
+    ],
+    "actions": [
+        {
+            "type": "Action.Submit",
+            "title": "Submit",
+            "data": {
+                "id": "1234567890"
+            }
+        }
+    ]
+}

@@ -1,0 +1,179 @@
+[
+  {
+    "conversation": {
+      "id": "iIgpSNq00FAQ6wk44iZIcXsxSwY="
+    },
+    "id": "1",
+    "recipient": {
+      "id": "bGsbKz7MDmkAAA2r9Pqub431/9E=",
+      "name": "Chad",
+      "role": "bot"
+    },
+    "from": {
+      "id": "0nk3+RTr6Z7jFfBESWeOzPtlgZE=",
+      "name": "David",
+      "role": "user"
+    },
+    "timestamp": "2020-04-15T00:30:29.100Z",
+    "type": "conversationUpdate",
+    "channelId": "chatdown",
+    "membersAdded": [
+      {
+        "id": "bGsbKz7MDmkAAA2r9Pqub431/9E=",
+        "name": "Chad",
+        "role": "bot"
+      }
+    ],
+    "membersRemoved": []
+  },
+  {
+    "conversation": {
+      "id": "iIgpSNq00FAQ6wk44iZIcXsxSwY="
+    },
+    "id": "2",
+    "recipient": {
+      "id": "0nk3+RTr6Z7jFfBESWeOzPtlgZE=",
+      "name": "David",
+      "role": "user"
+    },
+    "from": {
+      "id": "bGsbKz7MDmkAAA2r9Pqub431/9E=",
+      "name": "Chad",
+      "role": "bot"
+    },
+    "text": "Hey there! I'm Chad and I'm here to help. Feel free to type in a question or just select one of these topics and we'll get started!\r\n* Inventory\r\n* Specials\r\n* Promotions\r\n* Financing\r\n* Trade-Ins\r\n* Make an Appointment",
+    "timestamp": "2020-04-15T00:30:31.100Z",
+    "type": "message",
+    "channelId": "chatdown"
+  },
+  {
+    "conversation": {
+      "id": "iIgpSNq00FAQ6wk44iZIcXsxSwY="
+    },
+    "id": "3",
+    "recipient": {
+      "id": "bGsbKz7MDmkAAA2r9Pqub431/9E=",
+      "name": "Chad",
+      "role": "bot"
+    },
+    "from": {
+      "id": "0nk3+RTr6Z7jFfBESWeOzPtlgZE=",
+      "name": "David",
+      "role": "user"
+    },
+    "text": "Actually, I'd just like to know about a certain car I saw.",
+    "timestamp": "2020-04-15T00:30:33.100Z",
+    "type": "message",
+    "channelId": "chatdown"
+  },
+  {
+    "attachments": [
+      {
+        "contentType": "application/vnd.microsoft.card.adaptive",
+        "content": {
+          "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+          "type": "AdaptiveCard",
+          "version": "1.0",
+          "body": [
+            {
+              "type": "ColumnSet",
+              "columns": [
+                {
+                  "type": "Column",
+                  "width": 2,
+                  "items": [
+                    {
+                      "type": "TextBlock",
+                      "text": "Tell us about yourself",
+                      "weight": "bolder",
+                      "size": "medium"
+                    },
+                    {
+                      "type": "TextBlock",
+                      "text": "We just need a few more details to get you booked for the trip of a lifetime!",
+                      "isSubtle": true,
+                      "wrap": true
+                    },
+                    {
+                      "type": "TextBlock",
+                      "text": "Don't worry, we'll never share or sell your information.",
+                      "isSubtle": true,
+                      "wrap": true,
+                      "size": "small"
+                    },
+                    {
+                      "type": "TextBlock",
+                      "text": "Your name",
+                      "wrap": true
+                    },
+                    {
+                      "type": "Input.Text",
+                      "id": "myName",
+                      "placeholder": "First Last"
+                    },
+                    {
+                      "type": "TextBlock",
+                      "text": "Your email",
+                      "wrap": true
+                    },
+                    {
+                      "type": "Input.Text",
+                      "id": "myEmail",
+                      "placeholder": "youremail@example.com",
+                      "style": "email"
+                    },
+                    {
+                      "type": "TextBlock",
+                      "text": "Phone Number"
+                    },
+                    {
+                      "type": "Input.Text",
+                      "id": "myTel",
+                      "placeholder": "xxx.xxx.xxxx",
+                      "style": "tel"
+                    }
+                  ]
+                },
+                {
+                  "type": "Column",
+                  "width": 1,
+                  "items": [
+                    {
+                      "type": "Image",
+                      "url": "https://upload.wikimedia.org/wikipedia/commons/b/b2/Diver_Silhouette%2C_Great_Barrier_Reef.jpg",
+                      "size": "auto"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "actions": [
+            {
+              "type": "Action.Submit",
+              "title": "Submit"
+            }
+          ]
+        }
+      }
+    ],
+    "conversation": {
+      "id": "iIgpSNq00FAQ6wk44iZIcXsxSwY="
+    },
+    "id": "4",
+    "recipient": {
+      "id": "0nk3+RTr6Z7jFfBESWeOzPtlgZE=",
+      "name": "David",
+      "role": "user"
+    },
+    "from": {
+      "id": "bGsbKz7MDmkAAA2r9Pqub431/9E=",
+      "name": "Chad",
+      "role": "bot"
+    },
+    "text": "Great! I'll load a form to help you identify it, but before I do, would you mind providing a few contact details in case we get disconnected?",
+    "timestamp": "2020-04-15T00:30:35.100Z",
+    "type": "message",
+    "channelId": "chatdown"
+  }
+]

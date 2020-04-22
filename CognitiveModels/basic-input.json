@@ -1,0 +1,20 @@
+{
+        "title": "Contact Details",
+        "body": "Help us stay in touch!",
+        "disclaimer": "We'll never share or sell your information. That's a promise!",
+        "properties": [ 
+            { 
+                "title" : "Your Name, please",                       
+                "placeholder" : "first last"
+            },
+            { 
+                "title" : "Your email",                
+                "placeholder" : "youremail@example.com"
+            },
+            { 
+                "title" : "Phone Number",
+                "placeholder" : "(xxx)xxx.xxxx"
+            }        
+        ],
+        "thumbnailUrl": "/media/headlight.png"
+}

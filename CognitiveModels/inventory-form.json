@@ -1,0 +1,117 @@
+{
+    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+    "type": "AdaptiveCard",
+    "version": "1.0",
+    "body": [
+        {
+            "type": "TextBlock",
+            "size": "Medium",
+            "weight": "Bolder",
+            "text": "Inventory Search Details",
+            "horizontalAlignment": "Center",
+            "id": "title1"
+        },
+        {
+            "type": "TextBlock",
+            "text": "Color?"
+        },
+        {
+            "type": "Input.ChoiceSet",
+            "id": "CompactSelectVal",
+            "value": "4",
+            "choices": [
+                {
+                    "title": "Red",
+                    "value": "1"
+                },
+                {
+                    "title": "Green",
+                    "value": "2"
+                },
+                {
+                    "title": "Blue",
+                    "value": "3"
+                },
+                {
+                    "title": "Black",
+                    "value": "4"
+                },
+                {
+                    "title": "Doesn't matter",
+                    "value": "5"
+                }
+            ]
+        },
+        {
+            "type": "TextBlock",
+            "text": "Year?",
+            "spacing": "Medium"
+        },
+        {
+            "type": "Input.ChoiceSet",
+            "placeholder": "",
+            "choices": [
+                {
+                    "title": "2020",
+                    "value": "2020"
+                },
+                {
+                    "title": "2019",
+                    "value": "2019"
+                },
+                {
+                    "title": "2018",
+                    "value": "2018"
+                },
+                {
+                    "title": "2017",
+                    "value": "2017"
+                }
+            ],
+            "spacing": "Small",
+            "value": "2020",
+            "id": "year"
+        },
+        {
+            "type": "TextBlock",
+            "text": "Make?",
+            "spacing": "Medium"
+        },
+        {
+            "type": "Input.ChoiceSet",
+            "placeholder": "Placeholder text",
+            "choices": [
+                {
+                    "title": "Chevrolet",
+                    "value": "chev"
+                },
+                {
+                    "title": "Mercedes",
+                    "value": "mercedes"
+                },
+                {
+                    "title": "Volvo",
+                    "value": "volvo"
+                }
+            ],
+            "value": "chev",
+            "id": "make"
+        },
+        {
+            "type": "Input.Text",
+            "placeholder": "or just ask a question...",
+            "spacing": "Medium",
+            "id": "entry"
+        }
+    ],
+    "actions": [
+        {
+            "type": "Action.Submit",
+            "title": "Submit",
+            "data": {
+                "id": "1234567890"
+            },
+            "id": "sub"
+        }
+    ]
+}

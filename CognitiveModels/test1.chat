@@ -1,0 +1,13 @@
+user=David
+bot=Chad
+
+bot: Hey there! I'm Chad and I'm here to help. Feel free to type in a question or select one or more of these topics and we'll get started!
+[Attachment=initial-choices.json adaptivecard]
+[Delay=30000]
+user: Actually, I'd just like to know about a certain car I saw.
+bot: Super! I'll load a form to help us locate it, but before I do, would you mind providing a few contact details in case we get disconnected?
+[Attachment=input-template.json adaptivecard]
+user: [Fills out form...][Delay=30000]
+bot: Hey, thanks for the contact info, David! Here's that form to help us find the car you were looking at.
+[Attachment=inventory-form.json adaptivecard]
+user: [Fills out form...] [Delay=60000]

@@ -1,0 +1,41 @@
+{
+    "type": "AdaptiveCard",
+    "version": "1.0",
+    "body": [
+        {
+            "type": "ColumnSet",
+            "columns": [
+                {
+                    "type": "Column",
+                    "width": "159px",
+                    "items": [
+                        {
+                            "type": "ActionSet",
+                            "actions": [
+                                {
+                                    "type": "Action.Submit",
+                                    "title": "Find a vehicle",
+                                    "id": "vehicle"
+                                },
+                                {
+                                    "type": "Action.Submit",
+                                    "title": "Explore Financing",
+                                    "id": "finance"
+                                },
+                                {
+                                    "type": "Action.Submit",
+                                    "title": "Evaluate Trade In",
+                                    "id": "trades"
+                                }
+                            ]
+                        }
+                    ],
+                    "horizontalAlignment": "Center",
+                    "style": "emphasis"
+                }
+            ],
+            "horizontalAlignment": "Center"
+        }
+    ],
+    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json"
+}
