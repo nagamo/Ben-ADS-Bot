@@ -76,7 +76,8 @@ namespace ADS.Bot1.Dialogs
             if (!string.IsNullOrEmpty(userData.Financing.CreditScore)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
 
-            var creditOptions = Utilities.CreateOptions(new string[] { "<500", "500-600", "600-700", "700+" }, "What is your credit score?");
+            var creditOptions = Utilities.CreateOptions(new string[] { "<500", "500-600", "600-700", "700+" }, "Hate to ask this, " +
+                "but you know it's inevitable, right? Can you please take a swag at your credit score for me?");
             return await stepContext.PromptAsync(nameof(ChoicePrompt), creditOptions, cancellationToken);
         }
 
@@ -98,7 +99,9 @@ namespace ADS.Bot1.Dialogs
 
 
 
-            var incomeOptions = Utilities.CreateOptions(new string[] { "$1-2k /month", "$2-4k /month", "$4k+ /month" }, "Roughly what is your income?");
+            var incomeOptions = Utilities.CreateOptions(new string[] { "$1K-$2K per month", "$2K-$4K per month", "$4k - $8K per month", "$8K - $10K per month", "> $10K per month" }, 
+                                                        "OK, no fibbing now. Can you provide some sense of your gross monthly income? We promise " +
+                                                        "not to say anything to the IRS!");
             return await stepContext.PromptAsync(nameof(ChoicePrompt), incomeOptions, cancellationToken);
         }
 
@@ -120,7 +123,7 @@ namespace ADS.Bot1.Dialogs
 
 
 
-            var ownershipOptions = Utilities.CreateOptions(new string[] { "Own", "Rent", "Other" }, "Do you Own or Rent?");
+            var ownershipOptions = Utilities.CreateOptions(new string[] { "Own", "Rent", "Other" }, "Whew! Almost done! How about a little home-ownership information?");
             return await stepContext.PromptAsync(nameof(ChoicePrompt), ownershipOptions, cancellationToken);
         }
 
@@ -142,7 +145,9 @@ namespace ADS.Bot1.Dialogs
 
 
 
-            var ownershipOptions = Utilities.CreateOptions(new string[] { "< 1 yr", "1-5 yrs", "5+ yrs" }, "How long have you been employed?");
+            var ownershipOptions = Utilities.CreateOptions(new string[] { "Unemployed", "Less than a year", "1 - 5 years," +
+                                                          "More than five years" }, "Last Question! (I know - you thought we'd " +
+                                                           "never get here!). That great job you've got; how long have you been there?");
             return await stepContext.PromptAsync(nameof(ChoicePrompt), ownershipOptions, cancellationToken);
         }
 
@@ -163,8 +168,8 @@ namespace ADS.Bot1.Dialogs
 
             string details = string.Join(Environment.NewLine, new string[]
             {
-                $"Thanks {userData.Name}! I got these details for you.",
-                $"I hope it's correct becuase I don't reset yet! :)",
+                $"Wow {userData.Name}! Thanks! That wasn't so bad, was it? Here's what I picked up,",
+                $"and I sure hope we've got it nailed, 'cause we don't want to do THAT again, right?:)",
                 $"Credit Score: {userData.Financing.CreditScore}",
                 $"Income: {userData.Financing.Income}",
                 $"Home Ownership: {userData.Financing.HomeOwnership}",

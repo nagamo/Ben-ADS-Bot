@@ -23,9 +23,8 @@ namespace ADS.Bot.V1.Bots
         private readonly DialogSet dialogs;
         private BotState _userState;
         private BotAccessors _botAccessors;
-        //Hey there!
 
-        // Initializes a new instance of the "WelcomeUserBot" class.
+        // Initializes a new instance of the "BenBot" class.
         public BenBot(UserState userState, BotAccessors botAccessors, ActiveLeadDialog activeLeadDialog)
         {
             _userState = userState;
@@ -39,7 +38,7 @@ namespace ADS.Bot.V1.Bots
 
 
         // This is called when a user is added to the conversation. This occurs BEFORE they've typed something in, so it's a good way to
-        //initiate the conversation from the bot's perspective
+        // initiate the conversation from the bot's perspective
         protected override async Task OnMembersAddedAsync(IList<ChannelAccount> membersAdded, ITurnContext<IConversationUpdateActivity> turnContext, CancellationToken cancellationToken)
         {
             foreach (var member in membersAdded)
@@ -66,14 +65,14 @@ namespace ADS.Bot.V1.Bots
             }
             else
             {
-                if (!userData.IsRegistered)
-                {
-                    await dialogContext.BeginDialogAsync(nameof(UserProfileDialog));
-                }
-                else
-                {
+                //if (!userData.IsRegistered)
+                //{
+                    //await dialogContext.BeginDialogAsync(nameof(UserProfileDialog));
+                //}
+                //else
+                //{
                     await dialogContext.BeginDialogAsync(nameof(ActiveLeadDialog));
-                }
+                //}
             }
 
             // Save any state changes.

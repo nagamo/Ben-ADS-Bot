@@ -1,41 +1,77 @@
 {
-    "type": "AdaptiveCard",
-    "version": "1.0",
-    "body": [
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.0",
+  "body": [
+    {
+      "type": "TextBlock",
+      "text": "Welcome to Patriot Motors!",
+      "size": "Medium",
+      "weight": "Bolder",
+      "horizontalAlignment": "Center"
+    },
+    {
+      "type": "TextBlock",
+      "text": "Please select from one of the easy-pick options below, or feel free to type any question you have into the free-text area. I'd love to tell you about the dealership, our inventory, and address financing or trade-in if that's of interest. I'll ask a few questions of my own along the way, so be ready!",
+      "wrap": true,
+      "horizontalAlignment": "Center",
+      "spacing": "Large"
+    },
+    {
+      "type": "ImageSet",
+      "imageSize": "medium",
+      "images": [
         {
-            "type": "ColumnSet",
-            "columns": [
-                {
-                    "type": "Column",
-                    "width": "159px",
-                    "items": [
-                        {
-                            "type": "ActionSet",
-                            "actions": [
-                                {
-                                    "type": "Action.Submit",
-                                    "title": "Find a vehicle",
-                                    "id": "vehicle"
-                                },
-                                {
-                                    "type": "Action.Submit",
-                                    "title": "Explore Financing",
-                                    "id": "finance"
-                                },
-                                {
-                                    "type": "Action.Submit",
-                                    "title": "Evaluate Trade In",
-                                    "id": "trades"
-                                }
-                            ]
-                        }
-                    ],
-                    "horizontalAlignment": "Center",
-                    "style": "emphasis"
-                }
-            ],
-            "horizontalAlignment": "Center"
+          "type": "Image",
+          "url": "media/patriot logo.png",
+          "size": "Medium",
+          "horizontalAlignment": "Center"
         }
-    ],
-    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json"
+      ],
+      "spacing": "Medium",
+      "horizontalAlignment": "Center"
+    },
+    {
+      "type": "ColumnSet",
+      "columns": [
+        {
+          "type": "Column",
+          "width": "150px",
+          "horizontalAlignment": "Center",
+          "items": [
+            {
+              "type": "ActionSet",
+              "actions": [
+                {
+                  "type": "Action.ShowCard",
+                  "title": "Find A Vehicle",
+                  "card": {
+                    "type": "AdaptiveCard",
+                    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json"
+                  }
+                },
+                {
+                  "type": "Action.ShowCard",
+                  "title": "Explore Financing",
+                  "card": {
+                    "type": "AdaptiveCard",
+                    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json"
+                  }
+                },
+                {
+                  "type": "Action.ShowCard",
+                  "title": "Value A Trade",
+                  "card": {
+                    "type": "AdaptiveCard",
+                    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "horizontalAlignment": "Center"
+    }
+  ]
 }

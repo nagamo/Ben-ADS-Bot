@@ -17,12 +17,12 @@ namespace ADS.Bot.V1.Dialogs
 {
     public class ActiveLeadDialog : ComponentDialog
     {
-        private readonly UserState _userSate;
+        private readonly UserState _userState;
 
-        public ActiveLeadDialog(UserState userSate, VehicleProfileDialog vehicleDialog, ValueTradeInDialog tradeInDialog, IBotServices botServices) 
+        public ActiveLeadDialog(UserState userState, VehicleProfileDialog vehicleDialog, ValueTradeInDialog tradeInDialog, IBotServices botServices) 
             : base(nameof(ActiveLeadDialog))
         {
-            _userSate = userSate;
+            _userState = userState;
 
             var rootDialog = new AdaptiveDialog(nameof(AdaptiveDialog))
             {
@@ -88,7 +88,7 @@ namespace ADS.Bot.V1.Dialogs
             };
 
             AddDialog(rootDialog);
-            AddDialog(new FinanceDialog(_userSate));
+            AddDialog(new FinanceDialog(_userState));
             AddDialog(vehicleDialog);
             AddDialog(tradeInDialog);
         }
