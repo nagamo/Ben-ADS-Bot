@@ -189,7 +189,7 @@ namespace ADS.Bot.V1.Dialogs
         public async Task<DialogTurnResult> QNAFallback(DialogContext context, object something)
         {
             //This uses the QNA object instantiated in BotServices
-            if (Services.SampleQnA != null)
+            if (Services.LeadQualQnA != null)
             {
                 var results = await Services.LeadQualQnA.GetAnswersAsync(context.Context);
                 if (results.Any())
