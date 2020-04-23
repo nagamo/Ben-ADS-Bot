@@ -26,11 +26,11 @@ namespace ADS.Bot.V1.Bots
         public IBotServices Services { get; }
 
         // Initializes a new instance of the "WelcomeUserBot" class.
-        public BenBot(IBotServices services, ActiveLeadDialog activeLeadDialog)
+        public BenBot(IBotServices services, RootDialog dialog)
         {
             Services = services;
 
-            DialogManager = new DialogManager(activeLeadDialog);
+            DialogManager = new DialogManager(dialog);
         }
 
 
@@ -38,13 +38,18 @@ namespace ADS.Bot.V1.Bots
         //initiate the conversation from the bot's perspective
         protected override async Task OnMembersAddedAsync(IList<ChannelAccount> membersAdded, ITurnContext<IConversationUpdateActivity> turnContext, CancellationToken cancellationToken)
         {
+            var userProfile = await Services.GetUserProfileAsync(turnContext, cancellationToken);
+
             foreach (var member in membersAdded)
             {
                 if (member.Id != turnContext.Activity.Recipient.Id)
                 {
                     await turnContext.SendActivityAsync(WelcomeMessage, cancellationToken: cancellationToken);
+                    await DialogManager.OnTurnAsync(turnContext, cancellationToken);
                 }
             }
+
+            await Services.UserProfileAccessor.SetAsync(turnContext, userProfile, cancellationToken);
         }
 
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
