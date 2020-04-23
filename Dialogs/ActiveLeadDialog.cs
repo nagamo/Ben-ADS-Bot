@@ -24,6 +24,7 @@ namespace ADS.Bot.V1.Dialogs
         public ActiveLeadDialog(VehicleProfileDialog vehicleDialog, ValueTradeInDialog tradeInDialog, FinanceDialog financeDialog, UserProfileDialog userProfileDialog, IBotServices botServices) 
             : base(nameof(ActiveLeadDialog))
         {
+            Services = botServices;
 
             var rootDialog = new AdaptiveDialog(nameof(AdaptiveDialog))
             {
@@ -165,7 +166,8 @@ namespace ADS.Bot.V1.Dialogs
                     {
                         Actions = new List<Dialog>()
                         {
-                            new SendActivity("OK, you totally lost me! Give it another shot, will ya??")
+                            new CodeAction(QNAFallback),
+                            //new SendActivity("OK, you totally lost me! Give it another shot, will ya??")
                         }
                     }
                 }
@@ -176,6 +178,31 @@ namespace ADS.Bot.V1.Dialogs
             AddDialog(vehicleDialog);
             AddDialog(tradeInDialog);
             AddDialog(userProfileDialog);
+        }
+
+        public IBotServices Services { get; }
+
+        public async Task<DialogTurnResult> QNAFallback(DialogContext context, object something)
+        {
+            if (Services.SampleQnA != null)
+            {
+                var results = await Services.SampleQnA.GetAnswersAsync(context.Context);
+                if (results.Any())
+                {
+                    await context.Context.SendActivityAsync(MessageFactory.Text(results.First().Answer));
+                }
+                else
+                {
+                    await context.Context.SendActivityAsync(MessageFactory.Text("Sorry, could not find an answer in the Q and A system."));
+                }
+            }
+            else
+            {
+                await context.Context.SendActivityAsync("I have'nt actually configured QnA yet. Ooops");
+            }
+
+            //You can change status to alter the behaviour post-completion
+            return new DialogTurnResult(DialogTurnStatus.Complete, null);
         }
 
         public async Task<DialogTurnResult> Test(DialogContext context, object something)
