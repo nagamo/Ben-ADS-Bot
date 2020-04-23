@@ -37,12 +37,14 @@ namespace ADS.Bot1
                 }
             };
 
-            var qnaMaker = new QnAMaker(new QnAMakerEndpoint
+            var qnaEndpoint = new QnAMakerEndpoint
             {
                 KnowledgeBaseId = configuration["qna:QnAKnowledgebaseId"],
                 EndpointKey = configuration["qna:QnAEndpointKey"],
                 Host = configuration["qna:QnAEndpointHostName"]
-            },null,httpClient);
+            };
+
+            var qnaMaker = new QnAMaker(qnaEndpoint);
 
             Dispatch = new LuisRecognizer(recognizerOptions);
             ConversationState = conversationState;
@@ -50,15 +52,6 @@ namespace ADS.Bot1
 
             UserProfileAccessor = UserState.CreateProperty<UserProfile>(nameof(UserProfile));
             DialogStateAccessor = ConversationState.CreateProperty<DialogState>(nameof(DialogState));
-
-            /*
-            SampleQnA = new QnAMaker(new QnAMakerEndpoint
-            {
-                KnowledgeBaseId = configuration["QnAKnowledgebaseId"],
-                EndpointKey = configuration["QnAEndpointKey"],
-                Host = configuration["QnAEndpointHostName"]
-            });
-            */
         }
 
         public LuisRecognizer Dispatch { get; private set; }
