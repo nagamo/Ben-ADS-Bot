@@ -165,17 +165,7 @@ namespace ADS.Bot.V1.Dialogs
                     },
                     new OnUnknownIntent()
                     {
-                        var httpClient = _httpClientFactory.CreateClient();
-
-            var qnaMaker = new QnAMaker(new QnAMakerEndpoint
-            {
-                KnowledgeBaseId = _configuration["QnAKnowledgebaseId"],
-                EndpointKey = _configuration["QnAEndpointKey"],
-                Host = _configuration["QnAEndpointHostName"]
-            },
-            null,
-            httpClient);
-
+ 
             Actions = new List<Dialog>()
                         {
                             new CodeAction(QNAFallback),
@@ -196,21 +186,22 @@ namespace ADS.Bot.V1.Dialogs
 
         public async Task<DialogTurnResult> QNAFallback(DialogContext context, object something)
         {
-            if (Services.SampleQnA != null)
+            if (Services.LeadQualQnA != null)
             {
-                var results = await Services.SampleQnA.GetAnswersAsync(context.Context);
+                var results = await Services.LeadQualQnA.GetAnswersAsync(context.Context);
                 if (results.Any())
                 {
                     await context.Context.SendActivityAsync(MessageFactory.Text(results.First().Answer));
                 }
                 else
                 {
-                    await context.Context.SendActivityAsync(MessageFactory.Text("Sorry, could not find an answer in the Q and A system."));
+                    await context.Context.SendActivityAsync(MessageFactory.Text("Great Caesar's Ghost! " +
+                                   "You've thrown me for a loop with that one! Give 'er another try, will ya?"));
                 }
             }
             else
             {
-                await context.Context.SendActivityAsync("I have'nt actually configured QnA yet. Ooops");
+                await context.Context.SendActivityAsync("We must be in Kansas, Dorothy, 'cause there ain't no QnA!");
             }
 
             //You can change status to alter the behaviour post-completion

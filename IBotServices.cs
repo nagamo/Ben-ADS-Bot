@@ -20,7 +20,7 @@ namespace ADS.Bot1
         IStatePropertyAccessor<DialogState> DialogStateAccessor { get; }
 
         LuisRecognizer Dispatch { get; }
-        QnAMaker SampleQnA { get; }
+        QnAMaker LeadQualQnA { get; }
 
         Task<UserProfile> GetUserProfileAsync(ITurnContext turnContext, CancellationToken cancellationToken);
     }
