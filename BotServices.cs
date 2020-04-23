@@ -38,6 +38,7 @@ namespace ADS.Bot1
             };
 
             Dispatch = new LuisRecognizer(recognizerOptions);
+            Configuration = configuration;
             ConversationState = conversationState;
             UserState = userState;
 
@@ -58,7 +59,7 @@ namespace ADS.Bot1
 
         public IStatePropertyAccessor<UserProfile> UserProfileAccessor { get; private set; }
         public IStatePropertyAccessor<DialogState> DialogStateAccessor { get; private set; }
-
+        public IConfiguration Configuration { get; }
         public ConversationState ConversationState { get; private set; }
         public UserState UserState { get; private set; }
 

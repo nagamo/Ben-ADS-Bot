@@ -57,7 +57,6 @@ namespace ADS.Bot.V1.Dialogs
                             {
                                 TraceActivity = true
                             },
-
                             new SwitchCondition()
                             {
                                 Condition = "turn.interest",
@@ -66,28 +65,20 @@ namespace ADS.Bot.V1.Dialogs
                                     //Just copied from below as a quick fix, ideally this would all be in the financing dialog itself.
                                     new Case("Financing")
                                     {
-                                        Actions = new List<Dialog>()
-                                        {
-                                            new IfCondition()
-                                            {
-                                                Condition = "user.UserProfile == null",
-                                                Actions = new List<Dialog>()
-                                                {
-                                                    new SendActivity("Sure! I'd love to help you with that, but I need to collect a few details first."),
-                                                    new BeginDialog(nameof(UserProfileDialog)),
-                                                },
-                                                ElseActions = new List<Dialog>()
-                                                {
-                                                    new SendActivity("Sure! I'd love to help finance you. Let me ask you a few questions about that.")
-                                                }
-                                            },
-                                            new BeginDialog(nameof(FinanceDialog))
-                                        }
+                                        Actions = VerifyProfile(nameof(FinanceDialog))
                                     },
-
+                                    new Case("Purchasing")
+                                    {
+                                        Actions = VerifyProfile(nameof(VehicleProfileDialog))
+                                    },
+                                    new Case("Trade-In")
+                                    {
+                                        Actions = VerifyProfile(nameof(ValueTradeInDialog))
+                                    },
                                 },
                                 Default = new List<Dialog>()
                                 {
+                                    new TraceActivity(),
                                     new SendActivity("I'm sorry, I can't handle that request yet. :("),
                                     new EmitEvent(Constants.Event_ShowTips, bubble: true)
                                 }
@@ -100,7 +91,7 @@ namespace ADS.Bot.V1.Dialogs
                             }
                         }
                     },
-                    new OnIntent("Financing")
+                    new OnIntent("GetFinanced")
                     {
                         // again, are they coming back, or is this their first visit?
                         //*From Ben*
@@ -108,9 +99,9 @@ namespace ADS.Bot.V1.Dialogs
                         //          FinanceDialog itself will essentially skip all the way to the end internally and just print the summary.
                         //  Below is a more explicit implementation using Condition, which has a few shorthands to it (buried in the repositories)
                         //  $ works with dialog-scope variables (eg. $userName = dialog.userName), these only last as long as the dialog
-                        //  # works with LUIS intents (eg. Below, #Financing.Score >= 0.8 is looking at the luis response data)
+                        //  # works with LUIS intents (eg. Below, #GetFinanced.Score >= 0.8 is looking at the luis response data)
                         //  you can access needed data with variables like user, conversation, turn, etc. all automatically mapped to classes like UserState, ConversationState, etc.
-                        Condition = "#Financing.Score >= 0.8 && user.UserProfile != null",
+                        Condition = "#GetFinanced.Score >= 0.75",
                         Actions = new List<Dialog>()
                         {
                             //*From Ben*
@@ -134,7 +125,7 @@ namespace ADS.Bot.V1.Dialogs
                     },
                     new OnIntent("Purchasing")
                     {
-                        Condition = "#Purchasing.Score >= 0.8",
+                        Condition = "#Purchasing.Score >= 0.75",
                         Actions = new List<Dialog>()
                         {
                             new BeginDialog(nameof(VehicleProfileDialog))
@@ -216,5 +207,26 @@ namespace ADS.Bot.V1.Dialogs
             return null;
         }
 
+
+        public List<Dialog> VerifyProfile(string DialogID)
+        {
+            return new List<Dialog>()
+            {
+                new IfCondition()
+                {
+                    Condition = "user.UserProfile == null",
+                    Actions = new List<Dialog>()
+                    {
+                        new SendActivity("Sure! I'd love to help you with that, but I need to collect a few details first."),
+                        new BeginDialog(nameof(UserProfileDialog)),
+                    },
+                    ElseActions = new List<Dialog>()
+                    {
+                        new SendActivity("Sure! I'd love to help finance you. Let me ask you a few questions about that.")
+                    }
+                },
+                new BeginDialog(DialogID)
+            };
+        }
     }
 }

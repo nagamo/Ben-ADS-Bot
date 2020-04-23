@@ -6,6 +6,7 @@ using Microsoft.Bot.Builder.AI.Luis;
 using Microsoft.Bot.Builder.AI.QnA;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
+using Microsoft.Extensions.Configuration;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,6 +19,8 @@ namespace ADS.Bot1
 
         IStatePropertyAccessor<UserProfile> UserProfileAccessor { get; }
         IStatePropertyAccessor<DialogState> DialogStateAccessor { get; }
+
+        IConfiguration Configuration { get; }
 
         LuisRecognizer Dispatch { get; }
         QnAMaker LeadQualQnA { get; }

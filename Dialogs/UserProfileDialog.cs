@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder;
@@ -13,6 +14,7 @@ namespace ADS.Bot1.Dialogs
 {
     public class UserProfileDialog : ComponentDialog
     {
+        const string PROMPT_Name = "NameInput";
         const string PROMPT_Phone = "PhoneInput";
         const string PROMPT_Email = "EmailInput";
 
@@ -40,7 +42,7 @@ namespace ADS.Bot1.Dialogs
 
             // Add named dialogs to the DialogSet. These names are saved in the dialog state.
             AddDialog(new WaterfallDialog(nameof(WaterfallDialog), waterfallSteps));
-            AddDialog(new TextPrompt(nameof(TextPrompt)));
+            AddDialog(new TextPrompt(PROMPT_Name, ValidateNameAsync));
             AddDialog(new TextPrompt(PROMPT_Phone, ValidatePhoneAsync));
             AddDialog(new TextPrompt(PROMPT_Email, ValidateEmailAsync));
             AddDialog(new ChoicePrompt(nameof(ChoicePrompt)));
@@ -62,7 +64,18 @@ namespace ADS.Bot1.Dialogs
 
         private async Task<DialogTurnResult> NameStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            return await stepContext.PromptAsync(nameof(TextPrompt), new PromptOptions { Prompt = MessageFactory.Text("Please enter your name.") }, cancellationToken);
+            return await stepContext.PromptAsync(PROMPT_Name, new PromptOptions
+            {
+                Prompt = MessageFactory.Text("Please enter your name."),
+                RetryPrompt = MessageFactory.Text("Is that really your name???")
+            }, cancellationToken);
+        }
+
+        private async Task<bool> ValidateNameAsync(PromptValidatorContext<string> promptContext, CancellationToken cancellationToken)
+        {
+            var nameMatch = Regex.Match(promptContext.Context.Activity.Text, Services.Configuration["name_regex"]);
+
+            return nameMatch.Success;
         }
 
         private async Task<DialogTurnResult> NameConfirmStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
@@ -87,7 +100,7 @@ namespace ADS.Bot1.Dialogs
         private async Task<bool> ValidatePhoneAsync(PromptValidatorContext<string> promptContext, CancellationToken cancellationToken)
         {
             var phoneDetails = SequenceRecognizer.RecognizePhoneNumber(promptContext.Context.Activity.Text, "en");
-
+            
             return phoneDetails.Count != 0;
         }
 
