@@ -20,63 +20,47 @@ namespace ADS.Bot.V1.Bots
                         "typing 'Quit', or 'Cancel' or 'Stop' or any phrase that gets the point across! I love talking shop, " +
                         "so if you ask about financing or trade-ins, I've got some specific areas to explore with you.";
 
-        private readonly DialogSet dialogs;
-        private BotState _userState;
-        private BotAccessors _botAccessors;
+        private DialogManager DialogManager;
+        //Hey there!
 
-        // Initializes a new instance of the "BenBot" class.
-        public BenBot(UserState userState, BotAccessors botAccessors, ActiveLeadDialog activeLeadDialog)
+        public IBotServices Services { get; }
+
+        // Initializes a new instance of the "WelcomeUserBot" class.
+        public BenBot(IBotServices services, RootDialog dialog)
         {
-            _userState = userState;
-            _botAccessors = botAccessors;
+            Services = services;
 
-            dialogs = new DialogSet(_botAccessors.DialogStateAccessor);
-
-            dialogs.Add(new UserProfileDialog(userState));
-            dialogs.Add(activeLeadDialog);
+            DialogManager = new DialogManager(dialog);
         }
 
 
         // This is called when a user is added to the conversation. This occurs BEFORE they've typed something in, so it's a good way to
-        // initiate the conversation from the bot's perspective
+        //initiate the conversation from the bot's perspective
         protected override async Task OnMembersAddedAsync(IList<ChannelAccount> membersAdded, ITurnContext<IConversationUpdateActivity> turnContext, CancellationToken cancellationToken)
         {
+            var userProfile = await Services.GetUserProfileAsync(turnContext, cancellationToken);
+
             foreach (var member in membersAdded)
             {
                 if (member.Id != turnContext.Activity.Recipient.Id)
                 {
                     await turnContext.SendActivityAsync(WelcomeMessage, cancellationToken: cancellationToken);
+                    await DialogManager.OnTurnAsync(turnContext, cancellationToken);
                 }
             }
+
+            await Services.UserProfileAccessor.SetAsync(turnContext, userProfile, cancellationToken);
         }
 
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {
-            var userDataAccessor = _userState.CreateProperty<UserProfile>(nameof(UserProfile));
-            var userData = await userDataAccessor.GetAsync(turnContext, () => new UserProfile(), cancellationToken);
-            
-            
-            var dialogContext = await dialogs.CreateContextAsync(turnContext, cancellationToken);
+            var userProfile = await Services.GetUserProfileAsync(turnContext, cancellationToken);
 
-            
-            if (dialogContext.ActiveDialog != null)
-            {
-                var turnResult = await dialogContext.ContinueDialogAsync(cancellationToken);
-            }
-            else
-            {
-                //if (!userData.IsRegistered)
-                //{
-                    //await dialogContext.BeginDialogAsync(nameof(UserProfileDialog));
-                //}
-                //else
-                //{
-                    await dialogContext.BeginDialogAsync(nameof(ActiveLeadDialog));
-                //}
-            }
+            //Let the manager handle passing our message to the one-and-only dialog
+            await DialogManager.OnTurnAsync(turnContext, cancellationToken);
 
             // Save any state changes.
-            await _userState.SaveChangesAsync(turnContext);
+            await Services.UserProfileAccessor.SetAsync(turnContext, userProfile, cancellationToken);
         }
 
         /*private static async Task SendIntroCardAsync(ITurnContext turnContext, CancellationToken cancellationToken)
