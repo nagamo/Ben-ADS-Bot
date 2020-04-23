@@ -26,6 +26,7 @@ namespace ADS.Bot1
     {
         public string Name { get; set; }
         public string Phone { get; set; }
+        public string Email { get; set; }
     }
 
     public class VehicleProfileDetails

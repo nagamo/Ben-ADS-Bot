@@ -26,7 +26,7 @@ namespace ADS.Bot.V1.Bots
         public IBotServices Services { get; }
 
         // Initializes a new instance of the "WelcomeUserBot" class.
-        public BenBot(IBotServices services, UserProfileDialog userProfileDialog, ActiveLeadDialog activeLeadDialog)
+        public BenBot(IBotServices services, ActiveLeadDialog activeLeadDialog)
         {
             Services = services;
 

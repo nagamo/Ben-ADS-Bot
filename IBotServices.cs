@@ -22,6 +22,6 @@ namespace ADS.Bot1
         LuisRecognizer Dispatch { get; }
         QnAMaker SampleQnA { get; }
 
-        Task<UserProfile> GetUserProfileAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken);
+        Task<UserProfile> GetUserProfileAsync(ITurnContext turnContext, CancellationToken cancellationToken);
     }
 }

@@ -13,13 +13,11 @@ namespace ADS.Bot1.Dialogs
 {
     public class FinanceDialog : ComponentDialog
     {
-        private IStatePropertyAccessor<UserProfile> _userProfileAccessor;
+        public IBotServices Services { get; }
 
-        public FinanceDialog(UserState userState)
+        public FinanceDialog(IBotServices services)
             : base(nameof(FinanceDialog))
         {
-            _userProfileAccessor = userState.CreateProperty<UserProfile>(nameof(UserProfile));
-
             // This array defines how the Waterfall will execute.
             var waterfallSteps = new WaterfallStep[]
             {
@@ -48,12 +46,13 @@ namespace ADS.Bot1.Dialogs
 
             // The initial child Dialog to run.
             InitialDialogId = nameof(WaterfallDialog);
+            Services = services;
         }
 
 
         private async Task<DialogTurnResult> InitializeStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
             if (userData?.Financing != null)
             {
                 if (userData.Financing.IsCompleted)
@@ -72,7 +71,7 @@ namespace ADS.Bot1.Dialogs
 
         private async Task<DialogTurnResult> CreditScoreStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
             if (!string.IsNullOrEmpty(userData.Financing.CreditScore)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
 
@@ -82,8 +81,8 @@ namespace ADS.Bot1.Dialogs
 
         private async Task<DialogTurnResult> ValidateCreditScoreStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
-            if(stepContext.Result != null)
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
+            if (stepContext.Result != null)
                 userData.Financing.CreditScore = Utilities.ReadChoiceWithManual(stepContext);
 
             return await stepContext.NextAsync();
@@ -93,7 +92,7 @@ namespace ADS.Bot1.Dialogs
 
         private async Task<DialogTurnResult> IncomeStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
             if (!string.IsNullOrEmpty(userData.Financing.Income)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
 
@@ -104,7 +103,7 @@ namespace ADS.Bot1.Dialogs
 
         private async Task<DialogTurnResult> ValidateIncomeStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
             if (stepContext.Result != null)
                 userData.Financing.Income = Utilities.ReadChoiceWithManual(stepContext);
 
@@ -115,7 +114,7 @@ namespace ADS.Bot1.Dialogs
 
         private async Task<DialogTurnResult> HomeOwnershipStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
             if (!string.IsNullOrEmpty(userData.Financing.HomeOwnership)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
 
@@ -126,7 +125,7 @@ namespace ADS.Bot1.Dialogs
 
         private async Task<DialogTurnResult> ValidateHomeOwnershipStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
             if (stepContext.Result != null)
                 userData.Financing.HomeOwnership = Utilities.ReadChoiceWithManual(stepContext);
 
@@ -137,7 +136,7 @@ namespace ADS.Bot1.Dialogs
 
         private async Task<DialogTurnResult> EmploymentStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
             if (!string.IsNullOrEmpty(userData.Financing.Employment)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
 
@@ -148,7 +147,7 @@ namespace ADS.Bot1.Dialogs
 
         private async Task<DialogTurnResult> ValidateEmploymentStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
             if (stepContext.Result != null)
                 userData.Financing.Employment = Utilities.ReadChoiceWithManual(stepContext);
 
@@ -159,7 +158,7 @@ namespace ADS.Bot1.Dialogs
 
         private async Task<DialogTurnResult> FinalizeStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
 
             string details = string.Join(Environment.NewLine, new string[]
             {

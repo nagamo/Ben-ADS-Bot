@@ -63,7 +63,7 @@ namespace ADS.Bot1
         public ConversationState ConversationState { get; private set; }
         public UserState UserState { get; private set; }
 
-        public async Task<UserProfile> GetUserProfileAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
+        public async Task<UserProfile> GetUserProfileAsync(ITurnContext turnContext, CancellationToken cancellationToken)
         {
             return await UserProfileAccessor.GetAsync(turnContext, () => new UserProfile(), cancellationToken);
         }

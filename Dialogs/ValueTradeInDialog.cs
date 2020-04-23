@@ -12,13 +12,11 @@ namespace ADS.Bot.V1.Dialogs
 {
     public class ValueTradeInDialog : ComponentDialog
     {
-        private IStatePropertyAccessor<UserProfile> _userProfileAccessor;
+        private IBotServices Services { get; }
 
-        public ValueTradeInDialog(UserState userState)
+        public ValueTradeInDialog(IBotServices services)
             : base(nameof(ValueTradeInDialog))
         {
-            _userProfileAccessor = userState.CreateProperty<UserProfile>(nameof(UserProfile));
-
             // This array defines how the Waterfall will execute.
             var waterfallSteps = new WaterfallStep[]
             {
@@ -50,12 +48,14 @@ namespace ADS.Bot.V1.Dialogs
 
             // The initial child Dialog to run.
             InitialDialogId = nameof(WaterfallDialog);
+            Services = services;
         }
 
 
         private async Task<DialogTurnResult> InitializeStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
+
             if (userData?.TradeDetails != null)
             {
                 if (userData.TradeDetails.IsCompleted)
@@ -77,7 +77,7 @@ namespace ADS.Bot.V1.Dialogs
 
         private async Task<DialogTurnResult> MakeStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
             if (!string.IsNullOrEmpty(userData.TradeDetails.Make)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
 
@@ -87,7 +87,7 @@ namespace ADS.Bot.V1.Dialogs
 
         private async Task<DialogTurnResult> ValidateMakeStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
             if (stepContext.Result != null)
                 userData.TradeDetails.Make = Utilities.ReadChoiceWithManual(stepContext);
 
@@ -98,7 +98,7 @@ namespace ADS.Bot.V1.Dialogs
 
         private async Task<DialogTurnResult> ModelStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
             if (!string.IsNullOrEmpty(userData.TradeDetails.Model)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
 
@@ -109,7 +109,7 @@ namespace ADS.Bot.V1.Dialogs
 
         private async Task<DialogTurnResult> ValidateModelStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
             if (stepContext.Result != null)
                 userData.TradeDetails.Model = Utilities.ReadChoiceWithManual(stepContext);
 
@@ -120,7 +120,7 @@ namespace ADS.Bot.V1.Dialogs
 
         private async Task<DialogTurnResult> YearStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
             if (!string.IsNullOrEmpty(userData.TradeDetails.Year)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
 
@@ -131,7 +131,7 @@ namespace ADS.Bot.V1.Dialogs
 
         private async Task<DialogTurnResult> ValidateYearStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
             if (stepContext.Result != null)
                 userData.TradeDetails.Year = Utilities.ReadChoiceWithManual(stepContext);
 
@@ -142,7 +142,7 @@ namespace ADS.Bot.V1.Dialogs
 
         private async Task<DialogTurnResult> ConditionStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
             if (!string.IsNullOrEmpty(userData.TradeDetails.Condition)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
 
@@ -153,7 +153,7 @@ namespace ADS.Bot.V1.Dialogs
 
         private async Task<DialogTurnResult> ValidateConditionStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
             if (stepContext.Result != null)
                 userData.TradeDetails.Condition = Utilities.ReadChoiceWithManual(stepContext);
 
@@ -164,7 +164,7 @@ namespace ADS.Bot.V1.Dialogs
 
         private async Task<DialogTurnResult> AmountOwedStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
             if (!string.IsNullOrEmpty(userData.TradeDetails.AmountOwed)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
 
@@ -175,7 +175,7 @@ namespace ADS.Bot.V1.Dialogs
 
         private async Task<DialogTurnResult> ValidateAmountOwedStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
             if (stepContext.Result != null)
                 userData.TradeDetails.AmountOwed = Utilities.ReadChoiceWithManual(stepContext);
 
@@ -187,7 +187,7 @@ namespace ADS.Bot.V1.Dialogs
 
         private async Task<DialogTurnResult> FinalizeStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
 
             var lines = new List<string>
             {
