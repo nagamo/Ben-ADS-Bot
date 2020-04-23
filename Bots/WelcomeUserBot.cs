@@ -35,16 +35,10 @@ namespace ADS.Bot1.Bots
      
         private readonly DialogSet dialogs;
 
-        private BotState _userState;
-        private BotAccessors _botAccessors;
-
         // Initializes a new instance of the "WelcomeUserBot" class.
-        public WelcomeUserBot(UserState userState, BotAccessors botAccessors)
+        public WelcomeUserBot(IBotServices services)
         {
-            _userState = userState;
-            _botAccessors = botAccessors;
-
-            dialogs = new DialogSet(_botAccessors.DialogStateAccessor);
+            dialogs = new DialogSet(services.DialogStateAccessor);
             //dialogs.Add(FinanceDialog.Instance);
             dialogs.Add(TradeDialog.Instance);
             dialogs.Add(InventoryDialog.Instance);
@@ -71,8 +65,9 @@ namespace ADS.Bot1.Bots
 
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {
-            var welcomeUserStateAccessor = _userState.CreateProperty<WelcomeUserState>(nameof(WelcomeUserState));
-            var didBotWelcomeUser = await welcomeUserStateAccessor.GetAsync(turnContext, () => new WelcomeUserState());
+            //var welcomeUserStateAccessor = _userState.CreateProperty<WelcomeUserState>(nameof(WelcomeUserState));
+            //var didBotWelcomeUser = await welcomeUserStateAccessor.GetAsync(turnContext, () => new WelcomeUserState());
+            var didBotWelcomeUser = new WelcomeUserState();
 
             if (!didBotWelcomeUser.DidBotWelcomeUser)
             {
@@ -106,7 +101,7 @@ namespace ADS.Bot1.Bots
             }
 
             // Save any state changes.
-            await _userState.SaveChangesAsync(turnContext);
+            //await _userState.SaveChangesAsync(turnContext);
         }
 
         private static async Task SendIntroCardAsync(ITurnContext turnContext, CancellationToken cancellationToken)

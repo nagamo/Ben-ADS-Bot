@@ -20,21 +20,17 @@ namespace ADS.Bot.V1.Bots
                         "typing 'Quit', or 'Cancel' or 'Stop' or any phrase that gets the point across! I love talking shop, " +
                         "so if you ask about financing or trade-ins, I've got some specific areas to explore with you.";
 
-        private readonly DialogSet dialogs;
-        private BotState _userState;
-        private BotAccessors _botAccessors;
+        private DialogManager DialogManager;
         //Hey there!
 
+        public IBotServices Services { get; }
+
         // Initializes a new instance of the "WelcomeUserBot" class.
-        public BenBot(UserState userState, BotAccessors botAccessors, ActiveLeadDialog activeLeadDialog)
+        public BenBot(IBotServices services, UserProfileDialog userProfileDialog, ActiveLeadDialog activeLeadDialog)
         {
-            _userState = userState;
-            _botAccessors = botAccessors;
+            Services = services;
 
-            dialogs = new DialogSet(_botAccessors.DialogStateAccessor);
-
-            dialogs.Add(new UserProfileDialog(userState));
-            dialogs.Add(activeLeadDialog);
+            DialogManager = new DialogManager(activeLeadDialog);
         }
 
 
@@ -53,31 +49,13 @@ namespace ADS.Bot.V1.Bots
 
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {
-            var userDataAccessor = _userState.CreateProperty<UserProfile>(nameof(UserProfile));
-            var userData = await userDataAccessor.GetAsync(turnContext, () => new UserProfile(), cancellationToken);
-            
-            
-            var dialogContext = await dialogs.CreateContextAsync(turnContext, cancellationToken);
+            var userProfile = await Services.GetUserProfileAsync(turnContext, cancellationToken);
 
-            
-            if (dialogContext.ActiveDialog != null)
-            {
-                var turnResult = await dialogContext.ContinueDialogAsync(cancellationToken);
-            }
-            else
-            {
-                if (!userData.IsRegistered)
-                {
-                    await dialogContext.BeginDialogAsync(nameof(UserProfileDialog));
-                }
-                else
-                {
-                    await dialogContext.BeginDialogAsync(nameof(ActiveLeadDialog));
-                }
-            }
+            //Let the manager handle passing our message to the one-and-only dialog
+            await DialogManager.OnTurnAsync(turnContext, cancellationToken);
 
             // Save any state changes.
-            await _userState.SaveChangesAsync(turnContext);
+            await Services.UserProfileAccessor.SetAsync(turnContext, userProfile, cancellationToken);
         }
 
         /*private static async Task SendIntroCardAsync(ITurnContext turnContext, CancellationToken cancellationToken)

@@ -8,6 +8,7 @@ using ADS.Bot1.Dialogs;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Bot.Builder;
+using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Integration.AspNet.Core;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -34,18 +35,19 @@ namespace ADS.Bot1
 
             // Create the User state. (Used in this bot's Dialog implementation.)
             services.AddSingleton<UserState>();
+            services.AddSingleton<ConversationState>();
 
             // Create the bot services (LUIS, QnA) as a singleton.
             services.AddSingleton<IBotServices, BotServices>();
 
-            services.AddSingleton<BotAccessors>();
-
             // Create the Conversation state. (Used by the Dialog system itself.)
-            services.AddSingleton<ConversationState>();
 
+            services.AddSingleton<UserProfileDialog>();
             services.AddSingleton<ActiveLeadDialog>();
+
             services.AddSingleton<VehicleProfileDialog>();
             services.AddSingleton<ValueTradeInDialog>();
+            services.AddSingleton<FinanceDialog>();
 
             // The Dialog that will be run by the bot.
             //services.AddSingleton<MainDialog>();
