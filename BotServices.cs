@@ -37,6 +37,13 @@ namespace ADS.Bot1
                 }
             };
 
+            var qnaMaker = new QnAMaker(new QnAMakerEndpoint
+            {
+                KnowledgeBaseId = configuration["qna:QnAKnowledgebaseId"],
+                EndpointKey = configuration["qna:QnAEndpointKey"],
+                Host = configuration["qna:QnAEndpointHostName"]
+            },null,httpClient);
+
             Dispatch = new LuisRecognizer(recognizerOptions);
             ConversationState = conversationState;
             UserState = userState;

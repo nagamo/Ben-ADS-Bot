@@ -82,7 +82,8 @@ namespace ADS.Bot.V1.Dialogs
                                             },
                                             new BeginDialog(nameof(FinanceDialog))
                                         }
-                                    }
+                                    },
+
                                 },
                                 Default = new List<Dialog>()
                                 {
@@ -132,7 +133,7 @@ namespace ADS.Bot.V1.Dialogs
                     },
                     new OnIntent("Purchasing")
                     {
-                        Condition = "#Vehicle.Score >= 0.8",
+                        Condition = "#Purchasing.Score >= 0.8",
                         Actions = new List<Dialog>()
                         {
                             new BeginDialog(nameof(VehicleProfileDialog))
@@ -163,7 +164,18 @@ namespace ADS.Bot.V1.Dialogs
                     },
                     new OnUnknownIntent()
                     {
-                        Actions = new List<Dialog>()
+                        var httpClient = _httpClientFactory.CreateClient();
+
+            var qnaMaker = new QnAMaker(new QnAMakerEndpoint
+            {
+                KnowledgeBaseId = _configuration["QnAKnowledgebaseId"],
+                EndpointKey = _configuration["QnAEndpointKey"],
+                Host = _configuration["QnAEndpointHostName"]
+            },
+            null,
+            httpClient);
+
+            Actions = new List<Dialog>()
                         {
                             new SendActivity("OK, you totally lost me! Give it another shot, will ya??")
                         }
