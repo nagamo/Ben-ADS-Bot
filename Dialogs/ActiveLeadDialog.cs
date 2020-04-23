@@ -165,9 +165,11 @@ namespace ADS.Bot.V1.Dialogs
                     },
                     new OnUnknownIntent()
                     {
- 
-            Actions = new List<Dialog>()
+                        Actions = new List<Dialog>()
                         {
+                            //Remember, this part isn't "Code" per-se, more a data definition of the actions to bot should take
+                            //And the CodeAction() block is how you execute code instead of pre-built actions.
+                            //QNAFallback is defined below where we actually ready out to the QNA service for the response.
                             new CodeAction(QNAFallback),
                             //new SendActivity("OK, you totally lost me! Give it another shot, will ya??")
                         }
@@ -186,7 +188,8 @@ namespace ADS.Bot.V1.Dialogs
 
         public async Task<DialogTurnResult> QNAFallback(DialogContext context, object something)
         {
-            if (Services.LeadQualQnA != null)
+            //This uses the QNA object instantiated in BotServices
+            if (Services.SampleQnA != null)
             {
                 var results = await Services.LeadQualQnA.GetAnswersAsync(context.Context);
                 if (results.Any())
