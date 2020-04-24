@@ -51,10 +51,12 @@ namespace ADS.Bot.V1.Dialogs
                             },
                             new ChoiceInput()
                             {
-                                Prompt = new ActivityTemplate("Hey there! What can I help you with?."),
+                                Prompt = new ActivityTemplate("I want to provide you with the best service possible! " +
+                                                              "Just select one of the easy-click options below, or " + 
+                                                              "type a request directly into the text box."),
                                 AlwaysPrompt = true,
                                 AllowInterruptions =  "true",
-                                MaxTurnCount = 1,
+                                //MaxTurnCount = 1,
                                 Property = "turn.interest",
                                 Choices = new ChoiceSet(new List<Choice>()
                                 {

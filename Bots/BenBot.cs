@@ -15,10 +15,7 @@ namespace ADS.Bot.V1.Bots
     public class BenBot : ActivityHandler
     {
         // General messages sent to the user.
-        private const string WelcomeMessage = "Hey there! I'm Chad, and though I'm not human, I think I can be very helpful! " +
-                        "At any time, type in a question and I'll do my best to answer. You can also opt out at any point by simply " +
-                        "typing 'Quit', or 'Cancel' or 'Stop' or any phrase that gets the point across! I love talking shop, " +
-                        "so if you ask about financing or trade-ins, I've got some specific areas to explore with you.";
+        private const string WelcomeMessage = "Hey there! I'm Chad. Welcome!";
 
         private DialogManager DialogManager;
         //Hey there!
@@ -51,7 +48,8 @@ namespace ADS.Bot.V1.Bots
 
             await Services.UserProfileAccessor.SetAsync(turnContext, userProfile, cancellationToken);
         }
-
+        
+        // This is the primary message handler
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {
             var userProfile = await Services.GetUserProfileAsync(turnContext, cancellationToken);
