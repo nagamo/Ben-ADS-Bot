@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <LangVersion>latest</LangVersion>
+    <AssemblyName>ADS-Bot-V1</AssemblyName>
+    <RootNamespace>ADS.Bot.V1</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
