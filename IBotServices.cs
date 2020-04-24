@@ -14,9 +14,6 @@ namespace ADS.Bot1
 {
     public interface IBotServices
     {
-        ConversationState ConversationState { get; }
-        UserState UserState { get; }
-
         IStatePropertyAccessor<UserProfile> UserProfileAccessor { get; }
         IStatePropertyAccessor<DialogState> DialogStateAccessor { get; }
 

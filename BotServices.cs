@@ -59,9 +59,11 @@ namespace ADS.Bot1
 
         public IStatePropertyAccessor<UserProfile> UserProfileAccessor { get; private set; }
         public IStatePropertyAccessor<DialogState> DialogStateAccessor { get; private set; }
+
         public IConfiguration Configuration { get; }
-        public ConversationState ConversationState { get; private set; }
-        public UserState UserState { get; private set; }
+
+        private ConversationState ConversationState { get; set; }
+        private UserState UserState { get; set; }
 
         public async Task<UserProfile> GetUserProfileAsync(ITurnContext turnContext, CancellationToken cancellationToken)
         {
