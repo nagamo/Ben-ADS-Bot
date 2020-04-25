@@ -7,6 +7,7 @@ using Microsoft.Bot.Builder.AI.QnA;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Configuration;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -33,6 +34,7 @@ namespace ADS.Bot1
 
         public QnAMaker LeadQualQnA { get; private set; }
 
+        public IStatePropertyAccessor<Dictionary<string, object>> GenericUserProfileAccessor { get; private set; }
         public IStatePropertyAccessor<UserProfile> UserProfileAccessor { get; private set; }
         public IStatePropertyAccessor<DialogState> DialogStateAccessor { get; private set; }
 

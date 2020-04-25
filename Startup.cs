@@ -12,15 +12,21 @@ using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Integration.AspNet.Core;
 using Microsoft.Extensions.DependencyInjection;
-
+using System.Configuration;
+using Microsoft.Bot.Connector;
+using Microsoft.Bot.Builder.Azure;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Configuration;
 
 namespace ADS.Bot1
 {
     public class Startup
     {
-        public Startup()
+        public IConfiguration Configuration { get; }
+
+        public Startup(IConfiguration configuration)
         {
+            Configuration = configuration;
         }
 
         // This method gets called by the runtime. Use this method to add services to the container.
@@ -32,8 +38,17 @@ namespace ADS.Bot1
             services.AddSingleton<IBotFrameworkHttpAdapter, AdapterWithErrorHandler>();
 
             // Create the storage we'll be using for User and Conversation state. (Memory is great for testing purposes.)
-            services.AddSingleton<IStorage, MemoryStorage>();
-
+            var dbConnectionString = Configuration.GetConnectionString("UserData");
+            if(dbConnectionString != null)
+            {
+                services.AddSingleton<IStorage>(new AzureBlobStorage(dbConnectionString, "bottest"));
+            }
+            else
+            {
+                services.AddSingleton<IStorage, MemoryStorage>();
+            }
+            
+            
             // Create the User and Conversation State
             services.AddSingleton<UserState>();
             services.AddSingleton<ConversationState>();
