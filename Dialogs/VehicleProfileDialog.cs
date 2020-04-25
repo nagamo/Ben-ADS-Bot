@@ -27,26 +27,27 @@ namespace ADS.Bot.V1.Dialogs
                 GoalsStep,
                 ValidateGoalsStep,
 
-                InterestStep,
-                ValidateInterestStep,
+                NewUsedStep,
+                ValidateNewUsedStep,
+
+               //InterestStep,
+                //ValidateInterestStep,
 
                 VehicleTypeStep,
                 ValidateTypeStep,
 
-                VehicleBrandStep,
-                ValidateVehicleBrancStep,
+                VehicleMakeStep,
+                ValidateVehicleMakeStep,
 
-                NewUsedStep,
-                ValidateNewUsedStep,
+                VehicleModelStep,
+                ValidateVehicleModelStep,
 
-                BudgetStep,
-                ValidateBudgetStep,
+                //NeedFinancingStep,
+                //ExecuteFinancingStep,
 
-                NeedFinancingStep,
-                ExecuteFinancingStep,
-
-                TradingInStep,
-                ExecuteTradingInStep,
+                VehicleColorStep,
+                ValidateVehicleColorStep,
+                //ExecuteTradingInStep,
 
                 FinalizeStep
             };
@@ -90,22 +91,27 @@ namespace ADS.Bot.V1.Dialogs
             if (!string.IsNullOrEmpty(userData.VehicleProfile.Goals)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
 
-            var goalOptions = Utilities.CreateOptions(new string[] { "Buy", "Lease", "Not Sure" }, "What are you looking to do?");
-            return await stepContext.PromptAsync(nameof(ChoicePrompt), goalOptions, cancellationToken);
+            //var goalOptions = Utilities.CreateOptions(new string[] { "Buy", "Lease", "Not Sure" }, "What are you looking to do?");
+            //return await stepContext.PromptAsync(nameof(ChoicePrompt), goalOptions, cancellationToken);
+            return await stepContext.PromptAsync(nameof(TextPrompt), new PromptOptions
+            {
+                Prompt = MessageFactory.Text("So, before we dive into the details, " + userData.Name + ", can you give me some sense of your goals? " +
+                                             "For instance, are you seriously looking to buy / lease? Maybe just browsing? Come on, spill the beans!")
+            });
         }
 
         private async Task<DialogTurnResult> ValidateGoalsStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
             if (stepContext.Result != null)
-                userData.VehicleProfile.Goals = Utilities.ReadChoiceWithManual(stepContext);
-
+                //userData.VehicleProfile.Goals = Utilities.ReadChoiceWithManual(stepContext);
+                userData.VehicleProfile.Goals = (string)stepContext.Result;
             return await stepContext.NextAsync();
         }
 
 
 
-        private async Task<DialogTurnResult> InterestStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        /*private async Task<DialogTurnResult> InterestStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
             if (!string.IsNullOrEmpty(userData.VehicleProfile.LevelOfInterest)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
@@ -123,7 +129,7 @@ namespace ADS.Bot.V1.Dialogs
                 userData.VehicleProfile.LevelOfInterest = Utilities.ReadChoiceWithManual(stepContext);
 
             return await stepContext.NextAsync();
-        }
+        }*/
 
 
 
@@ -134,7 +140,8 @@ namespace ADS.Bot.V1.Dialogs
 
 
 
-            var typeOptions = Utilities.CreateOptions(new string[] { "SUV", "Sedan", "Pickup", "EV", "Other" }, "What kind of vehicle are you interested in?");
+            var typeOptions = Utilities.CreateOptions(new string[] { "SUV", "Sedan", "Pickup", "EV", "Other" }, "Thanks! So, let's get started, shall we? " +
+                                                      "First of all, What kind of vehicle are you primarily interested in?");
             return await stepContext.PromptAsync(nameof(ChoicePrompt), typeOptions, cancellationToken);
         }
 
@@ -148,29 +155,6 @@ namespace ADS.Bot.V1.Dialogs
         }
 
 
-
-        private async Task<DialogTurnResult> VehicleBrandStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
-        {
-            var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
-            if (!string.IsNullOrEmpty(userData.VehicleProfile.Brand)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
-
-
-
-            var brandOptions = Utilities.CreateOptions(new string[] { "Chevrolet", "Toyota", "Honda" }, "What brand are you looking for?");
-            return await stepContext.PromptAsync(nameof(ChoicePrompt), brandOptions, cancellationToken);
-        }
-
-        private async Task<DialogTurnResult> ValidateVehicleBrancStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
-        {
-            var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
-            if (stepContext.Result != null)
-                userData.VehicleProfile.Brand = Utilities.ReadChoiceWithManual(stepContext);
-
-            return await stepContext.NextAsync();
-        }
-
-
-
         private async Task<DialogTurnResult> NewUsedStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
@@ -178,8 +162,9 @@ namespace ADS.Bot.V1.Dialogs
 
 
 
-            var brandOptions = Utilities.CreateOptions(new string[] { "New", "Used", "Certified Pre-Owned" }, "Looking to buy new or used?");
-            return await stepContext.PromptAsync(nameof(ChoicePrompt), brandOptions, cancellationToken);
+            var newusedOptions = Utilities.CreateOptions(new string[] { "Yes!", "Nah", "Not sure" },
+                                                        "OK, cool! Are you after that brand-new smell?");
+            return await stepContext.PromptAsync(nameof(ChoicePrompt), newusedOptions, cancellationToken);
         }
 
         private async Task<DialogTurnResult> ValidateNewUsedStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
@@ -193,84 +178,117 @@ namespace ADS.Bot.V1.Dialogs
 
 
 
-        private async Task<DialogTurnResult> BudgetStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        private async Task<DialogTurnResult> VehicleMakeStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
-            if (!string.IsNullOrEmpty(userData.VehicleProfile.Budget)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
+            if (!string.IsNullOrEmpty(userData.VehicleProfile.Make)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
 
 
-            var brandOptions = Utilities.CreateOptions(new string[] { "< $1000", "$1000-5000", "$5000+" }, "Roughly what is your budget?");
-            return await stepContext.PromptAsync(nameof(ChoicePrompt), brandOptions, cancellationToken);
+            var makeOptions = Utilities.CreateOptions(new string[] { "Chevrolet", "Toyota", "Honda", "GMC", "Dodge", "Ford" }, 
+                                                       "What manufacturer really floats your boat?");
+            return await stepContext.PromptAsync(nameof(ChoicePrompt), makeOptions, cancellationToken);
         }
 
-        private async Task<DialogTurnResult> ValidateBudgetStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        private async Task<DialogTurnResult> ValidateVehicleMakeStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
             if (stepContext.Result != null)
-                userData.VehicleProfile.Budget = Utilities.ReadChoiceWithManual(stepContext);
+                userData.VehicleProfile.Make = Utilities.ReadChoiceWithManual(stepContext);
 
             return await stepContext.NextAsync();
         }
 
-
-
-        private async Task<DialogTurnResult> NeedFinancingStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        private async Task<DialogTurnResult> VehicleModelStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
-            if (userData.VehicleProfile.NeedFinancing != null) return await stepContext.NextAsync(cancellationToken: cancellationToken);
+            if (!string.IsNullOrEmpty(userData.VehicleProfile.Model)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
+            //var modelOptions = Utilities.CreateOptions(new string[] { "< $1000", "$1000-5000", "$5000+" }, "Roughly what is your budget?");
 
-
-            var financeOptions = Utilities.CreateOptions(new string[] { "Yes", "No" }, "Do you need financing?");
-            return await stepContext.PromptAsync(nameof(ChoicePrompt), financeOptions, cancellationToken);
-        }
-
-        private async Task<DialogTurnResult> ExecuteFinancingStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
-        {
-            var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
-            if (stepContext.Result != null)
-                userData.VehicleProfile.NeedFinancing = Utilities.ReadChoiceWithManual(stepContext).Equals("yes", StringComparison.OrdinalIgnoreCase);
-
-            if (userData.VehicleProfile.NeedFinancing ?? false)
+            return await stepContext.PromptAsync(nameof(TextPrompt), new PromptOptions
             {
-                return await stepContext.BeginDialogAsync(nameof(FinanceDialog));
-            }
-            else
-            {
-                return await stepContext.NextAsync();
-            }
+                Prompt = MessageFactory.Text("OK, sounds good to me! If you've got a particular model in mind, go ahead and let me know. ")
+            });
+
+            //return await stepContext.PromptAsync(nameof(ChoicePrompt), brandOptions, cancellationToken);
         }
 
-
-
-        private async Task<DialogTurnResult> TradingInStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
-        {
-            var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
-            if (userData.VehicleProfile.TradingIn != null) return await stepContext.NextAsync(cancellationToken: cancellationToken);
-
-
-
-            var tradeinOptions = Utilities.CreateOptions(new string[] { "Yes", "No" }, "Will you be trading in your current vehicle?");
-            return await stepContext.PromptAsync(nameof(ChoicePrompt), tradeinOptions, cancellationToken);
-        }
-
-        private async Task<DialogTurnResult> ExecuteTradingInStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        private async Task<DialogTurnResult> ValidateVehicleModelStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
             if (stepContext.Result != null)
-                userData.VehicleProfile.TradingIn = Utilities.ReadChoiceWithManual(stepContext).Equals("yes", StringComparison.OrdinalIgnoreCase);
-
-            if (userData.VehicleProfile.TradingIn ?? false)
-            {
-                return await stepContext.BeginDialogAsync(nameof(ValueTradeInDialog));
-            }
-            else
-            {
-                return await stepContext.NextAsync();
-            }
+                //userData.VehicleProfile.Goals = Utilities.ReadChoiceWithManual(stepContext);
+                userData.VehicleProfile.Model = (string)stepContext.Result;
+            return await stepContext.NextAsync();
         }
 
+
+        private async Task<DialogTurnResult> VehicleColorStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        {
+            var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
+            if (!string.IsNullOrEmpty(userData.VehicleProfile.Color)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
+
+            return await stepContext.PromptAsync(nameof(TextPrompt), new PromptOptions
+            {
+                Prompt = MessageFactory.Text("Last Question! Got a color in mind?")
+            });
+        }
+
+        private async Task<DialogTurnResult> ValidateVehicleColorStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        {
+            var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
+
+            if (stepContext.Result != null)
+                userData.VehicleProfile.Color = (string)stepContext.Result;
+            return await stepContext.NextAsync();
+        }
+
+        /*private async Task<DialogTurnResult> ExecuteFinancingStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+         {
+             var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
+             if (stepContext.Result != null)
+                 userData.VehicleProfile.NeedFinancing = Utilities.ReadChoiceWithManual(stepContext).Equals("yes", StringComparison.OrdinalIgnoreCase);
+
+             if (userData.VehicleProfile.NeedFinancing ?? false)
+             {
+                 return await stepContext.BeginDialogAsync(nameof(FinanceDialog));
+             }
+             else
+             {
+                 return await stepContext.NextAsync();
+             }
+         }
+
+
+
+         private async Task<DialogTurnResult> TradingInStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+         {
+             var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
+             if (userData.VehicleProfile.TradingIn != null) return await stepContext.NextAsync(cancellationToken: cancellationToken);
+
+
+
+             var tradeinOptions = Utilities.CreateOptions(new string[] { "Yes", "No" }, "Will you be trading in your current vehicle?");
+             return await stepContext.PromptAsync(nameof(ChoicePrompt), tradeinOptions, cancellationToken);
+         }
+
+         private async Task<DialogTurnResult> ExecuteTradingInStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+         {
+             var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
+             if (stepContext.Result != null)
+                 userData.VehicleProfile.TradingIn = Utilities.ReadChoiceWithManual(stepContext).Equals("yes", StringComparison.OrdinalIgnoreCase);
+
+             if (userData.VehicleProfile.TradingIn ?? false)
+             {
+                 return await stepContext.BeginDialogAsync(nameof(ValueTradeInDialog));
+             }
+             else
+             {
+                 return await stepContext.NextAsync();
+             }
+         }
+         */
 
 
         private async Task<DialogTurnResult> FinalizeStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
@@ -279,17 +297,16 @@ namespace ADS.Bot.V1.Dialogs
 
             var lines = new List<string>
             {
-                $"Thanks {userData.Name}! I got these details for you.",
-                $"I hope it's correct becuase I don't reset yet! :)",
-                $"Goals: {userData.VehicleProfile.Goals}",
-                $"Urgency: {userData.VehicleProfile.LevelOfInterest}",
-                $"Type: {userData.VehicleProfile.Type}",
-                $"Brand: {userData.VehicleProfile.Brand}",
-                $"New/Used: {userData.VehicleProfile.NewUsed}",
-                $"Budget: {userData.VehicleProfile.Budget}"
+                $"Thanks {userData.Name}! Let's summarize:",
+                $"Your basic goals: {userData.VehicleProfile.Goals}",
+                $"Looking for a new vehicle: {userData.VehicleProfile.NewUsed}",
+                $"Type of vehicle: {userData.VehicleProfile.Type}",
+                $"And you're obviously a '{userData.VehicleProfile.Make}' person!",
+                $"Interested in a:  {userData.VehicleProfile.Model}",
+                $"Preferably in: {userData.VehicleProfile.Color}"
             };
 
-            lines.Add($"Financing?: {userData.VehicleProfile.NeedFinancing}");
+            /*lines.Add($"Financing?: {userData.VehicleProfile.NeedFinancing}");
             if (userData.VehicleProfile.NeedFinancing ?? false)
             {
                 lines.Add($"Credit Score: {userData.Financing.CreditScore}");
@@ -305,7 +322,7 @@ namespace ADS.Bot.V1.Dialogs
                 lines.Add($"Model: {userData.TradeDetails.Model}");
                 lines.Add($"Year: {userData.TradeDetails.Year}");
                 lines.Add($"Condition: {userData.TradeDetails.Condition}");
-            }
+            }*/
 
             await stepContext.Context.SendActivityAsync(MessageFactory.Text(string.Join(Environment.NewLine, lines)), cancellationToken);
 

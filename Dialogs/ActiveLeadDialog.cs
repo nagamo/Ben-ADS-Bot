@@ -63,15 +63,15 @@ namespace ADS.Bot.V1.Dialogs
                                 Cases = new List<Case>()
                                 {
                                     //Just copied from below as a quick fix, ideally this would all be in the financing dialog itself.
-                                    new Case("Financing")
+                                    new Case("Explore Financing")
                                     {
                                         Actions = VerifyProfile(nameof(FinanceDialog))
                                     },
-                                    new Case("Purchasing")
+                                    new Case("Identify a Vehicle")
                                     {
                                         Actions = VerifyProfile(nameof(VehicleProfileDialog))
                                     },
-                                    new Case("Trade-In")
+                                    new Case("Value a Trade-In")
                                     {
                                         Actions = VerifyProfile(nameof(ValueTradeInDialog))
                                     },

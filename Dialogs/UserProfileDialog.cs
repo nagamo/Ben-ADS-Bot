@@ -70,7 +70,7 @@ namespace ADS.Bot1.Dialogs
         {
             return await stepContext.PromptAsync(PROMPT_Name, new PromptOptions
             {
-                Prompt = MessageFactory.Text("So, first things first. Can I get your name, please?"),
+                Prompt = MessageFactory.Text("So, first of all - I can't keep saying 'hey you'! Can I get your name, please?"),
                 RetryPrompt = MessageFactory.Text("Seriously? I may be a bot, but I'm pretty sure that's not a name! Give it another go, will ya?")
             }, cancellationToken);
         }
@@ -149,7 +149,7 @@ namespace ADS.Bot1.Dialogs
             //var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
 
             await stepContext.Context.SendActivityAsync($"You're the cat's pyjamas, {userData.Details.Name}!");
-            await stepContext.Context.SendActivityAsync("And now that we know a little about you, let's get that trade valued!");
+            await stepContext.Context.SendActivityAsync("And now, without further ado - onto your destination!");
 
             return await stepContext.EndDialogAsync(null, cancellationToken);
         }
