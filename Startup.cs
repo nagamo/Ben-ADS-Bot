@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using ADS.Bot.V1.Bots;
+using ADS.Bot.V1.Cards;
 using ADS.Bot.V1.Dialogs;
 using ADS.Bot1.Bots;
 using ADS.Bot1.Dialogs;
@@ -38,7 +39,10 @@ namespace ADS.Bot1
             services.AddSingleton<ConversationState>();
 
             // Create the bot services (LUIS, QnA) as a singleton.
-            services.AddSingleton<IBotServices, BotServices>();
+            services.AddSingleton<IBotServices, Services>();
+
+            services.AddSingleton<ProfileCardFactory>();
+            services.AddSingleton<SendAdaptiveDialog<ProfileCardFactory, BasicDetails>>();
 
             // Create the various dialogs
             services.AddSingleton<UserProfileDialog>();

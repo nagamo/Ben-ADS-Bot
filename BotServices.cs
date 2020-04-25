@@ -12,9 +12,9 @@ using System.Threading.Tasks;
 
 namespace ADS.Bot1
 {
-    public class BotServices : IBotServices
+    public class Services : IBotServices
     {
-        public BotServices(IConfiguration configuration, ConversationState conversationState, UserState userState)
+        public Services(IConfiguration configuration, ConversationState conversationState, UserState userState)
         {
             // Read the setting for cognitive services (LUIS, QnA) from the appsettings.json
             // If includeApiResults is set to true, the full response from the LUIS api (LuisResult)

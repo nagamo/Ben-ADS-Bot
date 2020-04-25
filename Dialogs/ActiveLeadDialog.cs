@@ -16,12 +16,24 @@ using System.Threading;
 using Microsoft.Bot.Builder.Dialogs.Adaptive.Input;
 using Microsoft.Bot.Builder.Dialogs.Adaptive.Templates;
 using Microsoft.Bot.Builder.Dialogs.Choices;
+using Microsoft.Bot.Schema;
+using ADS.Bot.V1.Cards;
+using Newtonsoft.Json.Linq;
 
 namespace ADS.Bot.V1.Dialogs
 {
     public class ActiveLeadDialog : ComponentDialog
     {
-        public ActiveLeadDialog(VehicleProfileDialog vehicleDialog, ValueTradeInDialog tradeInDialog, FinanceDialog financeDialog, UserProfileDialog userProfileDialog, IBotServices botServices) 
+
+        List<ICardFactory> CardFactories = new List<ICardFactory>();
+
+        public ActiveLeadDialog(
+            VehicleProfileDialog vehicleDialog, 
+            ValueTradeInDialog tradeInDialog, 
+            FinanceDialog financeDialog, 
+            UserProfileDialog userProfileDialog, 
+            ProfileCardFactory profileFactory,
+            IBotServices botServices) 
             : base(nameof(ActiveLeadDialog))
         {
             Services = botServices;
@@ -65,7 +77,10 @@ namespace ADS.Bot.V1.Dialogs
                                     //Just copied from below as a quick fix, ideally this would all be in the financing dialog itself.
                                     new Case("Financing")
                                     {
-                                        Actions = VerifyProfile(nameof(FinanceDialog))
+                                        Actions = new List<Dialog>()
+                                        {
+                                            Utilities.CardFactoryAction(profileFactory)
+                                        }
                                     },
                                     new Case("Purchasing")
                                     {
@@ -168,6 +183,8 @@ namespace ADS.Bot.V1.Dialogs
                 }
             };
 
+            CardFactories.Add(profileFactory);
+
             AddDialog(rootDialog);
             AddDialog(financeDialog);
             AddDialog(vehicleDialog);
@@ -179,8 +196,33 @@ namespace ADS.Bot.V1.Dialogs
 
         public async Task<DialogTurnResult> QNAFallback(DialogContext context, object something)
         {
+            if(context.Context.Activity.Text == null)
+            {
+                if(context.Context.Activity.Value is JObject cardResponse)
+                {
+                    var respondingFactoryID = cardResponse.Value<string>("card_id");
+                    var matchingFactory = CardFactories.SingleOrDefault(cf => cf.Id == respondingFactoryID);
+
+                    if (respondingFactoryID != null && matchingFactory != null)
+                    {
+                        if(await matchingFactory.OnValidateCard(cardResponse, context.Context))
+                        {
+                            await matchingFactory.OnFinalizeCard(cardResponse, context.Context);
+                        }
+                        else
+                        {
+                            await context.Context.SendActivityAsync("Looks like you have some errors. You should go back and fix those, and then just resubmit!");
+                        }
+                        
+                    }
+                    else
+                    {
+                        await context.Context.SendActivityAsync("Not sure where you came from...");
+                    }
+                }
+            }
             //This uses the QNA object instantiated in BotServices
-            if (Services.LeadQualQnA != null)
+            else if (Services.LeadQualQnA != null)
             {
                 var results = await Services.LeadQualQnA.GetAnswersAsync(context.Context);
                 if (results.Any())
