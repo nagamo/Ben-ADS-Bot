@@ -12,58 +12,61 @@
                     "items": [
                         {
                             "type": "TextBlock",
-                            "text": "Tell us about yourself",
+                            "text": "Value that Trade-In!",
                             "weight": "Bolder",
                             "size": "Medium",
                             "horizontalAlignment": "Center"
                         },
                         {
                             "type": "TextBlock",
-                            "text": "Whatever contact information you can provide would be appreciated! It'll help us stay in touch.",
+                            "text": "Tell us a little about the vehicle you're interested in trading in. Here today, gone tomorrow!",
                             "isSubtle": true,
                             "wrap": true
                         },
                         {
                             "type": "TextBlock",
-                            "text": "(Don't worry, we'll never share or sell your information) 👍",
-                            "isSubtle": true,
+                            "text": "Year",
+                            "wrap": true
+                        },
+                        {
+                            "type": "Input.Text",
+                            "id": "year",
+                            "placeholder": "enter year..."
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "Make",
                             "wrap": true,
-                            "size": "Small"
-                        },
-                        {
-                            "type": "TextBlock",
-                            "text": "Your name",
-                            "wrap": true
+                            "spacing": "Medium"
                         },
                         {
                             "type": "Input.Text",
-                            "id": "myName",
-                            "placeholder": "name"
+                            "placeholder": "enter make...",
+                            "id": "make"
                         },
                         {
                             "type": "TextBlock",
-                            "text": "Your email",
-                            "wrap": true
+                            "text": "Model",
+                            "spacing": "Medium"
                         },
                         {
                             "type": "Input.Text",
-                            "id": "myEmail",
-                            "placeholder": "youremail@example.com",
-                            "style": "Email"
+                            "id": "model",
+                            "placeholder": "enter model..."
                         },
                         {
                             "type": "TextBlock",
-                            "text": "Phone Number"
+                            "text": "Mileage",
+                            "spacing": "Medium"
                         },
                         {
                             "type": "Input.Text",
-                            "id": "myTel",
-                            "placeholder": "xxx.xxx.xxxx",
-                            "style": "Tel"
+                            "placeholder": "enter mileage...",
+                            "id": "mileage"
                         },
                         {
                             "type": "TextBlock",
-                            "text": "What's your focus?",
+                            "text": "Condition",
                             "spacing": "Medium"
                         },
                         {
@@ -71,50 +74,38 @@
                             "placeholder": "Placeholder text",
                             "choices": [
                                 {
-                                    "title": "Just browsing",
+                                    "title": "Excellent",
                                     "value": "1"
                                 },
                                 {
-                                    "title": "Looking to buy or lease",
+                                    "title": "Good",
                                     "value": "2"
                                 },
                                 {
-                                    "title": "Derpends on what I see",
+                                    "title": "Fair",
                                     "value": "3"
+                                },
+                                {
+                                    "title": "Rough",
+                                    "value": "4"
                                 }
                             ],
                             "style": "expanded",
-                            "id": "interest",
-                            "spacing": "Small"
+                            "id": "condition"
                         },
                         {
                             "type": "TextBlock",
-                            "text": "What's your timeframe?",
+                            "text": "Amount still owed",
                             "spacing": "Medium"
                         },
                         {
-                            "type": "Input.ChoiceSet",
-                            "placeholder": "Placeholder text",
-                            "choices": [
-                                {
-                                    "title": "ASAP",
-                                    "value": "1"
-                                },
-                                {
-                                    "title": "Within a week",
-                                    "value": "2"
-                                },
-                                {
-                                    "title": "Really not sure",
-                                    "value": "3"
-                                }
-                            ],
-                            "style": "expanded",
-                            "id": "timeframe",
-                            "spacing": "Small"
+                            "type": "Input.Number",
+                            "placeholder": "enter amount owed...",
+                            "id": "amountOwed"
                         },
                         {
                             "type": "ActionSet",
+                            "spacing": "Medium",
                             "actions": [
                                 {
                                     "type": "Action.Submit",
@@ -126,24 +117,22 @@
                                     "title": "Cancel",
                                     "id": "cancel"
                                 }
-                            ],
-                            "spacing": "Medium"
+                            ]
                         }
                     ]
                 },
                 {
                     "type": "Column",
-                    "width": "stretch",
+                    "width": "100px",
                     "items": [
                         {
-                            "type": "TextBlock",
-                            "text": ""
+                            "type": "Image",
+                            "url": "https://upload.wikimedia.org/wikipedia/commons/b/b2/Diver_Silhouette%2C_Great_Barrier_Reef.jpg",
+                            "size": "auto"
                         }
                     ]
                 }
-            ],
-            "horizontalAlignment": "Right",
-            "spacing": "None"
+            ]
         }
     ]
 }

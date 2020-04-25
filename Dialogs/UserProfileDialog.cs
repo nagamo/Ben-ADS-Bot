@@ -18,6 +18,9 @@ namespace ADS.Bot1.Dialogs
         const string PROMPT_Phone = "PhoneInput";
         const string PROMPT_Email = "EmailInput";
 
+        //trying to make user data available to all the prompts
+        UserProfile userData;
+
         public IBotServices Services { get; }
 
         public UserProfileDialog(IBotServices services)
@@ -39,6 +42,7 @@ namespace ADS.Bot1.Dialogs
 
                 FinalizeStepAsync
             };
+
 
             // Add named dialogs to the DialogSet. These names are saved in the dialog state.
             AddDialog(new WaterfallDialog(nameof(WaterfallDialog), waterfallSteps));
@@ -66,8 +70,8 @@ namespace ADS.Bot1.Dialogs
         {
             return await stepContext.PromptAsync(PROMPT_Name, new PromptOptions
             {
-                Prompt = MessageFactory.Text("Please enter your name."),
-                RetryPrompt = MessageFactory.Text("Is that really your name???")
+                Prompt = MessageFactory.Text("So, first things first. Can I get your name, please?"),
+                RetryPrompt = MessageFactory.Text("Seriously? I may be a bot, but I'm pretty sure that's not a name! Give it another go, will ya?")
             }, cancellationToken);
         }
 
@@ -80,7 +84,7 @@ namespace ADS.Bot1.Dialogs
 
         private async Task<DialogTurnResult> NameConfirmStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
+            userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
             userData.Details.Name = (string)stepContext.Result;
 
             return await stepContext.NextAsync(cancellationToken: cancellationToken);
@@ -91,9 +95,9 @@ namespace ADS.Bot1.Dialogs
 
         private async Task<DialogTurnResult> PhoneStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            return await stepContext.PromptAsync(PROMPT_Phone, new PromptOptions {
-                Prompt = MessageFactory.Text("Please enter your phone."),
-                RetryPrompt = MessageFactory.Text("I'm sorry, that doesn't appear to be a valid phone number.")
+             return await stepContext.PromptAsync(PROMPT_Phone, new PromptOptions {
+                Prompt = MessageFactory.Text("Great to meet you, " + userData.Name + "! Can I get your cell number in case we get disconnected?"),
+                RetryPrompt = MessageFactory.Text("Um, that seems wrong. Try again?")
             }, cancellationToken);
         }
 
@@ -119,8 +123,8 @@ namespace ADS.Bot1.Dialogs
         {
             return await stepContext.PromptAsync(PROMPT_Email, new PromptOptions
             {
-                Prompt = MessageFactory.Text("Please enter your email."),
-                RetryPrompt = MessageFactory.Text("I'm sorry, that doesn't appear to be a valid email address.")
+                Prompt = MessageFactory.Text("So far, so good, " + userData.Name + "! Now, could we get your email? And seriously, we won't pass it to anyone."),
+                RetryPrompt = MessageFactory.Text("Not to be critical, but I think that's invalid. Wanna give it another go?")
             }, cancellationToken);
         }
 
@@ -142,9 +146,10 @@ namespace ADS.Bot1.Dialogs
 
         private async Task<DialogTurnResult> FinalizeStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
+            //var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
 
-            await stepContext.Context.SendActivityAsync($"Thank you for confirming your details {userData.Details.Name}.");
+            await stepContext.Context.SendActivityAsync($"You're the cat's pyjamas, {userData.Details.Name}!");
+            await stepContext.Context.SendActivityAsync("And now that we know a little about you, let's get that trade valued!");
 
             return await stepContext.EndDialogAsync(null, cancellationToken);
         }
