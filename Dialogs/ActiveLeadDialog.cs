@@ -112,7 +112,8 @@ namespace ADS.Bot.V1.Dialogs
                                 Condition = "user.UserProfile == null",
                                 Actions = new List<Dialog>()
                                 {
-                                    new SendActivity("Sure! I'd love to help you with that, but I need to collect a few details first."),
+                                    new SendActivity("Financing it is! One of my favorite topics!But listen - could I collect a few " +
+                                                     "details first? Just some contact information, basically."),
                                     new BeginDialog(nameof(UserProfileDialog)),
                                 },
                                 ElseActions = new List<Dialog>()

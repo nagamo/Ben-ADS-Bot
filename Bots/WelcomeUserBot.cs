@@ -24,7 +24,7 @@ namespace ADS.Bot1.Bots
                         "typing 'Quit', or 'Cancel' or 'Stop' or any phrase that gets that point across! For your convenience, " +
                         "I've offered a few likely topics for easy selection. Feel free to select one of those.";
 
-        private const string InfoMessage = "You are seeing this message because the bot received at least one " +
+ /*       private const string InfoMessage = "You are seeing this message because the bot received at least one " +
                                             "'ConversationUpdate' event, indicating you (and possibly others) " +
                                             "joined the conversation. If you are using the emulator, pressing " +
                                             "the 'Start Over' button to trigger this event again. The specifics " +
@@ -32,7 +32,7 @@ namespace ADS.Bot1.Bots
                                             "read more information at: " +
                                             "https://aka.ms/about-botframework-welcome-user";
 
-     
+ */    
         private readonly DialogSet dialogs;
 
         // Initializes a new instance of the "WelcomeUserBot" class.
@@ -57,7 +57,7 @@ namespace ADS.Bot1.Bots
                 if (member.Id != turnContext.Activity.Recipient.Id)
                 {
                     await turnContext.SendActivityAsync(WelcomeMessage, cancellationToken: cancellationToken);
-                    await turnContext.SendActivityAsync(InfoMessage, cancellationToken: cancellationToken);
+ //                   await turnContext.SendActivityAsync(InfoMessage, cancellationToken: cancellationToken);
                     //await turnContext.SendActivityAsync(PatternMessage, cancellationToken: cancellationToken);
                 }
             }

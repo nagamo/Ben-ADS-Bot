@@ -1,0 +1,99 @@
+{
+    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+    "type": "AdaptiveCard",
+    "version": "1.0",
+    "body": [
+        {
+            "type": "ColumnSet",
+            "columns": [
+                {
+                    "type": "Column",
+                    "width": 2,
+                    "items": [
+                        {
+                            "type": "TextBlock",
+                            "text": "Search for a Vehicle",
+                            "weight": "Bolder",
+                            "size": "Medium",
+                            "horizontalAlignment": "Center"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "These are just the basics - we can deal with trim and options once we've narrowed things down.",
+                            "isSubtle": true,
+                            "wrap": true
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "Year",
+                            "wrap": true
+                        },
+                        {
+                            "type": "Input.Text",
+                            "id": "year",
+                            "placeholder": "year"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "Make",
+                            "wrap": true,
+                            "spacing": "Medium"
+                        },
+                        {
+                            "type": "Input.Text",
+                            "placeholder": "make",
+                            "id": "make"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "Model",
+                            "spacing": "Medium"
+                        },
+                        {
+                            "type": "Input.Text",
+                            "id": "model",
+                            "placeholder": "model"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "Color",
+                            "spacing": "Medium"
+                        },
+                        {
+                            "type": "Input.Text",
+                            "placeholder": "color",
+                            "id": "color"
+                        },
+                        {
+                            "type": "ActionSet",
+                            "spacing": "Medium",
+                            "actions": [
+                                {
+                                    "type": "Action.Submit",
+                                    "title": "Submit",
+                                    "id": "submit"
+                                },
+                                {
+                                    "type": "Action.Submit",
+                                    "title": "Cancel",
+                                    "id": "cancel"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "Column",
+                    "width": 1,
+                    "items": [
+                        {
+                            "type": "Image",
+                            "url": "https://upload.wikimedia.org/wikipedia/commons/b/b2/Diver_Silhouette%2C_Great_Barrier_Reef.jpg",
+                            "size": "auto"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
