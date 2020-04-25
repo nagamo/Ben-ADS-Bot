@@ -16,28 +16,6 @@ namespace ADS.Bot1
     {
         public Services(IConfiguration configuration, ConversationState conversationState, UserState userState)
         {
-            // Read the setting for cognitive services (LUIS, QnA) from the appsettings.json
-            // If includeApiResults is set to true, the full response from the LUIS api (LuisResult)
-            // will be made available in the properties collection of the RecognizerResult
-
-            var luisApplication = new LuisApplication(
-                configuration["luis:id"],
-                configuration["luis:endpointKey"],
-                configuration["luis:endpoint"]);
-
-            // Set the recognizer options depending on which endpoint version you want to use.
-            // More details can be found in https://docs.microsoft.com/en-gb/azure/cognitive-services/luis/luis-migration-api-v3
-            var recognizerOptions = new LuisRecognizerOptionsV2(luisApplication)
-            {
-                IncludeAPIResults = true,
-                PredictionOptions = new LuisPredictionOptions()
-                {
-                    IncludeAllIntents = true,
-                    IncludeInstanceData = true
-                }
-            };
-
-            Dispatch = new LuisRecognizer(recognizerOptions);
             Configuration = configuration;
             ConversationState = conversationState;
             UserState = userState;
@@ -45,7 +23,6 @@ namespace ADS.Bot1
             UserProfileAccessor = UserState.CreateProperty<UserProfile>(nameof(UserProfile));
             DialogStateAccessor = ConversationState.CreateProperty<DialogState>(nameof(DialogState));
 
-            
             LeadQualQnA = new QnAMaker(new QnAMakerEndpoint
             {
                 KnowledgeBaseId = configuration["qna:QnAKnowledgebaseId"],
@@ -54,7 +31,6 @@ namespace ADS.Bot1
             });
         }
 
-        public LuisRecognizer Dispatch { get; private set; }
         public QnAMaker LeadQualQnA { get; private set; }
 
         public IStatePropertyAccessor<UserProfile> UserProfileAccessor { get; private set; }

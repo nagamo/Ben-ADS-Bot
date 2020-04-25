@@ -7,6 +7,10 @@ namespace ADS.Bot.V1
 {
     public class Constants
     {
-        public const string Event_ShowTips = "ShowTips";
+        public const string Event_Help = "Help";
+
+        public const string Event_Cancel = "Cancel";
+
+        public const string Event_Card = "Card";
     }
 }

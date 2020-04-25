@@ -63,22 +63,25 @@ namespace ADS.Bot.V1
             };
         }
 
-        public static CodeAction CardFactoryAction<TModel>(ICardFactory<TModel> Factory)
+        public static List<Dialog> CardFactoryActions<TModel>(ICardFactory<TModel> Factory)
         {
-            return new CodeAction(async (context, obj) =>
+            return new List<Dialog>()
             {
-                var initData = Factory.Populate(context.Context);
-
-                var message = Activity.CreateMessageActivity();
-
-                message.Attachments = new List<Attachment>()
+                new CodeAction(async (context, obj) =>
                 {
-                    CreateAttachment(Factory.CreateCard(initData, context.Context))
-                };
-                await context.Context.SendActivityAsync(message);
+                    var initData = Factory.Populate(context.Context);
 
-                return new DialogTurnResult(DialogTurnStatus.Complete, null);
-            });
+                    var message = Activity.CreateMessageActivity();
+
+                    message.Attachments = new List<Attachment>()
+                    {
+                        CreateAttachment(Factory.CreateCard(initData, context.Context))
+                    };
+                    await context.Context.SendActivityAsync(message);
+
+                    return new DialogTurnResult(DialogTurnStatus.Complete, null);
+                })
+            };
         }
 
         public static bool AttemptParseCardResult<T>(ITurnContext context, out T result)

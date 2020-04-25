@@ -19,7 +19,6 @@ namespace ADS.Bot1
 
         IConfiguration Configuration { get; }
 
-        LuisRecognizer Dispatch { get; }
         QnAMaker LeadQualQnA { get; }
 
         Task<UserProfile> GetUserProfileAsync(ITurnContext turnContext, CancellationToken cancellationToken);
