@@ -144,10 +144,12 @@ namespace ADS.Bot.V1.Dialogs
 
         public async Task<DialogTurnResult> PrimaryHandler(DialogContext context, object data)
         {
+            //Check if we have an object payload, which comes from cards
             if(context.Context.Activity.Text == null && context.Context.Activity.Value is JObject cardResponse)
             {
                 await ProcessCardResponse(cardResponse, context, data);
             }
+            //Otherwise if we have a properly instantiated QnA service, hit that.
             else if (Services.LeadQualQnA != null)
             {
                 await ProcessDefaultResponse(context, data);
@@ -161,11 +163,14 @@ namespace ADS.Bot.V1.Dialogs
             return new DialogTurnResult(DialogTurnStatus.Complete, null);
         }
 
+        //response is json object of card data
         public async Task ProcessCardResponse(JObject response, DialogContext context, object data)
         {
+            //look at the card_id field, which has to be assigned on the submit button
             var respondingFactoryID = response.Value<string>("card_id");
             var matchingFactory = CardFactories.SingleOrDefault(cf => cf.Id == respondingFactoryID);
 
+            //If everything checks out validate it, and save if applicable
             if (respondingFactoryID != null && matchingFactory != null)
             {
                 if (await matchingFactory.OnValidateCard(response, context.Context))
@@ -185,17 +190,22 @@ namespace ADS.Bot.V1.Dialogs
 
         public async Task ProcessDefaultResponse(DialogContext context, object data)
         {
+            //Get Top QnA result
             var results = await Services.LeadQualQnA.GetAnswersAsync(context.Context);
             var topResult = results.FirstOrDefault();
             if (topResult != null)
             {
+                //Convert Metadata tags to dictionary for comparison
                 var resultTags = topResult.Metadata.ToDictionary(m => m.Name.ToLower(), m => m.Value);
                 if(resultTags.ContainsKey("event"))
                 {
+                    //emit arbitrary events based on an "event" metadata record
                     await context.EmitEventAsync(resultTags["event"]);
                 }
                 else if(resultTags.ContainsKey("card"))
                 {
+                    //emit card display event, based on the value of the "card" tag, if present
+                    //this causes the card to be displayed "independently" through the custom event handler
                     await context.EmitEventAsync(Constants.Event_Card, resultTags["card"]);
                 }
 
