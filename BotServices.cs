@@ -45,5 +45,10 @@ namespace ADS.Bot1
         {
             return await UserProfileAccessor.GetAsync(turnContext, () => new UserProfile(), cancellationToken);
         }
+
+        public async Task SetUserProfileAsync(UserProfile profile, ITurnContext turnContext, CancellationToken cancellationToken)
+        {
+            await UserProfileAccessor.SetAsync(turnContext, profile, cancellationToken);
+        }
     }
 }

@@ -126,6 +126,9 @@ namespace ADS.Bot.V1.Dialogs
                         Actions = new List<Dialog>()
                         {
                             new CodeAction(PrimaryHandler),
+#if DEBUG
+                            new TraceActivity()
+#endif
                         }
                     }
                 }

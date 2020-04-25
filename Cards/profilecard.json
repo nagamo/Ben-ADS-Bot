@@ -47,7 +47,11 @@
         {
             "type": "Action.Submit",
             "title": "Submit",
-            "style": "positive"
+            "style": "positive",
+            "data": {
+                "id": "submit",
+                "card_id": "JSONProfileCardFactory"
+            }
         }
     ]
 }

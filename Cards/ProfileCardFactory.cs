@@ -46,6 +46,12 @@ namespace ADS.Bot.V1.Cards
 
         internal override async Task DoFinalize(BasicDetails submission, ITurnContext context, CancellationToken cancellationToken)
         {
+            var currentProfiles = await Services.GetUserProfileAsync(context, cancellationToken);
+
+            currentProfiles.Details = submission;
+
+            await Services.SetUserProfileAsync(currentProfiles, context, cancellationToken);
+
             await context.SendActivityAsync("Thank you!", cancellationToken: cancellationToken);
         }
     }
