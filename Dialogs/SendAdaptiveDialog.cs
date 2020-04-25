@@ -42,7 +42,7 @@ namespace ADS.Bot1.Dialogs
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
             //TODO: pre-check user details, look if they already have details
             //many more options than just new()'ing at the start
-            var initData = CardFactory.Populate(stepContext.Context, cancellationToken);
+            var initData = await CardFactory.Populate(stepContext.Context, cancellationToken);
             var createdCard = CardFactory.CreateCard(initData, stepContext.Context, cancellationToken);
 
             await stepContext.Context.SendActivityAsync(MessageFactory.Attachment(Utilities.CreateAttachment(createdCard)));

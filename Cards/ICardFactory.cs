@@ -19,12 +19,12 @@ namespace ADS.Bot.V1.Cards
     public interface ICardFactory<TModel> : ICardFactory
     {
         public AdaptiveCard CreateCard(TModel startingData, ITurnContext context, CancellationToken cancellationToken = default);
-        public TModel Populate(ITurnContext context, CancellationToken cancellationToken = default);
+        virtual public Task<TModel> Populate(ITurnContext context, CancellationToken cancellationToken = default) { return default; }
 
 
 
-        internal Task<bool> Validate(TModel submission, ITurnContext context, CancellationToken cancellationToken = default);
-        internal Task Finalize(TModel submission, ITurnContext context, CancellationToken cancellationToken = default);
+        virtual internal async Task<bool> Validate(TModel submission, ITurnContext context, CancellationToken cancellationToken = default) { return true; }
+        virtual internal async Task Finalize(TModel submission, ITurnContext context, CancellationToken cancellationToken = default) { }
 
 
 

@@ -32,7 +32,7 @@ namespace ADS.Bot.V1.Dialogs
             ValueTradeInDialog tradeInDialog, 
             FinanceDialog financeDialog, 
             UserProfileDialog userProfileDialog, 
-            ProfileCardFactory profileFactory,
+            ICardFactory<BasicDetails> profileFactory,
             IBotServices botServices) 
             : base(nameof(ActiveLeadDialog))
         {

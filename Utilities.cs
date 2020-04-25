@@ -69,7 +69,7 @@ namespace ADS.Bot.V1
             {
                 new CodeAction(async (context, obj) =>
                 {
-                    var initData = Factory.Populate(context.Context);
+                    var initData = await Factory.Populate(context.Context);
 
                     var message = Activity.CreateMessageActivity();
 

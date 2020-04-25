@@ -41,8 +41,8 @@ namespace ADS.Bot1
             // Create the bot services (LUIS, QnA) as a singleton.
             services.AddSingleton<IBotServices, Services>();
 
-            services.AddSingleton<ProfileCardFactory>();
-            services.AddSingleton<SendAdaptiveDialog<ProfileCardFactory, BasicDetails>>();
+            services.AddSingleton<ICardFactory<BasicDetails>,JSONProfileCardFactory>();
+            //services.AddSingleton<SendAdaptiveDialog<ProfileCardFactory, BasicDetails>>();
 
             // Create the various dialogs
             services.AddSingleton<UserProfileDialog>();

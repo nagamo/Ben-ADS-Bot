@@ -5,12 +5,51 @@ using Microsoft.Bot.Schema;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace ADS.Bot.V1.Cards
 {
+    public class JSONProfileCardFactory : JSONCardFactory<BasicDetails>
+    {
+        public IBotServices Services { get; }
+
+        public JSONProfileCardFactory(IBotServices services)
+            : base(nameof(JSONProfileCardFactory), Path.Combine(".", "Cards", "profilecard.json"))
+        {
+            Services = services;
+        }
+
+        internal override async Task<BasicDetails> DoPopulate(ITurnContext context, CancellationToken cancellationToken = default)
+        {
+            var userProfile = await Services.GetUserProfileAsync(context, cancellationToken);
+
+            if(userProfile.Details == null)
+            {
+                userProfile.Details = new BasicDetails()
+                {
+                     Name = "Test",
+                     Phone = "Data",
+                     Email = "Saving"
+                };
+            }
+
+            return userProfile.Details;
+        }
+
+        internal override async Task<bool> DoValidate(BasicDetails submission, ITurnContext context, CancellationToken cancellationToken)
+        {
+            return submission.Name != "Test";
+        }
+
+        internal override async Task DoFinalize(BasicDetails submission, ITurnContext context, CancellationToken cancellationToken)
+        {
+            await context.SendActivityAsync("Thank you!", cancellationToken: cancellationToken);
+        }
+    }
+
     public class ProfileCardFactory : ICardFactory<BasicDetails>
     {
         public string Id { get => nameof(ProfileCardFactory); }

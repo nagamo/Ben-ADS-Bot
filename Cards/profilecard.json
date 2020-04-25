@@ -1,0 +1,53 @@
+﻿{
+    "type": "AdaptiveCard",
+    "body": [
+        {
+            "type": "TextBlock",
+            "size": "Medium",
+            "weight": "Bolder",
+            "id": "",
+            "text": "Name"
+        },
+        {
+            "type": "Input.Text",
+            "placeholder": "Placeholder text",
+            "id": "Name",
+            "value": "{Name}"
+        },
+        {
+            "type": "TextBlock",
+            "weight": "Bolder",
+            "size": "Medium",
+            "id": "",
+            "text": "Phone"
+        },
+        {
+            "type": "Input.Text",
+            "placeholder": "Placeholder text",
+            "id": "Phone",
+            "value": "{Phone}"
+        },
+        {
+            "type": "TextBlock",
+            "size": "Medium",
+            "weight": "Bolder",
+            "id": "",
+            "text": "Email"
+        },
+        {
+            "type": "Input.Text",
+            "placeholder": "Placeholder text",
+            "id": "Email",
+            "value": "{Email}"
+        }
+    ],
+    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+    "version": "1.0",
+    "actions": [
+        {
+            "type": "Action.Submit",
+            "title": "Submit",
+            "style": "positive"
+        }
+    ]
+}
