@@ -61,10 +61,10 @@ namespace ADS.Bot.V1.Dialogs
                                 Property = "turn.interest",
                                 Choices = new ChoiceSet(new List<Choice>()
                                 {
-                                    new Choice() { Value = "Financing" },
-                                    new Choice() { Value = "Purchasing" },
-                                    new Choice() { Value = "Trade-In" },
-                                    new Choice() { Value = "Available Inventory" }
+                                    new Choice() { Value = "Explore Financing" },
+                                    new Choice() { Value = "Identify a Vehicle" },
+                                    new Choice() { Value = "Value a Trade-In" },
+                                    new Choice() { Value = "Search Inventory" }
                                 })
                             },
                             new RepeatDialog()

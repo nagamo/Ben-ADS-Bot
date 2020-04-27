@@ -17,7 +17,7 @@ namespace ADS.Bot.V1.Cards
         public IBotServices Services { get; }
 
         public JSONProfileCardFactory(IBotServices services)
-            : base(nameof(JSONProfileCardFactory), Path.Combine(".", "Cards", "profilecard.json"))
+            : base(nameof(JSONProfileCardFactory), Path.Combine(".", "Cards", "profile-card.json"))
         {
             Services = services;
         }
@@ -32,7 +32,9 @@ namespace ADS.Bot.V1.Cards
                 {
                      Name = "Test",
                      Phone = "Data",
-                     Email = "Saving"
+                     Email = "Saving",
+                     Focus = "focus",
+                     Timeframe = "timeframe"
                 };
             }
 
@@ -52,7 +54,7 @@ namespace ADS.Bot.V1.Cards
 
             await Services.SetUserProfileAsync(currentProfiles, context, cancellationToken);
 
-            await context.SendActivityAsync("Thank you!", cancellationToken: cancellationToken);
+            await context.SendActivityAsync($"Thanks so much, {currentProfiles.Details.Name}!", cancellationToken: cancellationToken);
         }
     }
 
@@ -129,7 +131,9 @@ namespace ADS.Bot.V1.Cards
             {
                 Name = "Test",
                 Phone = "If",
-                Email = "Prefilled"
+                Email = "Prefilled",
+                Focus = "???",
+                Timeframe = "timef"
             };
         }
 

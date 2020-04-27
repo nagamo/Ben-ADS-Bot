@@ -1,0 +1,138 @@
+{
+    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+    "type": "AdaptiveCard",
+    "version": "1.0",
+    "body": [
+        {
+            "type": "ColumnSet",
+            "columns": [
+                {
+                    "type": "Column",
+                    "width": 2,
+                    "items": [
+                        {
+                            "type": "TextBlock",
+                            "text": "Value that Trade-In!",
+                            "weight": "Bolder",
+                            "size": "Medium",
+                            "horizontalAlignment": "Center"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "Tell us a little about the vehicle you're interested in trading in. Here today, gone tomorrow!",
+                            "isSubtle": true,
+                            "wrap": true
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "Year",
+                            "wrap": true
+                        },
+                        {
+                            "type": "Input.Text",
+                            "id": "year",
+                            "placeholder": "enter year..."
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "Make",
+                            "wrap": true,
+                            "spacing": "Medium"
+                        },
+                        {
+                            "type": "Input.Text",
+                            "placeholder": "enter make...",
+                            "id": "make"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "Model",
+                            "spacing": "Medium"
+                        },
+                        {
+                            "type": "Input.Text",
+                            "id": "model",
+                            "placeholder": "enter model..."
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "Mileage",
+                            "spacing": "Medium"
+                        },
+                        {
+                            "type": "Input.Text",
+                            "placeholder": "enter mileage...",
+                            "id": "mileage"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "Condition",
+                            "spacing": "Medium"
+                        },
+                        {
+                            "type": "Input.ChoiceSet",
+                            "placeholder": "Placeholder text",
+                            "choices": [
+                                {
+                                    "title": "Excellent",
+                                    "value": "1"
+                                },
+                                {
+                                    "title": "Good",
+                                    "value": "2"
+                                },
+                                {
+                                    "title": "Fair",
+                                    "value": "3"
+                                },
+                                {
+                                    "title": "Rough",
+                                    "value": "4"
+                                }
+                            ],
+                            "style": "expanded",
+                            "id": "condition"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "Amount still owed",
+                            "spacing": "Medium"
+                        },
+                        {
+                            "type": "Input.Number",
+                            "placeholder": "enter amount owed...",
+                            "id": "amountOwed"
+                        },
+                        {
+                            "type": "ActionSet",
+                            "spacing": "Medium",
+                            "actions": [
+                                {
+                                    "type": "Action.Submit",
+                                    "title": "Submit",
+                                    "id": "submit"
+                                },
+                                {
+                                    "type": "Action.Submit",
+                                    "title": "Cancel",
+                                    "id": "cancel"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "Column",
+                    "width": "100px",
+                    "items": [
+                        {
+                            "type": "Image",
+                            "url": "https://upload.wikimedia.org/wikipedia/commons/b/b2/Diver_Silhouette%2C_Great_Barrier_Reef.jpg",
+                            "size": "auto"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
