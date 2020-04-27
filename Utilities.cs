@@ -67,7 +67,12 @@ namespace ADS.Bot.V1
         {
             return new List<Dialog>()
             {
-                new CodeAction(async (context, obj) =>
+                CardFactoryAction<TModel>(Factory)
+            };
+        }
+        public static CodeAction CardFactoryAction<TModel>(ICardFactory<TModel> Factory)
+        {
+            return new CodeAction(async (context, obj) =>
                 {
                     var initData = await Factory.Populate(context.Context);
 
@@ -82,7 +87,6 @@ namespace ADS.Bot.V1
                     return new DialogTurnResult(DialogTurnStatus.Complete, null);
                 })
             };
-        }
 
         public static bool AttemptParseCardResult<T>(ITurnContext context, out T result)
         {
