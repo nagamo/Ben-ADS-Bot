@@ -20,8 +20,8 @@ namespace ADS.Bot.V1.Models
         }
 
         public string CreditScore { get; set; }
+        public string Employment { get; set; }
         public string Income { get; set; }
         public string HomeOwnership { get; set; }
-        public string Employment { get; set; }
     }
 }

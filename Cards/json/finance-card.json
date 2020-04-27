@@ -57,7 +57,8 @@
                                 }
                             ],
                             "style": "expanded",
-                            "id": "creditscore"
+                            "id": "CreditScore",
+                            "value": "{CreditScore}"
                         },
                         {
                             "type": "TextBlock",
@@ -86,7 +87,8 @@
                                 }
                             ],
                             "style": "expanded",
-                            "id": "employment"
+                            "id": "Employment",
+                            "value": "{Employment}"
                         },
                         {
                             "type": "TextBlock",
@@ -122,7 +124,8 @@
                                 }
                             ],
                             "style": "expanded",
-                            "id": "income"
+                            "id": "Income",
+                            "value": "{Income}"
                         },
                         {
                             "type": "TextBlock",
@@ -146,7 +149,8 @@
                                 }
                             ],
                             "style": "expanded",
-                            "id": "home"
+                            "id": "HomeOwnership",
+                            "value": "{HomeOwnership}"
                         },
                         {
                             "type": "ActionSet",
@@ -154,12 +158,18 @@
                                 {
                                     "type": "Action.Submit",
                                     "title": "Submit",
-                                    "id": "submit"
+                                    "data": {
+                                        "id": "submit",
+                                        "card_id": "JSONFinanceCardFactory"
+                                    }
                                 },
                                 {
                                     "type": "Action.Submit",
                                     "title": "Cancel",
-                                    "id": "cancel"
+                                    "data": {
+                                        "id": "cancel",
+                                        "card_id": "JSONFinanceCardFactory"
+                                    }
                                 }
                             ],
                             "horizontalAlignment": "Center",

@@ -21,12 +21,13 @@ namespace ADS.Bot.V1.Bots
         //Hey there!
 
         public IBotServices Services { get; }
+        public UserState User { get; }
 
         // Initializes a new instance of the "WelcomeUserBot" class.
-        public BenBot(IBotServices services, RootDialog dialog)
+        public BenBot(IBotServices services, ActiveLeadDialog dialog, UserState user)
         {
             Services = services;
-
+            User = user;
             DialogManager = new DialogManager(dialog);
         }
 
@@ -59,6 +60,7 @@ namespace ADS.Bot.V1.Bots
 
             // Save any state changes.
             await Services.UserProfileAccessor.SetAsync(turnContext, userProfile, cancellationToken);
+            await User.SaveChangesAsync(turnContext, cancellationToken: cancellationToken);
         }
     }
 }

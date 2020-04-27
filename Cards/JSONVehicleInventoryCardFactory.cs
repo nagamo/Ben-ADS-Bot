@@ -10,12 +10,12 @@ using System.Threading.Tasks;
 
 namespace ADS.Bot.V1.Cards
 {
-    public class JSONInventoryQueryCardFactory : JSONCardFactory<VehicleInventoryDetails>
+    public class JSONVehicleInventoryCardFactory : JSONCardFactory<VehicleInventoryDetails>
     {
         public IBotServices Services { get; }
 
-        public JSONInventoryQueryCardFactory(IBotServices services)
-            : base(nameof(JSONInventoryQueryCardFactory), Path.Combine(".", "Cards", "json", "inventory-card.json"))
+        public JSONVehicleInventoryCardFactory(IBotServices services)
+            : base(nameof(JSONVehicleInventoryCardFactory), Path.Combine(".", "Cards", "json", "inventory-card.json"))
         {
             Services = services;
         }
@@ -41,11 +41,11 @@ namespace ADS.Bot.V1.Cards
         {
             var currentProfiles = await Services.GetUserProfileAsync(context, cancellationToken);
 
-            
+            currentProfiles.VehicleProfile = submission;
 
             await Services.SetUserProfileAsync(currentProfiles, context, cancellationToken);
 
-            await context.SendActivityAsync($"Beep boop. Checking inventory for {submission.Brand}!\nJust kidding, I can't do that yet. :)", cancellationToken: cancellationToken);
+            await context.SendActivityAsync($"Beep boop. Checking inventory for {submission.Model}!\nJust kidding, I can't do that yet. :)", cancellationToken: cancellationToken);
         }
     }
 }

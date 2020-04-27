@@ -59,7 +59,7 @@ namespace ADS.Bot1
 
             services.AddSingleton<ICardFactory<BasicDetails>, JSONProfileCardFactory>();
             services.AddSingleton<ICardFactory<FinancingDetails>, JSONFinanceCardFactory>();
-            services.AddSingleton<ICardFactory<VehicleInventoryDetails>, JSONInventoryQueryCardFactory>();
+            services.AddSingleton<ICardFactory<VehicleInventoryDetails>, JSONVehicleInventoryCardFactory>();
             services.AddSingleton<ICardFactory<TradeInDetails>, JSONTradeInCardFactory>();
             //services.AddSingleton<SendAdaptiveDialog<ProfileCardFactory, BasicDetails>>();
 

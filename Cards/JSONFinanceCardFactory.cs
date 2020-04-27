@@ -45,7 +45,7 @@ namespace ADS.Bot.V1.Cards
 
             await Services.SetUserProfileAsync(currentProfiles, context, cancellationToken);
 
-            await context.SendActivityAsync($"Thanks so much, {currentProfiles.Details.Name}!", cancellationToken: cancellationToken);
+            await context.SendActivityAsync($"Thanks so much, {currentProfiles.Name}!", cancellationToken: cancellationToken);
         }
     }
 }

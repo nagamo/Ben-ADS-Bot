@@ -24,6 +24,8 @@ namespace ADS.Bot1
 
             UserProfileAccessor = UserState.CreateProperty<UserProfile>(nameof(UserProfile));
             DialogStateAccessor = ConversationState.CreateProperty<DialogState>(nameof(DialogState));
+            //Used by micrsoft dialog classes
+            GenericUserProfileAccessor = UserState.CreateProperty<Dictionary<string, object>>(nameof(UserProfile));
 
             LeadQualQnA = new QnAMaker(new QnAMakerEndpoint
             {

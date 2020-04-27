@@ -30,8 +30,9 @@
                         },
                         {
                             "type": "Input.Text",
-                            "id": "year",
-                            "placeholder": "enter year..."
+                            "id": "Year",
+                            "placeholder": "enter year...",
+                            "value": "{Year}"
                         },
                         {
                             "type": "TextBlock",
@@ -42,7 +43,8 @@
                         {
                             "type": "Input.Text",
                             "placeholder": "enter make...",
-                            "id": "make"
+                            "id": "Make",
+                            "value": "{Make}"
                         },
                         {
                             "type": "TextBlock",
@@ -51,8 +53,9 @@
                         },
                         {
                             "type": "Input.Text",
-                            "id": "model",
-                            "placeholder": "enter model..."
+                            "id": "Model",
+                            "placeholder": "enter model...",
+                            "value": "{Model}"
                         },
                         {
                             "type": "TextBlock",
@@ -62,7 +65,8 @@
                         {
                             "type": "Input.Text",
                             "placeholder": "enter mileage...",
-                            "id": "mileage"
+                            "id": "Mileage",
+                            "value": "{Mileage}"
                         },
                         {
                             "type": "TextBlock",
@@ -75,23 +79,24 @@
                             "choices": [
                                 {
                                     "title": "Excellent",
-                                    "value": "1"
+                                    "value": "Excellent"
                                 },
                                 {
                                     "title": "Good",
-                                    "value": "2"
+                                    "value": "Good"
                                 },
                                 {
                                     "title": "Fair",
-                                    "value": "3"
+                                    "value": "Fair"
                                 },
                                 {
                                     "title": "Rough",
-                                    "value": "4"
+                                    "value": "Rough"
                                 }
                             ],
                             "style": "expanded",
-                            "id": "condition"
+                            "id": "Condition",
+                            "value": "{Condition}"
                         },
                         {
                             "type": "TextBlock",
@@ -99,9 +104,10 @@
                             "spacing": "Medium"
                         },
                         {
-                            "type": "Input.Number",
+                            "type": "Input.Text",
                             "placeholder": "enter amount owed...",
-                            "id": "amountOwed"
+                            "id": "AmountOwed",
+                            "value": "{AmountOwed}"
                         },
                         {
                             "type": "ActionSet",
@@ -110,12 +116,18 @@
                                 {
                                     "type": "Action.Submit",
                                     "title": "Submit",
-                                    "id": "submit"
+                                    "data": {
+                                        "id": "submit",
+                                        "card_id": "JSONTradeInCardFactory"
+                                    }
                                 },
                                 {
                                     "type": "Action.Submit",
                                     "title": "Cancel",
-                                    "id": "cancel"
+                                    "data": {
+                                        "id": "cancel",
+                                        "card_id": "JSONTradeInCardFactory"
+                                    }
                                 }
                             ]
                         }

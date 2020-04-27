@@ -8,6 +8,7 @@ using Microsoft.Bot.Builder.AI.QnA;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Configuration;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,6 +16,7 @@ namespace ADS.Bot1
 {
     public interface IBotServices
     {
+        IStatePropertyAccessor<Dictionary<string, object>> GenericUserProfileAccessor { get; }
         IStatePropertyAccessor<UserProfile> UserProfileAccessor { get; }
         IStatePropertyAccessor<DialogState> DialogStateAccessor { get; }
 
@@ -22,7 +24,7 @@ namespace ADS.Bot1
 
         QnAMaker LeadQualQnA { get; }
 
-        Task<UserProfile> GetUserProfileAsync(ITurnContext turnContext, CancellationToken cancellationToken);
-        Task SetUserProfileAsync(UserProfile profile, ITurnContext turnContext, CancellationToken cancellationToken);
+        Task<UserProfile> GetUserProfileAsync(ITurnContext turnContext, CancellationToken cancellationToken = default);
+        Task SetUserProfileAsync(UserProfile profile, ITurnContext turnContext, CancellationToken cancellationToken = default);
     }
 }

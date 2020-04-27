@@ -56,9 +56,8 @@ namespace ADS.Bot.V1.Dialogs
                                                               "type a request directly into the text box."),
                                 AlwaysPrompt = true,
                                 AllowInterruptions =  "true",
-                                //MaxTurnCount = 1,
-                                DefaultValue = null,
-                                Property = "turn.interest",
+                                Validations = new List<string>(new string[]{ "true" }),
+                                Property = "conversation.interest",
                                 Choices = new ChoiceSet(new List<Choice>()
                                 {
                                     new Choice() { Value = "Explore Financing" },
@@ -67,7 +66,6 @@ namespace ADS.Bot.V1.Dialogs
                                     new Choice() { Value = "Search Inventory" }
                                 })
                             },
-                            new RepeatDialog()
                         }
                     }
                 }

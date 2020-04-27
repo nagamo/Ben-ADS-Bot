@@ -84,7 +84,7 @@ namespace ADS.Bot.V1
                     };
                     await context.Context.SendActivityAsync(message);
 
-                    return new DialogTurnResult(DialogTurnStatus.Complete, null);
+                    return new DialogTurnResult(DialogTurnStatus.Waiting, null);
                 });
         }
 

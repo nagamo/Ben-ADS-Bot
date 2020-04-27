@@ -27,6 +27,9 @@ namespace ADS.Bot.V1.Dialogs
     {
 
         List<ICardFactory> CardFactories = new List<ICardFactory>();
+        public IBotServices Services { get; }
+
+
 
         public ActiveLeadDialog(
             ICardFactory<BasicDetails> profileFactory,
@@ -43,54 +46,121 @@ namespace ADS.Bot.V1.Dialogs
                 Generator = new TemplateEngineLanguageGenerator(),
                 Triggers = new List<OnCondition>()
                 {
-                    //*From Ben*
-                    //  This is an intent from the user, not the bot's intent to send a hello message.
-                    //  We actually don't need this from LUIS because QnA will handle cases where a users says anything along the lines of a greeting
-                    /*
-                    new OnIntent("Greeting")
+                    new OnCustomEvent(Constants.Event_Card_Submit)
                     {
-                        // this needs to be combined with a 'restart' intent, where the text sent to the user recognizes
-                        // that they're cycling back through everything.
-                        Condition = "#Greeting.Score >= 0.9",
                         Actions = new List<Dialog>()
                         {
-                            new SendActivity("Hello!")
+                            //Update user object with details from profile
+                            //I thought this would happen automatically somewhere...
+                            new CodeAction(async (context, _)=>{
+                                var userData = await Services.GetUserProfileAsync(context.Context);
+                                context.GetState().SetValue("user.UserProfile", userData);
+                                return new DialogTurnResult(DialogTurnStatus.Complete);
+                            }),
+                            new IfCondition()
+                            {
+                                Condition = "conversation.residual_interest != null",
+                                Actions = new List<Dialog>()
+                                {
+                                    new SetProperty()
+                                    {
+                                        Property = "conversation.interest",
+                                        Value = "conversation.residual_interest"
+                                    },
+                                    new DeleteProperty()
+                                    {
+                                        Property = "conversation.residual_interest"
+                                    },
+                                    new EmitEvent(Constants.Event_Interest)
+                                }
+                            },
                         }
                     },
-                    */
-                    new OnBeginDialog()
+                    new OnCustomEvent(Constants.Event_Help)
                     {
-                        //This property is set by RootDialog, based on option selected from help cards
-                        Condition = "turn.interest != null",
                         Actions = new List<Dialog>()
                         {
-                            new SwitchCondition()
+                            new SetProperty()
                             {
-                                Condition = "turn.interest",
-                                Cases = new List<Case>()
+                                Property = "conversation.seen_help",
+                                Value = "true"
+                            },
+                            new ChoiceInput()
+                            {
+                                Prompt = new ActivityTemplate("I want to provide you with the best service possible! " +
+                                                              "Just select one of the easy-click options below, or " +
+                                                              "type a request directly into the text box."),
+                                AlwaysPrompt = true,
+                                Property = "conversation.interest",
+                                Choices = new ChoiceSet(Constants.HelpOptions.Select(o => new Choice(o)).ToList())
+                            },
+                            new IfCondition()
+                            {
+                                Condition = "conversation.interest != null",
+                                Actions = new List<Dialog>()
                                 {
-                                    new Case() { 
-                                        Value = "Explore Financing", 
-                                        Actions = new List<Dialog>(){ new EmitEvent(Constants.Event_Card, "'financing'") }
+                                    new EmitEvent(Constants.Event_Interest)
+                                }
+                            },
+                        }
+                    },
+                    new OnCustomEvent(Constants.Event_Interest)
+                    {
+                        Condition = "conversation.interest != null",
+                        Actions = new List<Dialog>()
+                        {
+                            new SendActivity("OnMessageActivity - Interest"),
+                            new TraceActivity()
+                            {
+                                Value = "user"
+                            },
+                            new IfCondition()
+                            {
+                                Condition = "user.UserProfile.Details == null",
+                                Actions = new List<Dialog>()
+                                {
+                                    new SetProperty()
+                                    {
+                                        Property = "conversation.residual_interest",
+                                        Value = "conversation.interest"
                                     },
-                                    new Case() { 
-                                        Value = "Identify a Vehicle",
-                                        Actions = new List<Dialog>(){ new EmitEvent(Constants.Event_Card, "'vehicle'") }
+                                    new DeleteProperty()
+                                    {
+                                        Property = "conversation.interest"
                                     },
-                                    new Case() { 
-                                        Value = "Value a Trade-In",
-                                        Actions = new List<Dialog>(){ new EmitEvent(Constants.Event_Card, "'tradein'") }
-                                    },
-                                    new Case() { 
-                                        Value = "Search Inventory",
-                                        Actions = new List<Dialog>(){ new EmitEvent(Constants.Event_Card, "'inventory'") }
+                                    new EmitEvent(Constants.Event_Card, "'profile'")
+                                },
+                                ElseActions = new List<Dialog>()
+                                {
+                                    new SwitchCondition()
+                                    {
+                                        Condition = "conversation.interest",
+                                        Cases = new List<Case>()
+                                        {
+                                            new Case() {
+                                                Value = "Explore Financing",
+                                                Actions = new List<Dialog>(){ new EmitEvent(Constants.Event_Card, "'financing'") }
+                                            },
+                                            new Case() {
+                                                Value = "Identify a Vehicle",
+                                                Actions = new List<Dialog>(){ new EmitEvent(Constants.Event_Card, "'vehicle'") }
+                                            },
+                                            new Case() {
+                                                Value = "Value a Trade-In",
+                                                Actions = new List<Dialog>(){ new EmitEvent(Constants.Event_Card, "'tradein'") }
+                                            },
+                                            new Case() {
+                                                Value = "Search Inventory",
+                                                Actions = new List<Dialog>(){ new EmitEvent(Constants.Event_Card, "'inventory'") }
+                                            }
+                                        }
                                     }
                                 }
                             },
                             //Delete the property so we don't loop forever
                             new DeleteProperty()
                             {
-                                Property = "turn.interest"
+                                Property = "conversation.interest"
                             }
                         }
                     },
@@ -102,14 +172,13 @@ namespace ADS.Bot.V1.Dialogs
                             //  what if they weren't in a dialog? What if they've typed 'cancel' twice in a row?
                             new SendActivity("Really? You want to quit? And we were having so much fun! But have it your way."),
                             new EmitEvent(Constants.Event_Help, bubble: true),
-                            new CancelAllDialogs()
+                            new CancelAllDialogs(),
                         }
                     },
                     new OnCustomEvent(Constants.Event_Card)
                     {
                         Actions = new List<Dialog>()
                         {
-                            new TraceActivity(),
                             new SwitchCondition()
                             {
                                 Condition = "toLower(turn.dialogEvent.value)",
@@ -161,15 +230,24 @@ namespace ADS.Bot.V1.Dialogs
                         }
                     },
 
-                    //Every dialog action goes through this
                     new OnBeginDialog()
                     {
                         Actions = new List<Dialog>()
                         {
-                            new CodeAction(PrimaryHandler),
 #if DEBUG
-                            new TraceActivity()
+                            new TraceActivity(){Name = "OnBeginDialog"},
 #endif
+                            new EmitEvent(Constants.Event_Help),
+                        }
+                    },
+                    new OnMessageActivity()
+                    {
+                        Actions = new List<Dialog>()
+                        {
+#if DEBUG
+                            new TraceActivity("OnMessageActivity"){Name = "OnMessageActivity"},
+#endif
+                            new CodeAction(PrimaryHandler)
                         }
                     }
                 }
@@ -183,19 +261,42 @@ namespace ADS.Bot.V1.Dialogs
             AddDialog(rootDialog);
         }
 
-        public IBotServices Services { get; }
+        public async Task<DialogTurnResult> DispalyHelp(DialogContext context, object data)
+        {
+            await context.Context.SendActivityAsync(MessageFactory.SuggestedActions(Constants.HelpOptions));
+            //await context.Context.SendActivityAsync("Test");
+
+            return new DialogTurnResult(DialogTurnStatus.Waiting, null);
+        }
 
         public async Task<DialogTurnResult> PrimaryHandler(DialogContext context, object data)
         {
             //Check if we have an object payload, which comes from cards
-            if(context.Context.Activity.Text == null && context.Context.Activity.Value is JObject cardResponse)
+            if(context.Context.Activity.Text == null)
             {
-                await ProcessCardResponse(cardResponse, context, data);
+                if (context.Context.Activity.Value is JObject cardResponse)
+                {
+                    return await ProcessCardResponse(cardResponse, context, data);
+                }
+                else
+                {
+                    //Waiting for user to specify something.
+                    //Usually come here after showing help screen.
+                    return new DialogTurnResult(DialogTurnStatus.Waiting);
+                }
             }
             //Otherwise if we have a properly instantiated QnA service, hit that.
             else if (Services.LeadQualQnA != null)
             {
-                await ProcessDefaultResponse(context, data);
+                if(Constants.HelpOptions.Contains(context.Context.Activity.Text))
+                {
+                    //await context.EmitEventAsync(Constants.Event_Interest);
+                    return new DialogTurnResult(DialogTurnStatus.CompleteAndWait);
+                }
+                else
+                {
+                    return await ProcessDefaultResponse(context, data);
+                }
             }
             else
             {
@@ -203,35 +304,52 @@ namespace ADS.Bot.V1.Dialogs
             }
 
             //You can change status to alter the behaviour post-completion
-            return new DialogTurnResult(DialogTurnStatus.Complete, null);
+            return new DialogTurnResult(DialogTurnStatus.Waiting, null);
         }
 
         //response is json object of card data
-        public async Task ProcessCardResponse(JObject response, DialogContext context, object data)
+        public async Task<DialogTurnResult> ProcessCardResponse(JObject response, DialogContext context, object data)
         {
             //look at the card_id field, which has to be assigned on the submit button
             var respondingFactoryID = response.Value<string>("card_id");
             var matchingFactory = CardFactories.SingleOrDefault(cf => cf.Id == respondingFactoryID);
 
-            //If everything checks out validate it, and save if applicable
-            if (respondingFactoryID != null && matchingFactory != null)
+            switch (response.Value<string>("id"))
             {
-                if (await matchingFactory.OnValidateCard(response, context.Context))
-                {
-                    await matchingFactory.OnFinalizeCard(response, context.Context);
-                }
-                else
-                {
-                    await context.Context.SendActivityAsync("Looks like you have some errors. You should go back and fix those, and then just resubmit!");
-                }
+                case "submit":
+                    //If everything checks out, validate it, and save if applicable
+                    if (respondingFactoryID != null && matchingFactory != null)
+                    {
+                        if (await matchingFactory.OnValidateCard(response, context.Context))
+                        {
+                            await matchingFactory.OnFinalizeCard(response, context.Context);
+
+                            await context.EmitEventAsync(Constants.Event_Card_Submit);
+
+                            return new DialogTurnResult(DialogTurnStatus.Complete);
+                        }
+                        else
+                        {
+                            await context.Context.SendActivityAsync("Looks like you have some errors. You should go back and fix those, and then just resubmit!");
+                        }
+                    }
+                    else
+                    {
+                        await context.Context.SendActivityAsync("Not sure where you came from...");
+                    }
+                    break;
+                case "cancel":
+                    await context.Context.SendActivityAsync("Canceled card");
+                    //If we cancel, we want to emit the help again.
+                    await context.EmitEventAsync(Constants.Event_Help);
+                    return new DialogTurnResult(DialogTurnStatus.Complete);
+                    break;
             }
-            else
-            {
-                await context.Context.SendActivityAsync("Not sure where you came from...");
-            }
+
+            return new DialogTurnResult(DialogTurnStatus.Waiting);
         }
 
-        public async Task ProcessDefaultResponse(DialogContext context, object data)
+        public async Task<DialogTurnResult> ProcessDefaultResponse(DialogContext context, object data)
         {
             //Get Top QnA result
             var results = await Services.LeadQualQnA.GetAnswersAsync(context.Context);
@@ -260,6 +378,8 @@ namespace ADS.Bot.V1.Dialogs
                 await context.Context.SendActivityAsync(MessageFactory.Text("Great Caesar's Ghost! " +
                                "You've thrown me for a loop with that one! Give 'er another try, will ya?"));
             }
+
+            return new DialogTurnResult(DialogTurnStatus.Waiting);
         }
 
         public async Task<DialogTurnResult> Test(DialogContext context, object something)

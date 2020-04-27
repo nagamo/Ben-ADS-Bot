@@ -30,8 +30,9 @@
                         },
                         {
                             "type": "Input.Text",
-                            "id": "year",
-                            "placeholder": "year"
+                            "id": "Year",
+                            "placeholder": "year",
+                            "value": "{Year}"
                         },
                         {
                             "type": "TextBlock",
@@ -42,7 +43,8 @@
                         {
                             "type": "Input.Text",
                             "placeholder": "make",
-                            "id": "make"
+                            "id": "Make",
+                            "value": "{Make}"
                         },
                         {
                             "type": "TextBlock",
@@ -51,8 +53,9 @@
                         },
                         {
                             "type": "Input.Text",
-                            "id": "model",
-                            "placeholder": "model"
+                            "id": "Model",
+                            "placeholder": "model",
+                            "value": "{Model}"
                         },
                         {
                             "type": "TextBlock",
@@ -62,7 +65,8 @@
                         {
                             "type": "Input.Text",
                             "placeholder": "color",
-                            "id": "color"
+                            "id": "Color",
+                            "value": "{Color}"
                         },
                         {
                             "type": "ActionSet",
@@ -71,12 +75,18 @@
                                 {
                                     "type": "Action.Submit",
                                     "title": "Submit",
-                                    "id": "submit"
+                                    "data": {
+                                        "id": "submit",
+                                        "card_id": "JSONVehicleInventoryCardFactory"
+                                    }
                                 },
                                 {
                                     "type": "Action.Submit",
                                     "title": "Cancel",
-                                    "id": "cancel"
+                                    "data": {
+                                        "id": "cancel",
+                                        "card_id": "JSONVehicleInventoryCardFactory"
+                                    }
                                 }
                             ]
                         }

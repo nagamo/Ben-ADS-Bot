@@ -88,7 +88,7 @@ namespace ADS.Bot.V1.Dialogs
         private async Task<DialogTurnResult> GoalsStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
-            if (!string.IsNullOrEmpty(userData.VehicleProfile.Goals)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
+            //if (!string.IsNullOrEmpty(userData.VehicleProfile.Goals)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
 
             var goalOptions = Utilities.CreateOptions(new string[] { "Buy", "Lease", "Not Sure" }, "What are you looking to do?");
@@ -98,8 +98,8 @@ namespace ADS.Bot.V1.Dialogs
         private async Task<DialogTurnResult> ValidateGoalsStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
-            if (stepContext.Result != null)
-                userData.VehicleProfile.Goals = Utilities.ReadChoiceWithManual(stepContext);
+            //if (stepContext.Result != null)
+            //    userData.VehicleProfile.Goals = Utilities.ReadChoiceWithManual(stepContext);
 
             return await stepContext.NextAsync();
         }
@@ -109,7 +109,7 @@ namespace ADS.Bot.V1.Dialogs
         private async Task<DialogTurnResult> InterestStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
-            if (!string.IsNullOrEmpty(userData.VehicleProfile.LevelOfInterest)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
+            //if (!string.IsNullOrEmpty(userData.VehicleProfile.LevelOfInterest)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
 
 
@@ -120,8 +120,8 @@ namespace ADS.Bot.V1.Dialogs
         private async Task<DialogTurnResult> ValidateInterestStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
-            if (stepContext.Result != null)
-                userData.VehicleProfile.LevelOfInterest = Utilities.ReadChoiceWithManual(stepContext);
+            //if (stepContext.Result != null)
+            //    userData.VehicleProfile.LevelOfInterest = Utilities.ReadChoiceWithManual(stepContext);
 
             return await stepContext.NextAsync();
         }
@@ -131,7 +131,7 @@ namespace ADS.Bot.V1.Dialogs
         private async Task<DialogTurnResult> VehicleTypeStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
-            if (!string.IsNullOrEmpty(userData.VehicleProfile.Type)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
+            if (!string.IsNullOrEmpty(userData.VehicleProfile.Make)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
 
 
@@ -143,7 +143,7 @@ namespace ADS.Bot.V1.Dialogs
         {
             var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
             if (stepContext.Result != null)
-                userData.VehicleProfile.Type = Utilities.ReadChoiceWithManual(stepContext);
+                userData.VehicleProfile.Make = Utilities.ReadChoiceWithManual(stepContext);
 
             return await stepContext.NextAsync();
         }
@@ -153,7 +153,7 @@ namespace ADS.Bot.V1.Dialogs
         private async Task<DialogTurnResult> VehicleBrandStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
-            if (!string.IsNullOrEmpty(userData.VehicleProfile.Brand)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
+            if (!string.IsNullOrEmpty(userData.VehicleProfile.Model)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
 
 
@@ -165,7 +165,7 @@ namespace ADS.Bot.V1.Dialogs
         {
             var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
             if (stepContext.Result != null)
-                userData.VehicleProfile.Brand = Utilities.ReadChoiceWithManual(stepContext);
+                userData.VehicleProfile.Model = Utilities.ReadChoiceWithManual(stepContext);
 
             return await stepContext.NextAsync();
         }
@@ -175,7 +175,7 @@ namespace ADS.Bot.V1.Dialogs
         private async Task<DialogTurnResult> NewUsedStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
-            if (!string.IsNullOrEmpty(userData.VehicleProfile.NewUsed)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
+            if (!string.IsNullOrEmpty(userData.VehicleProfile.Year)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
 
 
@@ -187,7 +187,7 @@ namespace ADS.Bot.V1.Dialogs
         {
             var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
             if (stepContext.Result != null)
-                userData.VehicleProfile.NewUsed = Utilities.ReadChoiceWithManual(stepContext);
+                userData.VehicleProfile.Year = Utilities.ReadChoiceWithManual(stepContext);
 
             return await stepContext.NextAsync();
         }
@@ -197,7 +197,7 @@ namespace ADS.Bot.V1.Dialogs
         private async Task<DialogTurnResult> BudgetStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
-            if (!string.IsNullOrEmpty(userData.VehicleProfile.Budget)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
+            //if (!string.IsNullOrEmpty(userData.VehicleProfile.Budget)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
 
 
@@ -208,8 +208,8 @@ namespace ADS.Bot.V1.Dialogs
         private async Task<DialogTurnResult> ValidateBudgetStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await _userProfileAccessor.GetAsync(stepContext.Context);
-            if (stepContext.Result != null)
-                userData.VehicleProfile.Budget = Utilities.ReadChoiceWithManual(stepContext);
+            //if (stepContext.Result != null)
+            //    userData.VehicleProfile.Budget = Utilities.ReadChoiceWithManual(stepContext);
 
             return await stepContext.NextAsync();
         }
@@ -282,12 +282,12 @@ namespace ADS.Bot.V1.Dialogs
             {
                 $"Thanks {userData.Name}! I got these details for you.",
                 $"I hope it's correct becuase I don't reset yet! :)",
-                $"Goals: {userData.VehicleProfile.Goals}",
-                $"Urgency: {userData.VehicleProfile.LevelOfInterest}",
-                $"Type: {userData.VehicleProfile.Type}",
-                $"Brand: {userData.VehicleProfile.Brand}",
-                $"New/Used: {userData.VehicleProfile.NewUsed}",
-                $"Budget: {userData.VehicleProfile.Budget}"
+                //$"Goals: {userData.VehicleProfile.Goals}",
+                //$"Urgency: {userData.VehicleProfile.LevelOfInterest}",
+                $"Type: {userData.VehicleProfile.Make}",
+                $"Brand: {userData.VehicleProfile.Model}",
+                $"New/Used: {userData.VehicleProfile.Year}",
+                //$"Budget: {userData.VehicleProfile.Budget}"
             };
 
             lines.Add($"Financing?: {userData.VehicleProfile.NeedFinancing}");

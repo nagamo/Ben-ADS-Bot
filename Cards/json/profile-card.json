@@ -75,15 +75,15 @@
                             "choices": [
                                 {
                                     "title": "Just browsing",
-                                    "value": "1"
+                                    "value": "Browsing"
                                 },
                                 {
                                     "title": "Looking to buy or lease",
-                                    "value": "2"
+                                    "value": "Buy/Lease"
                                 },
                                 {
                                     "title": "Depends on what I see",
-                                    "value": "3"
+                                    "value": "Depends"
                                 }
                             ],
                             "style": "expanded",
@@ -102,15 +102,15 @@
                             "choices": [
                                 {
                                     "title": "ASAP",
-                                    "value": "1"
+                                    "value": "ASAP"
                                 },
                                 {
                                     "title": "Within a week",
-                                    "value": "2"
+                                    "value": "Within a week"
                                 },
                                 {
                                     "title": "Really not sure",
-                                    "value": "3"
+                                    "value": "Really not sure"
                                 }
                             ],
                             "style": "expanded",
@@ -122,17 +122,20 @@
                             "type": "ActionSet",
                             "actions": [
                                 {
-                                  "type": "Action.Submit",
-                                  "title": "Submit",
-                                  "data": {
-                                    "id": "submit",
-                                    "card_id": "JSONProfileCardFactory"
-                                  }
+                                    "type": "Action.Submit",
+                                    "title": "Submit",
+                                    "data": {
+                                        "id": "submit",
+                                        "card_id": "JSONProfileCardFactory"
+                                    }
                                 },
                                 {
                                     "type": "Action.Submit",
                                     "title": "Cancel",
-                                    "id": "cancel"
+                                    "data": {
+                                        "id": "cancel",
+                                        "card_id": "JSONProfileCardFactory"
+                                    }
                                 }
                             ],
                             "spacing": "Medium"

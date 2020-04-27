@@ -21,6 +21,7 @@ namespace ADS.Bot.V1.Models
         public string Make { get; set; }
         public string Model { get; set; }
         public string Year { get; set; }
+        public string Mileage { get; set; }
         public string Condition { get; set; }
         public string AmountOwed { get; set; }
     }
