@@ -109,11 +109,6 @@ namespace ADS.Bot.V1.Dialogs
                         Condition = "conversation.interest != null",
                         Actions = new List<Dialog>()
                         {
-                            new SendActivity("OnMessageActivity - Interest"),
-                            new TraceActivity()
-                            {
-                                Value = "user"
-                            },
                             new IfCondition()
                             {
                                 Condition = "user.UserProfile.Details == null",
