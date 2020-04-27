@@ -85,8 +85,8 @@ namespace ADS.Bot.V1
                     await context.Context.SendActivityAsync(message);
 
                     return new DialogTurnResult(DialogTurnStatus.Complete, null);
-                })
-            };
+                });
+        }
 
         public static bool AttemptParseCardResult<T>(ITurnContext context, out T result)
         {

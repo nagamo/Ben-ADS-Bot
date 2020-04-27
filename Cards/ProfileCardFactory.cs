@@ -1,4 +1,5 @@
 ﻿using AdaptiveCards;
+using ADS.Bot.V1.Models;
 using ADS.Bot1;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Schema;
@@ -12,52 +13,6 @@ using System.Threading.Tasks;
 
 namespace ADS.Bot.V1.Cards
 {
-    public class JSONProfileCardFactory : JSONCardFactory<BasicDetails>
-    {
-        public IBotServices Services { get; }
-
-        public JSONProfileCardFactory(IBotServices services)
-            : base(nameof(JSONProfileCardFactory), Path.Combine(".", "Cards", "profile-card.json"))
-        {
-            Services = services;
-        }
-
-        internal override async Task<BasicDetails> DoPopulate(ITurnContext context, CancellationToken cancellationToken = default)
-        {
-            var userProfile = await Services.GetUserProfileAsync(context, cancellationToken);
-
-            if(userProfile.Details == null)
-            {
-                userProfile.Details = new BasicDetails()
-                {
-                     Name = "Test",
-                     Phone = "Data",
-                     Email = "Saving",
-                     Focus = "focus",
-                     Timeframe = "timeframe"
-                };
-            }
-
-            return userProfile.Details;
-        }
-
-        internal override async Task<bool> DoValidate(BasicDetails submission, ITurnContext context, CancellationToken cancellationToken)
-        {
-            return submission.Name != "Test";
-        }
-
-        internal override async Task DoFinalize(BasicDetails submission, ITurnContext context, CancellationToken cancellationToken)
-        {
-            var currentProfiles = await Services.GetUserProfileAsync(context, cancellationToken);
-
-            currentProfiles.Details = submission;
-
-            await Services.SetUserProfileAsync(currentProfiles, context, cancellationToken);
-
-            await context.SendActivityAsync($"Thanks so much, {currentProfiles.Details.Name}!", cancellationToken: cancellationToken);
-        }
-    }
-
     public class ProfileCardFactory : ICardFactory<BasicDetails>
     {
         public string Id { get => nameof(ProfileCardFactory); }

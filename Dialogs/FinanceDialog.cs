@@ -1,4 +1,5 @@
 ﻿using ADS.Bot.V1;
+using ADS.Bot.V1.Models;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Dialogs.Choices;

@@ -19,6 +19,7 @@ using Microsoft.Bot.Builder.Dialogs.Choices;
 using Microsoft.Bot.Schema;
 using ADS.Bot.V1.Cards;
 using Newtonsoft.Json.Linq;
+using ADS.Bot.V1.Models;
 
 namespace ADS.Bot.V1.Dialogs
 {
@@ -28,11 +29,10 @@ namespace ADS.Bot.V1.Dialogs
         List<ICardFactory> CardFactories = new List<ICardFactory>();
 
         public ActiveLeadDialog(
-            VehicleProfileDialog vehicleDialog, 
-            ValueTradeInDialog tradeInDialog, 
-            FinanceDialog financeDialog, 
-            UserProfileDialog userProfileDialog, 
             ICardFactory<BasicDetails> profileFactory,
+            ICardFactory<FinancingDetails> financeFactory,
+            ICardFactory<TradeInDetails> tradeinFactory,
+            ICardFactory<VehicleInventoryDetails> vehicleFactory,
             IBotServices botServices) 
             : base(nameof(ActiveLeadDialog))
         {
@@ -64,10 +64,28 @@ namespace ADS.Bot.V1.Dialogs
                         Condition = "turn.interest != null",
                         Actions = new List<Dialog>()
                         {
-                            new EmitEvent()
+                            new SwitchCondition()
                             {
-                                EventName = Constants.Event_Card,
-                                EventValue = "turn.interest"
+                                Condition = "turn.interest",
+                                Cases = new List<Case>()
+                                {
+                                    new Case() { 
+                                        Value = "Explore Financing", 
+                                        Actions = new List<Dialog>(){ new EmitEvent(Constants.Event_Card, "'financing'") }
+                                    },
+                                    new Case() { 
+                                        Value = "Identify a Vehicle",
+                                        Actions = new List<Dialog>(){ new EmitEvent(Constants.Event_Card, "'vehicle'") }
+                                    },
+                                    new Case() { 
+                                        Value = "Value a Trade-In",
+                                        Actions = new List<Dialog>(){ new EmitEvent(Constants.Event_Card, "'tradein'") }
+                                    },
+                                    new Case() { 
+                                        Value = "Search Inventory",
+                                        Actions = new List<Dialog>(){ new EmitEvent(Constants.Event_Card, "'inventory'") }
+                                    }
+                                }
                             },
                             //Delete the property so we don't loop forever
                             new DeleteProperty()
@@ -98,21 +116,40 @@ namespace ADS.Bot.V1.Dialogs
                                 Cases = new List<Case>()
                                 {
                                     //Just copied from below as a quick fix, ideally this would all be in the financing dialog itself.
-                                    new Case("explore financing")
+                                    new Case("profile")
                                     {
-                                        Actions = Utilities.CardFactoryActions(profileFactory)
+                                        Actions = new List<Dialog>()
+                                        {
+                                            Utilities.CardFactoryAction(profileFactory)
+                                        }
                                     },
-                                    new Case("identify a vehicle")
+                                    new Case("financing")
                                     {
-                                        Actions = VerifyProfile(nameof(VehicleProfileDialog))
+                                        Actions = new List<Dialog>()
+                                        {
+                                            Utilities.CardFactoryAction(financeFactory)
+                                        }
                                     },
-                                    new Case("value a trade-in")
+                                    new Case("vehicle")
                                     {
-                                        Actions = VerifyProfile(nameof(ValueTradeInDialog))
+                                        Actions = new List<Dialog>()
+                                        {
+                                            Utilities.CardFactoryAction(vehicleFactory)
+                                        }
                                     },
-                                    new Case("search inventory")
+                                    new Case("tradein")
                                     {
-                                        Actions = VerifyProfile(nameof(InventoryDialog))
+                                        Actions = new List<Dialog>()
+                                        {
+                                            Utilities.CardFactoryAction(tradeinFactory)
+                                        }
+                                    },
+                                    new Case("inventory")
+                                    {
+                                        Actions = new List<Dialog>()
+                                        {
+                                            Utilities.CardFactoryAction(vehicleFactory)
+                                        }
                                     },
                                 },
                                 Default = new List<Dialog>()
@@ -139,12 +176,11 @@ namespace ADS.Bot.V1.Dialogs
             };
 
             CardFactories.Add(profileFactory);
+            CardFactories.Add(financeFactory);
+            CardFactories.Add(tradeinFactory);
+            CardFactories.Add(vehicleFactory);
 
             AddDialog(rootDialog);
-            AddDialog(financeDialog);
-            AddDialog(vehicleDialog);
-            AddDialog(tradeInDialog);
-            AddDialog(userProfileDialog);
         }
 
         public IBotServices Services { get; }

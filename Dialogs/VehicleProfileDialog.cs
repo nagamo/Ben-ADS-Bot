@@ -1,4 +1,5 @@
-﻿using ADS.Bot1;
+﻿using ADS.Bot.V1.Models;
+using ADS.Bot1;
 using ADS.Bot1.Dialogs;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
@@ -74,7 +75,7 @@ namespace ADS.Bot.V1.Dialogs
             }
             else
             {
-                userData.VehicleProfile = new VehicleProfileDetails();
+                userData.VehicleProfile = new VehicleInventoryDetails();
             }
 
             return await stepContext.NextAsync(cancellationToken: cancellationToken);

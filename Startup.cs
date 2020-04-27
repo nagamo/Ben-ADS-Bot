@@ -17,6 +17,7 @@ using Microsoft.Bot.Connector;
 using Microsoft.Bot.Builder.Azure;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
+using ADS.Bot.V1.Models;
 
 namespace ADS.Bot1
 {
@@ -56,7 +57,10 @@ namespace ADS.Bot1
             // Create the bot services (LUIS, QnA) as a singleton.
             services.AddSingleton<IBotServices, Services>();
 
-            services.AddSingleton<ICardFactory<BasicDetails>,JSONProfileCardFactory>();
+            services.AddSingleton<ICardFactory<BasicDetails>, JSONProfileCardFactory>();
+            services.AddSingleton<ICardFactory<FinancingDetails>, JSONFinanceCardFactory>();
+            services.AddSingleton<ICardFactory<VehicleInventoryDetails>, JSONInventoryQueryCardFactory>();
+            services.AddSingleton<ICardFactory<TradeInDetails>, JSONTradeInCardFactory>();
             //services.AddSingleton<SendAdaptiveDialog<ProfileCardFactory, BasicDetails>>();
 
             // Create the various dialogs
