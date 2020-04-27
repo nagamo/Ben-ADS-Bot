@@ -38,7 +38,8 @@
                         {
                             "type": "Input.Text",
                             "id": "Name",
-                            "placeholder": "name"
+                            "placeholder": "name",
+                            "value": "{Name}"
                         },
                         {
                             "type": "TextBlock",
@@ -49,7 +50,8 @@
                             "type": "Input.Text",
                             "id": "Email",
                             "placeholder": "youremail@example.com",
-                            "style": "Email"
+                            "style": "Email",
+                            "value": "{Email}"
                         },
                         {
                             "type": "TextBlock",
@@ -59,7 +61,8 @@
                             "type": "Input.Text",
                             "id": "Phone",
                             "placeholder": "xxx.xxx.xxxx",
-                            "style": "Tel"
+                            "style": "Tel",
+                            "value": "{Phone}"
                         },
                         {
                             "type": "TextBlock",
@@ -85,7 +88,8 @@
                             ],
                             "style": "expanded",
                             "id": "Focus",
-                            "spacing": "Small"
+                            "spacing": "Small",
+                            "value": "{Focus}"
                         },
                         {
                             "type": "TextBlock",
@@ -111,7 +115,8 @@
                             ],
                             "style": "expanded",
                             "id": "Timeframe",
-                            "spacing": "Small"
+                            "spacing": "Small",
+                            "value": "{Timeframe}"
                         },
                         {
                             "type": "ActionSet",
