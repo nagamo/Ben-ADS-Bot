@@ -145,9 +145,8 @@ namespace ADS.Bot1.Dialogs
 
 
 
-            var ownershipOptions = Utilities.CreateOptions(new string[] { "Unemployed", "Less than a year", "1 - 5 years," +
-                                                          "More than five years" }, "Last Question! (I know - you thought we'd " +
-                                                           "never get here!). That great job you've got; how long have you been there?");
+            var ownershipOptions = Utilities.CreateOptions(new string[] { "I'm Unemployed", "Less than a year", "1 - 5 years", "More than five years" }, 
+                                                           "Last Question! (And you thought we'd never get here!). How long have you been in your current job?");
             return await stepContext.PromptAsync(nameof(ChoicePrompt), ownershipOptions, cancellationToken);
         }
 

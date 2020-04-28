@@ -363,12 +363,14 @@ namespace ADS.Bot.V1.Dialogs
                     //emit card display event, based on the value of the "card" tag, if present
                     //this causes the card to be displayed "independently" through the custom event handler
                     await context.EmitEventAsync(Constants.Event_Card, resultTags["card"]);
-
-                    return new DialogTurnResult(DialogTurnStatus.Complete);
                 }
 
                 //We always send the response from QnA
                 await context.Context.SendActivityAsync(MessageFactory.Text(topResult.Answer));
+
+                //and since the user has asked for a specific intent, we don't wait for further input. Call
+                //the turn complete
+                return new DialogTurnResult(DialogTurnStatus.Complete);
             }
             else
             {
