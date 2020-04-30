@@ -32,6 +32,8 @@ namespace ADS.Bot.V1.Dialogs
 
 
         public ActiveLeadDialog(
+            UserProfileDialog userProfileDialog,
+            FinanceDialog financeDialog,
             ICardFactory<BasicDetails> profileFactory,
             ICardFactory<FinancingDetails> financeFactory,
             ICardFactory<TradeInDetails> tradeinFactory,
@@ -184,14 +186,14 @@ namespace ADS.Bot.V1.Dialogs
                                     {
                                         Actions = new List<Dialog>()
                                         {
-                                            Utilities.CardFactoryAction(profileFactory)
+                                            new BeginDialog(nameof(UserProfileDialog))
                                         }
                                     },
                                     new Case("financing")
                                     {
                                         Actions = new List<Dialog>()
                                         {
-                                            Utilities.CardFactoryAction(financeFactory)
+                                            new BeginDialog(nameof(FinanceDialog))
                                         }
                                     },
                                     new Case("vehicle")
@@ -254,6 +256,9 @@ namespace ADS.Bot.V1.Dialogs
             CardFactories.Add(vehicleFactory);
 
             AddDialog(rootDialog);
+
+            AddDialog(userProfileDialog);
+            AddDialog(financeDialog);
         }
 
         public async Task<DialogTurnResult> DispalyHelp(DialogContext context, object data)
@@ -374,8 +379,10 @@ namespace ADS.Bot.V1.Dialogs
             }
             else
             {
-                await context.Context.SendActivityAsync(MessageFactory.Text("Great Caesar's Ghost! " +
-                               "You've thrown me for a loop with that one! Give 'er another try, will ya?"));
+                //await context.Context.SendActivityAsync(MessageFactory.Text("Great Caesar's Ghost! " +
+                //               "You've thrown me for a loop with that one! Give 'er another try, will ya?"));
+
+                return new DialogTurnResult(DialogTurnStatus.Complete);
             }
 
             return new DialogTurnResult(DialogTurnStatus.Waiting);
