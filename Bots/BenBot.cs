@@ -56,11 +56,19 @@ namespace ADS.Bot.V1.Bots
             var userProfile = await Services.GetUserProfileAsync(turnContext, cancellationToken);
 
             //Let the manager handle passing our message to the one-and-only dialog
-            await DialogManager.OnTurnAsync(turnContext, cancellationToken);
+            var dialogResult = await DialogManager.OnTurnAsync(turnContext, cancellationToken);
 
             // Save any state changes.
             await Services.UserProfileAccessor.SetAsync(turnContext, userProfile, cancellationToken);
             await User.SaveChangesAsync(turnContext, cancellationToken: cancellationToken);
+
+
+            switch (dialogResult.TurnResult.Status)
+            {
+                case DialogTurnStatus.Complete:
+                    //End of conversation here....
+                    break;
+            }
         }
     }
 }

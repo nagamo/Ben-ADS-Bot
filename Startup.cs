@@ -68,6 +68,7 @@ namespace ADS.Bot1
             services.AddSingleton<VehicleProfileDialog>();
             services.AddSingleton<ValueTradeInDialog>();
             services.AddSingleton<FinanceDialog>();
+            services.AddSingleton<InventoryDialog>();
 
             services.AddSingleton<ActiveLeadDialog>();
 

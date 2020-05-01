@@ -7,15 +7,15 @@ namespace ADS.Bot.V1
 {
     public class Constants
     {
-        public const string Event_Help = "Help";
+        public const string Event_Help = "help";
 
-        public const string Event_Cancel = "Cancel";
+        public const string Event_Cancel = "cancel";
 
-        public const string Event_Card = "Card";
+        public const string Event_Card = "card";
 
-        public const string Event_Card_Submit = "Card_Submit";
+        public const string Event_Card_Submit = "card_submit";
 
-        public const string Event_Interest = "Interst";
+        public const string Event_Interest = "interest";
 
         public static string[] HelpOptions = new string[]
         {

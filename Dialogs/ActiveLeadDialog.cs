@@ -34,6 +34,9 @@ namespace ADS.Bot.V1.Dialogs
         public ActiveLeadDialog(
             UserProfileDialog userProfileDialog,
             FinanceDialog financeDialog,
+            VehicleProfileDialog vehicleProfileDialog,
+            ValueTradeInDialog valueTradeInDialog,
+            InventoryDialog inventoryDialog,
             ICardFactory<BasicDetails> profileFactory,
             ICardFactory<FinancingDetails> financeFactory,
             ICardFactory<TradeInDetails> tradeinFactory,
@@ -48,36 +51,6 @@ namespace ADS.Bot.V1.Dialogs
                 Generator = new TemplateEngineLanguageGenerator(),
                 Triggers = new List<OnCondition>()
                 {
-                    new OnCustomEvent(Constants.Event_Card_Submit)
-                    {
-                        Actions = new List<Dialog>()
-                        {
-                            //Update user object with details from profile
-                            //I thought this would happen automatically somewhere...
-                            new CodeAction(async (context, _)=>{
-                                var userData = await Services.GetUserProfileAsync(context.Context);
-                                context.GetState().SetValue("user.UserProfile", userData);
-                                return new DialogTurnResult(DialogTurnStatus.Complete);
-                            }),
-                            new IfCondition()
-                            {
-                                Condition = "conversation.residual_interest != null",
-                                Actions = new List<Dialog>()
-                                {
-                                    new SetProperty()
-                                    {
-                                        Property = "conversation.interest",
-                                        Value = "conversation.residual_interest"
-                                    },
-                                    new DeleteProperty()
-                                    {
-                                        Property = "conversation.residual_interest"
-                                    },
-                                    new EmitEvent(Constants.Event_Interest)
-                                }
-                            },
-                        }
-                    },
                     new OnCustomEvent(Constants.Event_Help)
                     {
                         Actions = new List<Dialog>()
@@ -167,7 +140,6 @@ namespace ADS.Bot.V1.Dialogs
                         {
                             //  when the user cancels we need to check where they were so that we can transition smoothly.
                             //  what if they weren't in a dialog? What if they've typed 'cancel' twice in a row?
-                            new SendActivity("Really? You want to quit? And we were having so much fun! But have it your way."),
                             new EmitEvent(Constants.Event_Help, bubble: true),
                             new CancelAllDialogs(),
                         }
@@ -200,21 +172,21 @@ namespace ADS.Bot.V1.Dialogs
                                     {
                                         Actions = new List<Dialog>()
                                         {
-                                            Utilities.CardFactoryAction(vehicleFactory)
+                                            new BeginDialog(nameof(VehicleProfileDialog))
                                         }
                                     },
                                     new Case("tradein")
                                     {
                                         Actions = new List<Dialog>()
                                         {
-                                            Utilities.CardFactoryAction(tradeinFactory)
+                                            new BeginDialog(nameof(TradeDialog))
                                         }
                                     },
                                     new Case("inventory")
                                     {
                                         Actions = new List<Dialog>()
                                         {
-                                            Utilities.CardFactoryAction(vehicleFactory)
+                                            new BeginDialog(nameof(InventoryDialog))
                                         }
                                     },
                                 },
@@ -223,7 +195,54 @@ namespace ADS.Bot.V1.Dialogs
                                     new SendActivity("I'm sorry, I can't handle that request yet. :("),
                                     new EmitEvent(Constants.Event_Help, bubble: true)
                                 }
-                            }
+                            },
+                            new IfCondition()
+                            {
+                                Condition = "conversation.residual_interest != null",
+                                Actions = new List<Dialog>()
+                                {
+                                    new SetProperty()
+                                    {
+                                        Property = "conversation.interest",
+                                        Value = "conversation.residual_interest"
+                                    },
+                                    new DeleteProperty()
+                                    {
+                                        Property = "conversation.residual_interest"
+                                    },
+                                    new EmitEvent(Constants.Event_Interest)
+                                },
+                                ElseActions = new List<Dialog>()
+                                {
+                                    new SendActivity("All done!"),
+                                    new DeleteProperty()
+                                    {
+                                        Property = "conversation.interest"
+                                    },
+                                    new ChoiceInput()
+                                    {
+                                        Prompt = new ActivityTemplate("Thank you for filling out all those details. Can I help you with anything else?"),
+                                        Choices = new ChoiceSet(new string[]{ "No Thanks" }.Union(Constants.HelpOptions).Select(o => new Choice(o)).ToList()),
+                                        Property = "conversation.interest",
+                                        AlwaysPrompt = true,
+                                        AllowInterruptions = "true"
+                                    },
+                                    new TraceActivity(),
+                                    new IfCondition()
+                                    {
+                                        Condition = "conversation.interest == null || conversation.interest == 'No Thanks'",
+                                        Actions = new List<Dialog>()
+                                        {
+                                            new SendActivity("No more interest"),
+                                            new EndDialog()
+                                        },
+                                        ElseActions = new List<Dialog>()
+                                        {
+                                            new EmitEvent(Constants.Event_Interest)
+                                        }
+                                    }
+                                }
+                            },
                         }
                     },
 
@@ -244,7 +263,12 @@ namespace ADS.Bot.V1.Dialogs
 #if DEBUG
                             new TraceActivity("OnMessageActivity"){Name = "OnMessageActivity"},
 #endif
-                            new CodeAction(PrimaryHandler)
+                            new CodeAction(PrimaryHandler),
+                            new CodeAction(async (context, _)=>{
+                                var userData = await Services.GetUserProfileAsync(context.Context);
+                                context.GetState().SetValue("user.UserProfile", userData);
+                                return new DialogTurnResult(DialogTurnStatus.Complete);
+                            })
                         }
                     }
                 }
@@ -259,6 +283,9 @@ namespace ADS.Bot.V1.Dialogs
 
             AddDialog(userProfileDialog);
             AddDialog(financeDialog);
+            AddDialog(vehicleProfileDialog);
+            AddDialog(valueTradeInDialog);
+            AddDialog(inventoryDialog);
         }
 
         public async Task<DialogTurnResult> DispalyHelp(DialogContext context, object data)
