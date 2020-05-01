@@ -28,7 +28,10 @@ namespace ADS.Bot.V1.Bots
         {
             Services = services;
             User = user;
-            DialogManager = new DialogManager(dialog);
+            DialogManager = new DialogManager(dialog)
+            {
+                UserState = user
+            };
         }
 
 
@@ -67,6 +70,10 @@ namespace ADS.Bot.V1.Bots
             {
                 case DialogTurnStatus.Complete:
                     //End of conversation here....
+                    if(dialogResult.TurnResult.Result != null)
+                    {
+
+                    }
                     break;
             }
         }

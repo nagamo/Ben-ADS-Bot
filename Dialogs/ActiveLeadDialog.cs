@@ -233,8 +233,11 @@ namespace ADS.Bot.V1.Dialogs
                                         Condition = "conversation.interest == null || conversation.interest == 'No Thanks'",
                                         Actions = new List<Dialog>()
                                         {
-                                            new SendActivity("No more interest"),
+                                            new SendActivity("All right then, thank you for you interest!"),
                                             new EndDialog()
+                                            {
+                                                Value = "user.UserProfile"
+                                            }
                                         },
                                         ElseActions = new List<Dialog>()
                                         {
