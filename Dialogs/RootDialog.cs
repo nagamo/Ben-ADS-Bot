@@ -34,13 +34,13 @@ namespace ADS.Bot.V1.Dialogs
                                 Condition = "conversation.seen_help == false || conversation.seen_help == null",
                                 Actions = new List<Dialog>()
                                 {
-                                    new EmitEvent(Constants.Event_ShowTips)
+                                    new EmitEvent(Constants.Event_Help)
                                 }
                             },
                             new BeginDialog(nameof(ActiveLeadDialog))
                         }
                     },
-                    new OnCustomEvent(Constants.Event_ShowTips)
+                    new OnCustomEvent(Constants.Event_Help)
                     {
                         Actions = new List<Dialog>()
                         {
@@ -56,8 +56,8 @@ namespace ADS.Bot.V1.Dialogs
                                                               "type a request directly into the text box."),
                                 AlwaysPrompt = true,
                                 AllowInterruptions =  "true",
-                                //MaxTurnCount = 1,
-                                Property = "turn.interest",
+                                Validations = new List<string>(new string[]{ "true" }),
+                                Property = "conversation.interest",
                                 Choices = new ChoiceSet(new List<Choice>()
                                 {
                                     new Choice() { Value = "Explore Financing" },
@@ -66,7 +66,6 @@ namespace ADS.Bot.V1.Dialogs
                                     new Choice() { Value = "Search Inventory" }
                                 })
                             },
-                            new RepeatDialog()
                         }
                     }
                 }

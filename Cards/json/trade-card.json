@@ -1,0 +1,150 @@
+{
+    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+    "type": "AdaptiveCard",
+    "version": "1.0",
+    "body": [
+        {
+            "type": "ColumnSet",
+            "columns": [
+                {
+                    "type": "Column",
+                    "width": 2,
+                    "items": [
+                        {
+                            "type": "TextBlock",
+                            "text": "Value that Trade-In!",
+                            "weight": "Bolder",
+                            "size": "Medium",
+                            "horizontalAlignment": "Center"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "Tell us a little about the vehicle you're interested in trading in. Here today, gone tomorrow!",
+                            "isSubtle": true,
+                            "wrap": true
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "Year",
+                            "wrap": true
+                        },
+                        {
+                            "type": "Input.Text",
+                            "id": "Year",
+                            "placeholder": "enter year...",
+                            "value": "{Year}"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "Make",
+                            "wrap": true,
+                            "spacing": "Medium"
+                        },
+                        {
+                            "type": "Input.Text",
+                            "placeholder": "enter make...",
+                            "id": "Make",
+                            "value": "{Make}"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "Model",
+                            "spacing": "Medium"
+                        },
+                        {
+                            "type": "Input.Text",
+                            "id": "Model",
+                            "placeholder": "enter model...",
+                            "value": "{Model}"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "Mileage",
+                            "spacing": "Medium"
+                        },
+                        {
+                            "type": "Input.Text",
+                            "placeholder": "enter mileage...",
+                            "id": "Mileage",
+                            "value": "{Mileage}"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "Condition",
+                            "spacing": "Medium"
+                        },
+                        {
+                            "type": "Input.ChoiceSet",
+                            "placeholder": "Placeholder text",
+                            "choices": [
+                                {
+                                    "title": "Excellent",
+                                    "value": "Excellent"
+                                },
+                                {
+                                    "title": "Good",
+                                    "value": "Good"
+                                },
+                                {
+                                    "title": "Fair",
+                                    "value": "Fair"
+                                },
+                                {
+                                    "title": "Rough",
+                                    "value": "Rough"
+                                }
+                            ],
+                            "style": "expanded",
+                            "id": "Condition",
+                            "value": "{Condition}"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "Amount still owed",
+                            "spacing": "Medium"
+                        },
+                        {
+                            "type": "Input.Text",
+                            "placeholder": "enter amount owed...",
+                            "id": "AmountOwed",
+                            "value": "{AmountOwed}"
+                        },
+                        {
+                            "type": "ActionSet",
+                            "spacing": "Medium",
+                            "actions": [
+                                {
+                                    "type": "Action.Submit",
+                                    "title": "Submit",
+                                    "data": {
+                                        "id": "submit",
+                                        "card_id": "JSONTradeInCardFactory"
+                                    }
+                                },
+                                {
+                                    "type": "Action.Submit",
+                                    "title": "Cancel",
+                                    "data": {
+                                        "id": "cancel",
+                                        "card_id": "JSONTradeInCardFactory"
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "Column",
+                    "width": "100px",
+                    "items": [
+                        {
+                            "type": "Image",
+                            "url": "https://upload.wikimedia.org/wikipedia/commons/b/b2/Diver_Silhouette%2C_Great_Barrier_Reef.jpg",
+                            "size": "auto"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

@@ -1,4 +1,5 @@
-﻿using ADS.Bot1;
+﻿using ADS.Bot.V1.Models;
+using ADS.Bot1;
 using ADS.Bot1.Dialogs;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
@@ -103,7 +104,7 @@ namespace ADS.Bot.V1.Dialogs
 
 
 
-            var modelOptions = Utilities.CreateOptions(new string[] { "Load", "Me", "Dynamically" }, "What Model?");
+            var modelOptions = Utilities.CreateOptions(new string[] { "Tacoma", "Tundra", "RAV4" }, "And the Model?");
             return await stepContext.PromptAsync(nameof(ChoicePrompt), modelOptions, cancellationToken);
         }
 
@@ -147,7 +148,7 @@ namespace ADS.Bot.V1.Dialogs
 
 
 
-            var conditionOptions = Utilities.CreateOptions(new string[] { "New", "Slightly Used", "Medium Use", "Heavily Use" }, "What condition is the vehicle in?");
+            var conditionOptions = Utilities.CreateOptions(new string[] { "Like New", "Great Shape", "Fair", "Rough" }, "What kind of shape is it in?");
             return await stepContext.PromptAsync(nameof(ChoicePrompt), conditionOptions, cancellationToken);
         }
 
@@ -169,7 +170,7 @@ namespace ADS.Bot.V1.Dialogs
 
 
 
-            var owedOptions = Utilities.CreateOptions(new string[] { "N/A", "< $5000", "$5k-10k", "$10k+" }, "How much do you still owe?");
+            var owedOptions = Utilities.CreateOptions(new string[] { "It's paid off!", "< $1000", "$1k-5k", "$5k+" }, "How much do you still owe?");
             return await stepContext.PromptAsync(nameof(ChoicePrompt), owedOptions, cancellationToken);
         }
 
@@ -191,8 +192,7 @@ namespace ADS.Bot.V1.Dialogs
 
             var lines = new List<string>
             {
-                $"Thanks {userData.Name}! I got these details for your trade-in.",
-                $"I hope it's correct becuase I don't reset yet! :)",
+                $"Thanks {userData.Name}! Here's what I've got for your trade:",
                 $"Make: {userData.TradeDetails.Make}",
                 $"Model: {userData.TradeDetails.Model}",
                 $"Year: {userData.TradeDetails.Year}",

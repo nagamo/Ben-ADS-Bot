@@ -40,8 +40,6 @@ namespace ADS.Bot1.Bots
         {
             dialogs = new DialogSet(services.DialogStateAccessor);
             //dialogs.Add(FinanceDialog.Instance);
-            dialogs.Add(TradeDialog.Instance);
-            dialogs.Add(InventoryDialog.Instance);
         }
 
 

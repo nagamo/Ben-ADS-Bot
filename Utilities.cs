@@ -1,10 +1,16 @@
-﻿using Microsoft.Bot.Builder;
+﻿using AdaptiveCards;
+using ADS.Bot.V1.Cards;
+using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Bot.Builder.Dialogs.Adaptive.Actions;
 using Microsoft.Bot.Builder.Dialogs.Choices;
 using Microsoft.Bot.Schema;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ADS.Bot.V1
@@ -45,6 +51,55 @@ namespace ADS.Bot.V1
             else
             {
                 return stepContext.Result?.ToString();
+            }
+        }
+
+        public static Attachment CreateAttachment(AdaptiveCard Card)
+        {
+            return new Attachment()
+            {
+                ContentType = AdaptiveCard.ContentType,
+                Content = JsonConvert.DeserializeObject(JsonConvert.SerializeObject(Card))
+            };
+        }
+
+        public static List<Dialog> CardFactoryActions<TModel>(ICardFactory<TModel> Factory)
+        {
+            return new List<Dialog>()
+            {
+                CardFactoryAction<TModel>(Factory)
+            };
+        }
+        public static CodeAction CardFactoryAction<TModel>(ICardFactory<TModel> Factory)
+        {
+            return new CodeAction(async (context, obj) =>
+                {
+                    var initData = await Factory.Populate(context.Context);
+
+                    var message = Activity.CreateMessageActivity();
+
+                    message.Attachments = new List<Attachment>()
+                    {
+                        CreateAttachment(Factory.CreateCard(initData, context.Context))
+                    };
+                    await context.Context.SendActivityAsync(message);
+
+                    return new DialogTurnResult(DialogTurnStatus.Waiting, null);
+                });
+        }
+
+        public static bool AttemptParseCardResult<T>(ITurnContext context, out T result)
+        {
+            result = default;
+            var data = context.Activity.ChannelData as JObject;
+            if (Convert.ToBoolean(data.Value<string>("postBack")))
+            {
+                result = (context.Activity.Value as JObject).ToObject<T>();
+                return result != null;
+            }
+            else
+            {
+                return false;
             }
         }
     }

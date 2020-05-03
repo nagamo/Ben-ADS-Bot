@@ -6,16 +6,12 @@ using System.Threading.Tasks;
 
 namespace ADS.Bot1.Dialogs
 {
-    public class InventoryDialog : WaterfallDialog
+    public class InventoryDialog : ComponentDialog
     {
-        public InventoryDialog(string dialogId, IEnumerable<WaterfallStep> steps = null) : base(dialogId, steps)
+        public InventoryDialog() : base(nameof(InventoryDialog))
         {
 
         }
-
-        public static string Id => "inventoryDialog";
-
-        public static InventoryDialog Instance { get; } = new InventoryDialog(Id);
 
     }
 }

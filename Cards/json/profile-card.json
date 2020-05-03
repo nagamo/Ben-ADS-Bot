@@ -1,0 +1,160 @@
+{
+    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+    "type": "AdaptiveCard",
+    "version": "1.0",
+    "body": [
+        {
+            "type": "ColumnSet",
+            "columns": [
+                {
+                    "type": "Column",
+                    "width": 2,
+                    "items": [
+                        {
+                            "type": "TextBlock",
+                            "text": "Tell us about yourself",
+                            "weight": "Bolder",
+                            "size": "Medium",
+                            "horizontalAlignment": "Center"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "Whatever contact information you can provide would be appreciated! It'll help us stay in touch.",
+                            "isSubtle": true,
+                            "wrap": true
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "(Don't worry, we'll never share or sell your information) 👍",
+                            "isSubtle": true,
+                            "wrap": true,
+                            "size": "Small"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "Your name",
+                            "wrap": true
+                        },
+                        {
+                            "type": "Input.Text",
+                            "id": "Name",
+                            "placeholder": "name",
+                            "value": "{Name}"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "Your email",
+                            "wrap": true
+                        },
+                        {
+                            "type": "Input.Text",
+                            "id": "Email",
+                            "placeholder": "youremail@example.com",
+                            "style": "Email",
+                            "value": "{Email}"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "Phone Number"
+                        },
+                        {
+                            "type": "Input.Text",
+                            "id": "Phone",
+                            "placeholder": "xxx.xxx.xxxx",
+                            "style": "Tel",
+                            "value": "{Phone}"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "What's your focus?",
+                            "spacing": "Medium"
+                        },
+                        {
+                            "type": "Input.ChoiceSet",
+                            "placeholder": "Placeholder text",
+                            "choices": [
+                                {
+                                    "title": "Just browsing",
+                                    "value": "Browsing"
+                                },
+                                {
+                                    "title": "Looking to buy or lease",
+                                    "value": "Buy/Lease"
+                                },
+                                {
+                                    "title": "Depends on what I see",
+                                    "value": "Depends"
+                                }
+                            ],
+                            "style": "expanded",
+                            "id": "Focus",
+                            "spacing": "Small",
+                            "value": "{Focus}"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "What's your timeframe?",
+                            "spacing": "Medium"
+                        },
+                        {
+                            "type": "Input.ChoiceSet",
+                            "placeholder": "Placeholder text",
+                            "choices": [
+                                {
+                                    "title": "ASAP",
+                                    "value": "ASAP"
+                                },
+                                {
+                                    "title": "Within a week",
+                                    "value": "Within a week"
+                                },
+                                {
+                                    "title": "Really not sure",
+                                    "value": "Really not sure"
+                                }
+                            ],
+                            "style": "expanded",
+                            "id": "Timeframe",
+                            "spacing": "Small",
+                            "value": "{Timeframe}"
+                        },
+                        {
+                            "type": "ActionSet",
+                            "actions": [
+                                {
+                                    "type": "Action.Submit",
+                                    "title": "Submit",
+                                    "data": {
+                                        "id": "submit",
+                                        "card_id": "JSONProfileCardFactory"
+                                    }
+                                },
+                                {
+                                    "type": "Action.Submit",
+                                    "title": "Cancel",
+                                    "data": {
+                                        "id": "cancel",
+                                        "card_id": "JSONProfileCardFactory"
+                                    }
+                                }
+                            ],
+                            "spacing": "Medium"
+                        }
+                    ]
+                },
+                {
+                    "type": "Column",
+                    "width": "stretch",
+                    "items": [
+                        {
+                            "type": "TextBlock",
+                            "text": ""
+                        }
+                    ]
+                }
+            ],
+            "horizontalAlignment": "Right",
+            "spacing": "None"
+        }
+    ]
+}

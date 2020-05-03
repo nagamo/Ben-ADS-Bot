@@ -16,12 +16,32 @@ using System.Threading;
 using Microsoft.Bot.Builder.Dialogs.Adaptive.Input;
 using Microsoft.Bot.Builder.Dialogs.Adaptive.Templates;
 using Microsoft.Bot.Builder.Dialogs.Choices;
+using Microsoft.Bot.Schema;
+using ADS.Bot.V1.Cards;
+using Newtonsoft.Json.Linq;
+using ADS.Bot.V1.Models;
 
 namespace ADS.Bot.V1.Dialogs
 {
     public class ActiveLeadDialog : ComponentDialog
     {
-        public ActiveLeadDialog(VehicleProfileDialog vehicleDialog, ValueTradeInDialog tradeInDialog, FinanceDialog financeDialog, UserProfileDialog userProfileDialog, IBotServices botServices) 
+
+        List<ICardFactory> CardFactories = new List<ICardFactory>();
+        public IBotServices Services { get; }
+
+
+
+        public ActiveLeadDialog(
+            UserProfileDialog userProfileDialog,
+            FinanceDialog financeDialog,
+            VehicleProfileDialog vehicleProfileDialog,
+            ValueTradeInDialog valueTradeInDialog,
+            InventoryDialog inventoryDialog,
+            ICardFactory<BasicDetails> profileFactory,
+            ICardFactory<FinancingDetails> financeFactory,
+            ICardFactory<TradeInDetails> tradeinFactory,
+            ICardFactory<VehicleInventoryDetails> vehicleFactory,
+            IBotServices botServices) 
             : base(nameof(ActiveLeadDialog))
         {
             Services = botServices;
@@ -29,169 +49,281 @@ namespace ADS.Bot.V1.Dialogs
             var rootDialog = new AdaptiveDialog(nameof(AdaptiveDialog))
             {
                 Generator = new TemplateEngineLanguageGenerator(),
-                Recognizer = botServices.Dispatch,
                 Triggers = new List<OnCondition>()
                 {
-                    //*From Ben*
-                    //  This is an intent from the user, not the bot's intent to send a hello message.
-                    //  We actually don't need this from LUIS because QnA will handle cases where a users says anything along the lines of a greeting
-                    /*
-                    new OnIntent("Greeting")
+                    new OnCustomEvent(Constants.Event_Help)
                     {
-                        // this needs to be combined with a 'restart' intent, where the text sent to the user recognizes
-                        // that they're cycling back through everything.
-                        Condition = "#Greeting.Score >= 0.9",
                         Actions = new List<Dialog>()
                         {
-                            new SendActivity("Hello!")
+                            new SetProperty()
+                            {
+                                Property = "conversation.seen_help",
+                                Value = "true"
+                            },
+                            new ChoiceInput()
+                            {
+                                Prompt = new ActivityTemplate("I want to provide you with the best service possible! " +
+                                                              "Just select one of the easy-click options below, or " +
+                                                              "type a request directly into the text box."),
+                                AlwaysPrompt = true,
+                                Property = "conversation.interest",
+                                Choices = new ChoiceSet(Constants.HelpOptions.Select(o => new Choice(o)).ToList())
+                            },
+                            new IfCondition()
+                            {
+                                Condition = "conversation.interest != null",
+                                Actions = new List<Dialog>()
+                                {
+                                    new EmitEvent(Constants.Event_Interest)
+                                }
+                            },
                         }
                     },
-                    */
-                    new OnBeginDialog()
+                    new OnCustomEvent(Constants.Event_Interest)
                     {
-                        //This property is set by RootDialog, based on option selected from help cards
-                        Condition = "turn.interest != null",
+                        Condition = "conversation.interest != null",
                         Actions = new List<Dialog>()
                         {
-                            new LogAction("Options!")
+                            new IfCondition()
                             {
-                                TraceActivity = true
-                            },
-                            new SwitchCondition()
-                            {
-                                Condition = "turn.interest",
-                                Cases = new List<Case>()
+                                Condition = "user.UserProfile.Details == null",
+                                Actions = new List<Dialog>()
                                 {
-                                    //Just copied from below as a quick fix, ideally this would all be in the financing dialog itself.
-                                    new Case("Explore Financing")
+                                    new SetProperty()
                                     {
-                                        Actions = VerifyProfile(nameof(FinanceDialog))
+                                        Property = "conversation.residual_interest",
+                                        Value = "conversation.interest"
                                     },
-                                    new Case("Identify a Vehicle")
+                                    new DeleteProperty()
                                     {
-                                        Actions = VerifyProfile(nameof(VehicleProfileDialog))
+                                        Property = "conversation.interest"
                                     },
-                                    new Case("Value a Trade-In")
-                                    {
-                                        Actions = VerifyProfile(nameof(ValueTradeInDialog))
-                                    },
+                                    new EmitEvent(Constants.Event_Card, "'profile'")
                                 },
-                                Default = new List<Dialog>()
+                                ElseActions = new List<Dialog>()
                                 {
-                                    new TraceActivity(),
-                                    new SendActivity("I'm sorry, I can't handle that request yet. :("),
-                                    new EmitEvent(Constants.Event_ShowTips, bubble: true)
+                                    new SwitchCondition()
+                                    {
+                                        Condition = "conversation.interest",
+                                        Cases = new List<Case>()
+                                        {
+                                            new Case() {
+                                                Value = "Explore Financing",
+                                                Actions = new List<Dialog>(){ new EmitEvent(Constants.Event_Card, "'financing'") }
+                                            },
+                                            new Case() {
+                                                Value = "Identify a Vehicle",
+                                                Actions = new List<Dialog>(){ new EmitEvent(Constants.Event_Card, "'vehicle'") }
+                                            },
+                                            new Case() {
+                                                Value = "Value a Trade-In",
+                                                Actions = new List<Dialog>(){ new EmitEvent(Constants.Event_Card, "'tradein'") }
+                                            },
+                                            new Case() {
+                                                Value = "Search Inventory",
+                                                Actions = new List<Dialog>(){ new EmitEvent(Constants.Event_Card, "'inventory'") }
+                                            }
+                                        }
+                                    }
                                 }
-
                             },
                             //Delete the property so we don't loop forever
                             new DeleteProperty()
                             {
-                                Property = "turn.interest"
+                                Property = "conversation.interest"
                             }
                         }
                     },
-                    new OnIntent("GetFinanced")
+                    new OnCustomEvent(Constants.Event_Cancel)
                     {
-                        // again, are they coming back, or is this their first visit?
-                        //*From Ben*
-                        //  The way I currently implemented it:
-                        //          FinanceDialog itself will essentially skip all the way to the end internally and just print the summary.
-                        //  Below is a more explicit implementation using Condition, which has a few shorthands to it (buried in the repositories)
-                        //  $ works with dialog-scope variables (eg. $userName = dialog.userName), these only last as long as the dialog
-                        //  # works with LUIS intents (eg. Below, #GetFinanced.Score >= 0.8 is looking at the luis response data)
-                        //  you can access needed data with variables like user, conversation, turn, etc. all automatically mapped to classes like UserState, ConversationState, etc.
-                        Condition = "#GetFinanced.Score >= 0.75",
-                        Actions = new List<Dialog>()
-                        {
-                            //*From Ben*
-                            //  In this case, we handle them not having a profile, and show them the user profile dialog first.
-                            //  I understand this isn't 100% how you want it implemented, but should be a lot closer.
-                            new IfCondition()
-                            {
-                                Condition = "user.UserProfile == null",
-                                Actions = new List<Dialog>()
-                                {
-                                    new SendActivity("Financing it is! One of my favorite topics!But listen - could I collect a few " +
-                                                     "details first? Just some contact information, basically."),
-                                    new BeginDialog(nameof(UserProfileDialog)),
-                                },
-                                ElseActions = new List<Dialog>()
-                                {
-                                    new SendActivity("Sure! I'd love to help finance you. Let me ask you a few questions about that.")
-                                }
-                            },
-                            new BeginDialog(nameof(FinanceDialog))
-                        }
-                    },
-                    new OnIntent("Purchasing")
-                    {
-                        Condition = "#Purchasing.Score >= 0.75",
-                        Actions = new List<Dialog>()
-                        {
-                            new BeginDialog(nameof(VehicleProfileDialog))
-                        }
-                    },
-                    new OnIntent("Help")
-                    {
-                        Condition = "#Help.Score >= 0.8",
-                        Actions = new List<Dialog>()
-                        {
-                            //  this should display a card that gives them some explanations and a set of discrete selections.
-                            //  Need to bubble it so it goes up to RootDialog
-                            new EmitEvent(Constants.Event_ShowTips, bubble: true),
-                            new CancelAllDialogs()
-                        }
-                    },
-                    new OnIntent("Cancel")
-                    {
-                        Condition = "#Cancel.Score >= 0.8",
                         Actions = new List<Dialog>()
                         {
                             //  when the user cancels we need to check where they were so that we can transition smoothly.
                             //  what if they weren't in a dialog? What if they've typed 'cancel' twice in a row?
-                            new SendActivity("Really? You want to quit? And we were having so much fun! But have it your way."),
-                            new EmitEvent(Constants.Event_ShowTips, bubble: true),
-                            new CancelAllDialogs()
+                            new EmitEvent(Constants.Event_Help, bubble: true),
+                            new CancelAllDialogs(),
                         }
                     },
-                    new OnUnknownIntent()
+                    new OnCustomEvent(Constants.Event_Card)
                     {
                         Actions = new List<Dialog>()
                         {
-                            //Remember, this part isn't "Code" per-se, more a data definition of the actions to bot should take
-                            //And the CodeAction() block is how you execute code instead of pre-built actions.
-                            //QNAFallback is defined below where we actually ready out to the QNA service for the response.
-                            new CodeAction(QNAFallback),
-                            //new SendActivity("OK, you totally lost me! Give it another shot, will ya??")
+                            new SetProperty()
+                            {
+                                Property = "conversation.busy",
+                                Value = "true"
+                            },
+                            new SwitchCondition()
+                            {
+                                Condition = "toLower(turn.dialogEvent.value)",
+                                Cases = new List<Case>()
+                                {
+                                    //Just copied from below as a quick fix, ideally this would all be in the financing dialog itself.
+                                    new Case("profile")
+                                    {
+                                        Actions = new List<Dialog>()
+                                        {
+                                            new BeginDialog(nameof(UserProfileDialog))
+                                        }
+                                    },
+                                    new Case("financing")
+                                    {
+                                        Actions = new List<Dialog>()
+                                        {
+                                            new BeginDialog(nameof(FinanceDialog))
+                                        }
+                                    },
+                                    new Case("vehicle")
+                                    {
+                                        Actions = new List<Dialog>()
+                                        {
+                                            new BeginDialog(nameof(VehicleProfileDialog))
+                                        }
+                                    },
+                                    new Case("tradein")
+                                    {
+                                        Actions = new List<Dialog>()
+                                        {
+                                            new BeginDialog(nameof(TradeDialog))
+                                        }
+                                    },
+                                    new Case("inventory")
+                                    {
+                                        Actions = new List<Dialog>()
+                                        {
+                                            new BeginDialog(nameof(InventoryDialog))
+                                        }
+                                    },
+                                },
+                                Default = new List<Dialog>()
+                                {
+                                    new SendActivity("I'm sorry, I can't handle that request yet. :("),
+                                    new EmitEvent(Constants.Event_Help, bubble: true)
+                                }
+                            },
+                            new SetProperty()
+                            {
+                                Property = "conversation.busy",
+                                Value = "false"
+                            },
+                            new IfCondition()
+                            {
+                                Condition = "conversation.residual_interest != null",
+                                Actions = new List<Dialog>()
+                                {
+                                    new SetProperty()
+                                    {
+                                        Property = "conversation.interest",
+                                        Value = "conversation.residual_interest"
+                                    },
+                                    new DeleteProperty()
+                                    {
+                                        Property = "conversation.residual_interest"
+                                    },
+                                    new EmitEvent(Constants.Event_Interest)
+                                },
+                                ElseActions = new List<Dialog>()
+                                {
+                                    new SendActivity("All done!"),
+                                    new DeleteProperty()
+                                    {
+                                        Property = "conversation.interest"
+                                    },
+                                    new ChoiceInput()
+                                    {
+                                        Prompt = new ActivityTemplate("Thank you for filling out all those details. Can I help you with anything else?"),
+                                        Choices = new ChoiceSet(new string[]{ "No Thanks" }.Union(Constants.HelpOptions).Select(o => new Choice(o)).ToList()),
+                                        Property = "conversation.interest",
+                                        AlwaysPrompt = true,
+                                        AllowInterruptions = "true"
+                                    },
+                                    new TraceActivity(),
+                                    new IfCondition()
+                                    {
+                                        Condition = "conversation.interest == null || conversation.interest == 'No Thanks'",
+                                        Actions = new List<Dialog>()
+                                        {
+                                            new SendActivity("All right then, thank you for you interest!"),
+                                            new EndDialog()
+                                            {
+                                                Value = "user.UserProfile"
+                                            }
+                                        },
+                                        ElseActions = new List<Dialog>()
+                                        {
+                                            new EmitEvent(Constants.Event_Interest)
+                                        }
+                                    }
+                                }
+                            },
+                        }
+                    },
+
+                    new OnBeginDialog()
+                    {
+                        Actions = new List<Dialog>()
+                        {
+#if DEBUG
+                            new TraceActivity(){Name = "OnBeginDialog"},
+#endif
+                            new EmitEvent(Constants.Event_Help),
+                        }
+                    },
+                    new OnMessageActivity()
+                    {
+                        Actions = new List<Dialog>()
+                        {
+#if DEBUG
+                            new TraceActivity("OnMessageActivity"){Name = "OnMessageActivity"},
+#endif
+                            new CodeAction(PrimaryHandler),
+                            new CodeAction(async (context, _)=>{
+                                var userData = await Services.GetUserProfileAsync(context.Context);
+                                context.GetState().SetValue("user.UserProfile", userData);
+                                return new DialogTurnResult(DialogTurnStatus.Complete);
+                            })
                         }
                     }
                 }
             };
 
+            CardFactories.Add(profileFactory);
+            CardFactories.Add(financeFactory);
+            CardFactories.Add(tradeinFactory);
+            CardFactories.Add(vehicleFactory);
+
             AddDialog(rootDialog);
-            AddDialog(financeDialog);
-            AddDialog(vehicleDialog);
-            AddDialog(tradeInDialog);
+
             AddDialog(userProfileDialog);
+            AddDialog(financeDialog);
+            AddDialog(vehicleProfileDialog);
+            AddDialog(valueTradeInDialog);
+            AddDialog(inventoryDialog);
         }
 
-        public IBotServices Services { get; }
-
-        public async Task<DialogTurnResult> QNAFallback(DialogContext context, object something)
+        public async Task<DialogTurnResult> DispalyHelp(DialogContext context, object data)
         {
-            //This uses the QNA object instantiated in BotServices
+            await context.Context.SendActivityAsync(MessageFactory.SuggestedActions(Constants.HelpOptions));
+            //await context.Context.SendActivityAsync("Test");
+
+            return new DialogTurnResult(DialogTurnStatus.Waiting, null);
+        }
+
+        public async Task<DialogTurnResult> PrimaryHandler(DialogContext context, object data)
+        {
+            bool isBusy = context.GetState().GetValue<bool>("conversation.busy", () => false);
+
+            
             if (Services.LeadQualQnA != null)
             {
-                var results = await Services.LeadQualQnA.GetAnswersAsync(context.Context);
-                if (results.Any())
+                if(Constants.HelpOptions.Contains(context.Context.Activity.Text))
                 {
-                    await context.Context.SendActivityAsync(MessageFactory.Text(results.First().Answer));
+                    //await context.EmitEventAsync(Constants.Event_Interest);
+                    return new DialogTurnResult(DialogTurnStatus.CompleteAndWait);
                 }
                 else
                 {
-                    await context.Context.SendActivityAsync(MessageFactory.Text("Great Caesar's Ghost! " +
-                                   "You've thrown me for a loop with that one! Give 'er another try, will ya?"));
+                    return await ProcessDefaultResponse(context, data, isBusy);
                 }
             }
             else
@@ -200,12 +332,73 @@ namespace ADS.Bot.V1.Dialogs
             }
 
             //You can change status to alter the behaviour post-completion
-            return new DialogTurnResult(DialogTurnStatus.Complete, null);
+            return new DialogTurnResult(DialogTurnStatus.Waiting, null);
+        }
+
+        public async Task<DialogTurnResult> ProcessDefaultResponse(DialogContext context, object data, bool isBusy)
+        {
+            //Get Top QnA result
+            var results = await Services.LeadQualQnA.GetAnswersAsync(context.Context);
+            var topResult = results.FirstOrDefault();
+
+
+            if (topResult != null && topResult.Score > 0.5)
+            {
+
+                //Convert Metadata tags to dictionary for comparison
+                var resultTags = topResult.Metadata.ToDictionary(m => m.Name.ToLower(), m => m.Value);
+                if(resultTags.ContainsKey("event"))
+                {
+                    //emit arbitrary events based on an "event" metadata record
+                    await context.EmitEventAsync(resultTags["event"]);
+                }
+                else if(resultTags.ContainsKey("card"))
+                {
+                    //emit card display event, based on the value of the "card" tag, if present
+                    //this causes the card to be displayed "independently" through the custom event handler
+                    if (Constants.DialogEventTriggers.ContainsKey(resultTags["card"]))
+                    {
+                        //Remap the card event value from it's shorthand form, so we can reuse the residual interest logic
+                        //eg. ('financing') to full name ('Explore Financing')
+                        context.GetState().SetValue("conversation.interest", Constants.DialogEventTriggers[resultTags["card"]]);
+                        await context.EmitEventAsync(Constants.Event_Interest);
+                    }
+                }
+
+                //We always send the response from QnA
+                await context.Context.SendActivityAsync(MessageFactory.Text(topResult.Answer));
+
+                //and since the user has asked for a specific intent, we don't wait for further input. Call
+                //the turn complete
+                return new DialogTurnResult(DialogTurnStatus.Complete);
+            }
+            else
+            {
+                
+                if (isBusy)
+                {
+                    //If we are in a dialog, we want to 'Complete' to resume the let the dialog itself take control
+                    return new DialogTurnResult(DialogTurnStatus.Complete);
+                }
+                else
+                {
+                    //Otherwise a user entered an invalid root-level
+
+
+                    if (topResult != null)
+                    {
+                        Console.WriteLine($"Rejected low-confidence response to text '{context.Context.Activity.Text}' - [{topResult.Score}] {topResult.Source}:'{topResult.Answer}'");
+                    }
+
+                    await context.Context.SendActivityAsync(MessageFactory.Text("I'm not quite sure what you meant..."));
+                    return new DialogTurnResult(DialogTurnStatus.Waiting);
+                }
+            }
         }
 
         public async Task<DialogTurnResult> Test(DialogContext context, object something)
         {
-            return null;
+            return new DialogTurnResult(DialogTurnStatus.Complete);
         }
 
 

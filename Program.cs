@@ -12,6 +12,7 @@ namespace ADS.Bot1
     {
         public static void Main(string[] args)
         {
+
             CreateHostBuilder(args).Build().Run();
         }
 
@@ -22,6 +23,9 @@ namespace ADS.Bot1
                 .ConfigureAppConfiguration((hostingContext, config) =>
                 {
                     config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+#if DEBUG
+                    config.AddJsonFile("appsettings.Development.json", optional: true, reloadOnChange: true);
+#endif
                 })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {

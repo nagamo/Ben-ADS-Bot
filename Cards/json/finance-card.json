@@ -1,0 +1,194 @@
+{
+    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+    "type": "AdaptiveCard",
+    "version": "1.0",
+    "body": [
+        {
+            "type": "ColumnSet",
+            "columns": [
+                {
+                    "type": "Column",
+                    "width": 2,
+                    "items": [
+                        {
+                            "type": "TextBlock",
+                            "text": "Explore Financing",
+                            "weight": "Bolder",
+                            "size": "Medium",
+                            "horizontalAlignment": "Center"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "As you might expect, we need some information! Just do your best.",
+                            "isSubtle": true,
+                            "wrap": true
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "If you place your credit score over 700, no need to enter employment or income!",
+                            "isSubtle": true,
+                            "wrap": true,
+                            "size": "Small"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "Credit Score",
+                            "wrap": true
+                        },
+                        {
+                            "type": "Input.ChoiceSet",
+                            "placeholder": "Placeholder text",
+                            "choices": [
+                                {
+                                    "title": "499 or below",
+                                    "value": "1"
+                                },
+                                {
+                                    "title": "500 - 599",
+                                    "value": "2"
+                                },
+                                {
+                                    "title": "600 - 699",
+                                    "value": "3"
+                                },
+                                {
+                                    "title": "700 and above",
+                                    "value": "4"
+                                }
+                            ],
+                            "style": "expanded",
+                            "id": "CreditScore",
+                            "value": "{CreditScore}"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "Length of Employment",
+                            "wrap": true
+                        },
+                        {
+                            "type": "Input.ChoiceSet",
+                            "placeholder": "Placeholder text",
+                            "choices": [
+                                {
+                                    "title": "Six months or less",
+                                    "value": "1"
+                                },
+                                {
+                                    "title": "6 mos - 12 mos",
+                                    "value": "2"
+                                },
+                                {
+                                    "title": "1 year - 3 years",
+                                    "value": "3"
+                                },
+                                {
+                                    "title": "3 years or more",
+                                    "value": "4"
+                                }
+                            ],
+                            "style": "expanded",
+                            "id": "Employment",
+                            "value": "{Employment}"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "Income"
+                        },
+                        {
+                            "type": "Input.ChoiceSet",
+                            "placeholder": "Placeholder text",
+                            "choices": [
+                                {
+                                    "title": "Under $20K per year",
+                                    "value": "1"
+                                },
+                                {
+                                    "title": "$20K - $40K per year",
+                                    "value": "2"
+                                },
+                                {
+                                    "title": "$40K - $60K per year",
+                                    "value": "3"
+                                },
+                                {
+                                    "title": "$60K - $80K per year",
+                                    "value": "4"
+                                },
+                                {
+                                    "title": "$80K - $99K per year",
+                                    "value": "5"
+                                },
+                                {
+                                    "title": "$100K or more",
+                                    "value": "6"
+                                }
+                            ],
+                            "style": "expanded",
+                            "id": "Income",
+                            "value": "{Income}"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "Home Ownership"
+                        },
+                        {
+                            "type": "Input.ChoiceSet",
+                            "placeholder": "Placeholder text",
+                            "choices": [
+                                {
+                                    "title": "Own",
+                                    "value": "1"
+                                },
+                                {
+                                    "title": "Rent",
+                                    "value": "2"
+                                },
+                                {
+                                    "title": "Other",
+                                    "value": "3"
+                                }
+                            ],
+                            "style": "expanded",
+                            "id": "HomeOwnership",
+                            "value": "{HomeOwnership}"
+                        },
+                        {
+                            "type": "ActionSet",
+                            "actions": [
+                                {
+                                    "type": "Action.Submit",
+                                    "title": "Submit",
+                                    "data": {
+                                        "id": "submit",
+                                        "card_id": "JSONFinanceCardFactory"
+                                    }
+                                },
+                                {
+                                    "type": "Action.Submit",
+                                    "title": "Cancel",
+                                    "data": {
+                                        "id": "cancel",
+                                        "card_id": "JSONFinanceCardFactory"
+                                    }
+                                }
+                            ],
+                            "horizontalAlignment": "Center",
+                            "spacing": "Medium"
+                        }
+                    ]
+                },
+                {
+                    "type": "Column",
+                    "width": "100px",
+                    "items": [
+                        {
+                            "type": "Image",
+                            "url": "https://upload.wikimedia.org/wikipedia/commons/b/b2/Diver_Silhouette%2C_Great_Barrier_Reef.jpg",
+                            "size": "auto"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

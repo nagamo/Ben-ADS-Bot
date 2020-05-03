@@ -356,3 +356,5 @@ MigrationBackup/
 /.vscode
 /.config
 /DeploymentTemplates
+
+appsettings.Development.json
