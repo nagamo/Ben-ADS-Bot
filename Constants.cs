@@ -24,5 +24,13 @@ namespace ADS.Bot.V1
             "Value a Trade-In",
             "Search Inventory"
         };
+
+        public static Dictionary<string, string> DialogEventTriggers = new Dictionary<string, string>()
+        {
+            {"financing", HelpOptions[0] },
+            {"identify", HelpOptions[1] },
+            {"tradein", HelpOptions[2] },
+            {"inventory", HelpOptions[3] }
+        };
     }
 }

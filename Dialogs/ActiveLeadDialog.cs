@@ -148,6 +148,11 @@ namespace ADS.Bot.V1.Dialogs
                     {
                         Actions = new List<Dialog>()
                         {
+                            new SetProperty()
+                            {
+                                Property = "conversation.busy",
+                                Value = "true"
+                            },
                             new SwitchCondition()
                             {
                                 Condition = "toLower(turn.dialogEvent.value)",
@@ -195,6 +200,11 @@ namespace ADS.Bot.V1.Dialogs
                                     new SendActivity("I'm sorry, I can't handle that request yet. :("),
                                     new EmitEvent(Constants.Event_Help, bubble: true)
                                 }
+                            },
+                            new SetProperty()
+                            {
+                                Property = "conversation.busy",
+                                Value = "false"
                             },
                             new IfCondition()
                             {
@@ -301,22 +311,10 @@ namespace ADS.Bot.V1.Dialogs
 
         public async Task<DialogTurnResult> PrimaryHandler(DialogContext context, object data)
         {
-            //Check if we have an object payload, which comes from cards
-            if(context.Context.Activity.Text == null)
-            {
-                if (context.Context.Activity.Value is JObject cardResponse)
-                {
-                    return await ProcessCardResponse(cardResponse, context, data);
-                }
-                else
-                {
-                    //Waiting for user to specify something.
-                    //Usually come here after showing help screen.
-                    return new DialogTurnResult(DialogTurnStatus.Waiting);
-                }
-            }
-            //Otherwise if we have a properly instantiated QnA service, hit that.
-            else if (Services.LeadQualQnA != null)
+            bool isBusy = context.GetState().GetValue<bool>("conversation.busy", () => false);
+
+            
+            if (Services.LeadQualQnA != null)
             {
                 if(Constants.HelpOptions.Contains(context.Context.Activity.Text))
                 {
@@ -325,7 +323,7 @@ namespace ADS.Bot.V1.Dialogs
                 }
                 else
                 {
-                    return await ProcessDefaultResponse(context, data);
+                    return await ProcessDefaultResponse(context, data, isBusy);
                 }
             }
             else
@@ -337,55 +335,16 @@ namespace ADS.Bot.V1.Dialogs
             return new DialogTurnResult(DialogTurnStatus.Waiting, null);
         }
 
-        //response is json object of card data
-        public async Task<DialogTurnResult> ProcessCardResponse(JObject response, DialogContext context, object data)
-        {
-            //look at the card_id field, which has to be assigned on the submit button
-            var respondingFactoryID = response.Value<string>("card_id");
-            var matchingFactory = CardFactories.SingleOrDefault(cf => cf.Id == respondingFactoryID);
-
-            switch (response.Value<string>("id"))
-            {
-                case "submit":
-                    //If everything checks out, validate it, and save if applicable
-                    if (respondingFactoryID != null && matchingFactory != null)
-                    {
-                        if (await matchingFactory.OnValidateCard(response, context.Context))
-                        {
-                            await matchingFactory.OnFinalizeCard(response, context.Context);
-
-                            await context.EmitEventAsync(Constants.Event_Card_Submit);
-
-                            return new DialogTurnResult(DialogTurnStatus.Complete);
-                        }
-                        else
-                        {
-                            await context.Context.SendActivityAsync("Looks like you have some errors. You should go back and fix those, and then just resubmit!");
-                        }
-                    }
-                    else
-                    {
-                        await context.Context.SendActivityAsync("Not sure where you came from...");
-                    }
-                    break;
-                case "cancel":
-                    await context.Context.SendActivityAsync("Canceled card");
-                    //If we cancel, we want to emit the help again.
-                    await context.EmitEventAsync(Constants.Event_Help);
-                    return new DialogTurnResult(DialogTurnStatus.Complete);
-                    break;
-            }
-
-            return new DialogTurnResult(DialogTurnStatus.Waiting);
-        }
-
-        public async Task<DialogTurnResult> ProcessDefaultResponse(DialogContext context, object data)
+        public async Task<DialogTurnResult> ProcessDefaultResponse(DialogContext context, object data, bool isBusy)
         {
             //Get Top QnA result
             var results = await Services.LeadQualQnA.GetAnswersAsync(context.Context);
             var topResult = results.FirstOrDefault();
-            if (topResult != null)
+
+
+            if (topResult != null && topResult.Score > 0.5)
             {
+
                 //Convert Metadata tags to dictionary for comparison
                 var resultTags = topResult.Metadata.ToDictionary(m => m.Name.ToLower(), m => m.Value);
                 if(resultTags.ContainsKey("event"))
@@ -397,7 +356,13 @@ namespace ADS.Bot.V1.Dialogs
                 {
                     //emit card display event, based on the value of the "card" tag, if present
                     //this causes the card to be displayed "independently" through the custom event handler
-                    await context.EmitEventAsync(Constants.Event_Card, resultTags["card"]);
+                    if (Constants.DialogEventTriggers.ContainsKey(resultTags["card"]))
+                    {
+                        //Remap the card event value from it's shorthand form, so we can reuse the residual interest logic
+                        //eg. ('financing') to full name ('Explore Financing')
+                        context.GetState().SetValue("conversation.interest", Constants.DialogEventTriggers[resultTags["card"]]);
+                        await context.EmitEventAsync(Constants.Event_Interest);
+                    }
                 }
 
                 //We always send the response from QnA
@@ -409,13 +374,26 @@ namespace ADS.Bot.V1.Dialogs
             }
             else
             {
-                //await context.Context.SendActivityAsync(MessageFactory.Text("Great Caesar's Ghost! " +
-                //               "You've thrown me for a loop with that one! Give 'er another try, will ya?"));
+                
+                if (isBusy)
+                {
+                    //If we are in a dialog, we want to 'Complete' to resume the let the dialog itself take control
+                    return new DialogTurnResult(DialogTurnStatus.Complete);
+                }
+                else
+                {
+                    //Otherwise a user entered an invalid root-level
 
-                return new DialogTurnResult(DialogTurnStatus.Complete);
+
+                    if (topResult != null)
+                    {
+                        Console.WriteLine($"Rejected low-confidence response to text '{context.Context.Activity.Text}' - [{topResult.Score}] {topResult.Source}:'{topResult.Answer}'");
+                    }
+
+                    await context.Context.SendActivityAsync(MessageFactory.Text("I'm not quite sure what you meant..."));
+                    return new DialogTurnResult(DialogTurnStatus.Waiting);
+                }
             }
-
-            return new DialogTurnResult(DialogTurnStatus.Waiting);
         }
 
         public async Task<DialogTurnResult> Test(DialogContext context, object something)
