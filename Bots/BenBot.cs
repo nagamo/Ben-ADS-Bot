@@ -51,9 +51,10 @@ namespace ADS.Bot.V1.Bots
                 }
             }
 
-#if DEBUG
-            await turnContext.SendActivityAsync(JsonConvert.SerializeObject(turnContext.Activity));
-#endif
+            if(bool.TryParse(Services.Configuration["debug_messages"], out var debug_msg) && debug_msg)
+            {
+                await turnContext.SendActivityAsync(JsonConvert.SerializeObject(turnContext.Activity));
+            }
 
             await Services.UserProfileAccessor.SetAsync(turnContext, userProfile, cancellationToken);
         }
@@ -63,9 +64,11 @@ namespace ADS.Bot.V1.Bots
         {
             var userProfile = await Services.GetUserProfileAsync(turnContext, cancellationToken);
 
-#if DEBUG
-            await turnContext.SendActivityAsync(JsonConvert.SerializeObject(turnContext.Activity));
-#endif
+
+            if (bool.TryParse(Services.Configuration["debug_messages"], out var debug_msg) && debug_msg)
+            {
+                await turnContext.SendActivityAsync(JsonConvert.SerializeObject(turnContext.Activity));
+            }
 
             //Let the manager handle passing our message to the one-and-only dialog
             var dialogResult = await DialogManager.OnTurnAsync(turnContext, cancellationToken);
