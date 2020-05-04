@@ -4,6 +4,7 @@ using ADS.Bot1.Dialogs;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -50,6 +51,10 @@ namespace ADS.Bot.V1.Bots
                 }
             }
 
+#if DEBUG
+            await turnContext.SendActivityAsync(JsonConvert.SerializeObject(turnContext.Activity));
+#endif
+
             await Services.UserProfileAccessor.SetAsync(turnContext, userProfile, cancellationToken);
         }
         
@@ -57,6 +62,10 @@ namespace ADS.Bot.V1.Bots
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {
             var userProfile = await Services.GetUserProfileAsync(turnContext, cancellationToken);
+
+#if DEBUG
+            await turnContext.SendActivityAsync(JsonConvert.SerializeObject(turnContext.Activity));
+#endif
 
             //Let the manager handle passing our message to the one-and-only dialog
             var dialogResult = await DialogManager.OnTurnAsync(turnContext, cancellationToken);
