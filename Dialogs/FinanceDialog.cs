@@ -73,7 +73,7 @@ namespace ADS.Bot1.Dialogs
         private async Task<DialogTurnResult> CreditScoreStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            if (!string.IsNullOrEmpty(userData.Financing.CreditScore)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
+            if (userData.Financing.SkipCreditScore) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
 
             var creditOptions = Utilities.CreateOptions(new string[] { "<500", "500-600", "600-700", "700+" }, "Hate to ask this, " +
@@ -87,6 +87,11 @@ namespace ADS.Bot1.Dialogs
             if (stepContext.Result != null)
                 userData.Financing.CreditScore = Utilities.ReadChoiceWithManual(stepContext);
 
+            if (userData.Financing.GoodCredit)
+            {
+                await stepContext.Context.SendActivityAsync("Wow! Nice score, saved you a bunch of questions too!");
+            }
+
             return await stepContext.NextAsync();
         }
 
@@ -95,8 +100,7 @@ namespace ADS.Bot1.Dialogs
         private async Task<DialogTurnResult> IncomeStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            if (!string.IsNullOrEmpty(userData.Financing.Income)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
-
+            if (userData.Financing.SkipIncome) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
 
             var incomeOptions = Utilities.CreateOptions(new string[] { "$1K-$2K per month", "$2K-$4K per month", "$4k - $8K per month", "$8K - $10K per month", "> $10K per month" }, 
@@ -119,7 +123,7 @@ namespace ADS.Bot1.Dialogs
         private async Task<DialogTurnResult> HomeOwnershipStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            if (!string.IsNullOrEmpty(userData.Financing.HomeOwnership)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
+            if (userData.Financing.SkipHome) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
 
 
@@ -141,7 +145,7 @@ namespace ADS.Bot1.Dialogs
         private async Task<DialogTurnResult> EmploymentStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            if (!string.IsNullOrEmpty(userData.Financing.Employment)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
+            if (userData.Financing.SkipEmployment) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
 
 

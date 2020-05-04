@@ -17,20 +17,27 @@ namespace ADS.Bot.V1
 
         public const string Event_Interest = "interest";
 
+
+
+        public const string HELP_Financing = "Explore Financing";
+        public const string HELP_Identify = "Identify a Vehicle";
+        public const string HELP_TradeIn = "Value a Trade-In";
+        public const string HELP_Inventory = "Search Inventory";
+
         public static string[] HelpOptions = new string[]
         {
-            "Explore Financing",
-            "Identify a Vehicle",
-            "Value a Trade-In",
-            "Search Inventory"
+            HELP_Financing,
+            HELP_Identify,
+            HELP_TradeIn,
+            HELP_Inventory
         };
 
         public static Dictionary<string, string> DialogEventTriggers = new Dictionary<string, string>()
         {
-            {"financing", HelpOptions[0] },
-            {"identify", HelpOptions[1] },
-            {"tradein", HelpOptions[2] },
-            {"inventory", HelpOptions[3] }
+            {"financing", HELP_Financing },
+            {"identify", HELP_Identify },
+            {"tradein", HELP_TradeIn },
+            {"inventory", HELP_Inventory }
         };
     }
 }
