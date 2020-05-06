@@ -70,6 +70,13 @@ namespace ADS.Bot1.Dialogs
 
         private async Task<DialogTurnResult> NameStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
+
+            if (userData.Details?.Name != null)
+            {
+                return await stepContext.NextAsync(cancellationToken: cancellationToken);
+            }
+
             return await stepContext.PromptAsync(PROMPT_Name, new PromptOptions
             {
                 Prompt = MessageFactory.Text("So, first of all - I can't keep saying 'hey you'! Can I get your name, please?"),
@@ -88,7 +95,13 @@ namespace ADS.Bot1.Dialogs
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
 
-            userData.Details.Name = (string)stepContext.Result;
+            //Skip if we have a null result (name already filled out)
+            if(stepContext.Result != null)
+            {
+                userData.Details.Name = (string)stepContext.Result;
+
+                await Services.SetUserProfileAsync(userData, stepContext, cancellationToken);
+            }
 
             return await stepContext.NextAsync(cancellationToken: cancellationToken);
         }
@@ -99,6 +112,11 @@ namespace ADS.Bot1.Dialogs
         private async Task<DialogTurnResult> PhoneStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
+
+            if(userData.Details.Phone != null)
+            {
+                return await stepContext.NextAsync(cancellationToken: cancellationToken);
+            }
 
             return await stepContext.PromptAsync(PROMPT_Phone, new PromptOptions {
                 Prompt = MessageFactory.Text("Great to meet you, " + userData.Name + "! Can I get your cell number in case we get disconnected?"),
@@ -116,8 +134,14 @@ namespace ADS.Bot1.Dialogs
         private async Task<DialogTurnResult> PhoneConfirmStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            userData.Details.Phone = (string)stepContext.Result;
+            if(stepContext.Result != null)
+            {
+                var phoneDetails = SequenceRecognizer.RecognizePhoneNumber(stepContext.Context.Activity.Text, "en");
+                userData.Details.Phone = phoneDetails.First().Text;
 
+                await Services.SetUserProfileAsync(userData, stepContext, cancellationToken);
+            }
+            
             return await stepContext.NextAsync(cancellationToken: cancellationToken);
         }
 
@@ -127,6 +151,11 @@ namespace ADS.Bot1.Dialogs
         private async Task<DialogTurnResult> EmailStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
+
+            if (userData.Details.Email != null)
+            {
+                return await stepContext.NextAsync(cancellationToken: cancellationToken);
+            }
 
             return await stepContext.PromptAsync(PROMPT_Email, new PromptOptions
             {
@@ -145,7 +174,14 @@ namespace ADS.Bot1.Dialogs
         private async Task<DialogTurnResult> EmailConfirmStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            userData.Details.Email = (string)stepContext.Result;
+
+            if (stepContext.Result != null)
+            {
+                var emailDetails = SequenceRecognizer.RecognizeEmail(stepContext.Result as string, "en");
+                userData.Details.Email = emailDetails.First().Text;
+
+                await Services.SetUserProfileAsync(userData, stepContext, cancellationToken);
+            }
 
             return await stepContext.NextAsync(cancellationToken: cancellationToken);
         }
@@ -168,8 +204,11 @@ namespace ADS.Bot1.Dialogs
             }
             else
             {
-                //TODO: What to do if CRM isn't configure properly...
+                //TODO: What to do if CRM isn't configured properly...
             }
+
+            //Save it back to our storage
+            await Services.SetUserProfileAsync(userData, stepContext, cancellationToken);
 
             await stepContext.Context.SendActivityAsync($"You're the cat's pyjamas, {userData.Details.Name}!");
             await stepContext.Context.SendActivityAsync("And now, without further ado - onto your destination!");

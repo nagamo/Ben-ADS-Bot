@@ -97,21 +97,17 @@ namespace ADS.Bot.V1.Bots
         // This is the primary message handler
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {
-            var userProfile = await Services.GetUserProfileAsync(turnContext, cancellationToken);
-
-
             if (bool.TryParse(Services.Configuration["debug_messages"], out var debug_msg) && debug_msg)
             {
                 await turnContext.SendActivityAsync(JsonConvert.SerializeObject(turnContext.Activity));
             }
 
+            //Get the latest version
+            var userProfile = await Services.GetUserProfileAsync(turnContext, cancellationToken);
+            
             //Let the manager handle passing our message to the one-and-only dialog
             var dialogResult = await DialogManager.OnTurnAsync(turnContext, cancellationToken);
-
-            // Save any state changes.
-            await Services.UserProfileAccessor.SetAsync(turnContext, userProfile, cancellationToken);
-            await User.SaveChangesAsync(turnContext, cancellationToken: cancellationToken);
-
+            await Services.SaveUserProfileAsync(userProfile, turnContext, cancellationToken);
 
             switch (dialogResult.TurnResult.Status)
             {

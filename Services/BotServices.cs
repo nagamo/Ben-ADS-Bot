@@ -60,9 +60,17 @@ namespace ADS.Bot1
             return await UserProfileAccessor.GetAsync(turnContext, () => new UserProfile(), cancellationToken);
         }
 
-        public async Task SetUserProfileAsync(UserProfile profile, ITurnContext turnContext, CancellationToken cancellationToken)
+        public async Task SaveUserProfileAsync(UserProfile profile, ITurnContext turnContext, CancellationToken cancellationToken)
         {
-            await UserProfileAccessor.SetAsync(turnContext, profile, cancellationToken);
+            //Update accessors with latest version
+            await UserState.SaveChangesAsync(turnContext, cancellationToken: cancellationToken);
+        }
+
+        public async Task SetUserProfileAsync(UserProfile profile, DialogContext dialogContext, CancellationToken cancellationToken)
+        {
+            //Also update the dialog contexts state
+            await UserProfileAccessor.SetAsync(dialogContext.Context, profile, cancellationToken);
+            dialogContext.GetState().SetValue("user.UserProfile", profile);
         }
     }
 }

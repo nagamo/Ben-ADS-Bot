@@ -317,7 +317,7 @@ namespace ADS.Bot.V1.Dialogs
             }
             else
             {
-                //TODO: What to do if CRM isn't configure properly...
+                //TODO: What to do if CRM isn't configured properly...
             }
 
             await stepContext.Context.SendActivityAsync(MessageFactory.Text(string.Join(Environment.NewLine, lines)), cancellationToken);

@@ -11,7 +11,7 @@ namespace ADS.Bot.V1.Models
     /// </summary>
     public class UserProfile
     {
-        public bool IsRegistered { get { return Details != null; } }
+        public bool IsRegistered { get { return Details != null && ADS_CRM_ID.HasValue; } }
 
         public string Name { get { return Details?.Name; } }
         public string FirstName { get { return Details?.Name?.Split(' ')?.First(); } }

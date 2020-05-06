@@ -175,7 +175,7 @@ namespace ADS.Bot1.Dialogs
             }
             else
             {
-                //TODO: What to do if CRM isn't configure properly...
+                //TODO: What to do if CRM isn't configured properly...
             }
 
             return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);

@@ -28,6 +28,7 @@ namespace ADS.Bot1
         QnAMaker LeadQualQnA { get; }
 
         Task<UserProfile> GetUserProfileAsync(ITurnContext turnContext, CancellationToken cancellationToken = default);
-        Task SetUserProfileAsync(UserProfile profile, ITurnContext turnContext, CancellationToken cancellationToken = default);
+        Task SetUserProfileAsync(UserProfile profile, DialogContext dialogContext, CancellationToken cancellationToken = default);
+        Task SaveUserProfileAsync(UserProfile profile, ITurnContext turnContext, CancellationToken cancellationToken = default);
     }
 }
