@@ -3,7 +3,7 @@
 
 namespace ADS.Bot.V1.Models
 {
-    public class TradeInDetails
+    public class TradeInDetails : IADSCRMRecord
     {
         public bool IsCompleted
         {

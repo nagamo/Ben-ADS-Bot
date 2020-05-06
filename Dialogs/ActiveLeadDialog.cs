@@ -184,7 +184,7 @@ namespace ADS.Bot.V1.Dialogs
                                     {
                                         Actions = new List<Dialog>()
                                         {
-                                            new BeginDialog(nameof(TradeDialog))
+                                            new BeginDialog(nameof(ValueTradeInDialog))
                                         }
                                     },
                                     new Case("inventory")

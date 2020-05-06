@@ -238,12 +238,18 @@ namespace ADS.Bot.V1.Dialogs
 
             if (userData.VehicleProfile.NeedFinancing ?? false)
             {
-                return await stepContext.BeginDialogAsync(nameof(FinanceDialog));
+                if (userData.Financing?.IsCompleted ?? false)
+                {
+                    await stepContext.Context.SendActivityAsync("Looks like I've already got your financing details. So I won't ask you about those again.");
+                }
+                else
+                {
+                    return await stepContext.BeginDialogAsync(nameof(FinanceDialog));
+                }
+                
             }
-            else
-            {
-                return await stepContext.NextAsync();
-            }
+            
+            return await stepContext.NextAsync();
         }
 
 
@@ -267,12 +273,17 @@ namespace ADS.Bot.V1.Dialogs
 
             if (userData.VehicleProfile.TradingIn ?? false)
             {
-                return await stepContext.BeginDialogAsync(nameof(ValueTradeInDialog));
+                if (userData.TradeDetails?.IsCompleted ?? false)
+                {
+                    await stepContext.Context.SendActivityAsync("Looks like I've already got your trade-in details. So I won't ask you about those again.");
+                }
+                else
+                {
+                    return await stepContext.BeginDialogAsync(nameof(ValueTradeInDialog));
+                }
             }
-            else
-            {
-                return await stepContext.NextAsync();
-            }
+            
+            return await stepContext.NextAsync();
         }
 
 
@@ -283,33 +294,8 @@ namespace ADS.Bot.V1.Dialogs
 
             var lines = new List<string>
             {
-                $"Thanks {userData.Name}! I got these details for you.",
-                $"I hope it's correct becuase I don't reset yet! :)",
-                //$"Goals: {userData.VehicleProfile.Goals}",
-                //$"Urgency: {userData.VehicleProfile.LevelOfInterest}",
-                $"Type: {userData.VehicleProfile.Make}",
-                $"Brand: {userData.VehicleProfile.Model}",
-                $"New/Used: {userData.VehicleProfile.Year}",
-                //$"Budget: {userData.VehicleProfile.Budget}"
+                $"Thanks {userData.Name}!"
             };
-
-            lines.Add($"Financing?: {userData.VehicleProfile.NeedFinancing}");
-            if (userData.VehicleProfile.NeedFinancing ?? false)
-            {
-                lines.Add($"Credit Score: {userData.Financing.CreditScore}");
-                lines.Add($"Income: {userData.Financing.Income}");
-                lines.Add($"Home Ownership: {userData.Financing.HomeOwnership}");
-                lines.Add($"Employment History: {userData.Financing.Employment}");
-            }
-
-            lines.Add($"Trading In?: {userData.VehicleProfile.TradingIn}");
-            if (userData.VehicleProfile.TradingIn ?? false)
-            {
-                lines.Add($"Make: {userData.TradeDetails.Make}");
-                lines.Add($"Model: {userData.TradeDetails.Model}");
-                lines.Add($"Year: {userData.TradeDetails.Year}");
-                lines.Add($"Condition: {userData.TradeDetails.Condition}");
-            }
 
             if (Services.Zoho.Connected)
             {

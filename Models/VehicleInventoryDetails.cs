@@ -3,7 +3,7 @@
 
 namespace ADS.Bot.V1.Models
 {
-    public class VehicleInventoryDetails
+    public class VehicleInventoryDetails : IADSCRMRecord
     {
         public bool IsCompleted
         {

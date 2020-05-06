@@ -60,15 +60,53 @@ namespace ADS.Bot.V1.Services
 
         private void PopulateFinancingNote(FinancingDetails financing, ZCRMNote note)
         {
-            string details = string.Join(Environment.NewLine, new string[]
-            {
-                $"Credit Score: {financing.CreditScore}",
-                $"Income: {financing.Income}",
-                $"Home Ownership: {financing.HomeOwnership}",
-                $"Employment History: {financing.Employment}",
-            });
+            var lines = financing.GoodCredit ?
+                new string[]
+                {
+                    $"Credit Score: {financing.CreditScore}"
+                } :
+                new string[]
+                {
+                    $"Credit Score: {financing.CreditScore}",
+                    $"Income: {financing.Income}",
+                    $"Home Ownership: {financing.HomeOwnership}",
+                    $"Employment History: {financing.Employment}",
+                };
 
             note.Title = "Financing Details";
+            note.Content = string.Join(Environment.NewLine, lines);
+        }
+
+        private void PopulateTradeInNote(TradeInDetails tradein, ZCRMNote note)
+        {
+            string details = string.Join(Environment.NewLine, new string[]
+            {
+                $"Make: {tradein.Make}",
+                $"Model: {tradein.Model}",
+                $"Year: {tradein.Year}",
+                $"Mileage: {tradein.Mileage}",
+                $"Condition: {tradein.Condition}",
+                $"Amount Owed: {tradein.AmountOwed}",
+            });
+
+            note.Title = "Trade-In Details";
+            note.Content = details;
+        }
+
+        private void PopulateVehicleProfileNote(VehicleInventoryDetails vehicleProfile, ZCRMNote note)
+        {
+            string details = string.Join(Environment.NewLine, new string[]
+            {
+                $"Needs Financing: {((vehicleProfile.NeedFinancing ?? false) ? "Yes" : "No")}",
+                $"Trading-In: {((vehicleProfile.TradingIn ?? false) ? "Yes" : "No")}",
+                $"",
+                $"Make: {vehicleProfile.Make}",
+                $"Model: {vehicleProfile.Model}",
+                $"Year: {vehicleProfile.Year}",
+                $"Color: {vehicleProfile.Color}"
+            });
+
+            note.Title = "Vehilcle Profile Details";
             note.Content = details;
         }
 
@@ -130,7 +168,8 @@ namespace ADS.Bot.V1.Services
                 leadRecord.Update();
 
                 PopulateNote(leadRecord, profile.Financing, PopulateFinancingNote);
-
+                PopulateNote(leadRecord, profile.VehicleProfile, PopulateVehicleProfileNote);
+                PopulateNote(leadRecord, profile.TradeDetails, PopulateTradeInNote);
 
                 return true;
             }

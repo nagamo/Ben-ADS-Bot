@@ -17,8 +17,9 @@ namespace ADS.Bot.V1.Bots
     {
         // General messages sent to the user.
         private const string WelcomeSimple = "Hey there! I'm Chad. Welcome!";
-        private const string WelcomePersonal = "Hey there {0}! I'm Chad. Let's get started!";
-        private const string WelcomeReturn = "Welcome back {0}! I'm Chad. What can I help you with today?";
+        private const string WelcomeMeeting = "Hey there {0}! My name is, Chad, It's nice to meet you. Let's get started!";
+        private const string WelcomePersonal = "Hey {0}! It's me, Chad. Let's get started!";
+        private const string WelcomeReturn = "Welcome back {0}! Wasn't sure when we would talk again. What can I help you with today?";
 
         private DialogManager DialogManager;
         //Hey there!
@@ -48,15 +49,17 @@ namespace ADS.Bot.V1.Bots
             {
                 if (member.Id != turnContext.Activity.Recipient.Id)
                 {
+                    bool newGreeting = false;
                     //Handle having a users name from the conversation metadata already.
                     if(userProfile.Details == null)
                     {
-                        if(!string.IsNullOrWhiteSpace(turnContext.Activity.From.Name) && turnContext.Activity.From.Name != "User")
+                        if(!string.IsNullOrWhiteSpace(turnContext.Activity.From.Name))// && turnContext.Activity.From.Name != "User")
                         {
                             userProfile.Details = new Models.BasicDetails()
                             {
                                 Name = turnContext.Activity.From.Name
                             };
+                            newGreeting = true;
                         }
                     }
 
@@ -68,7 +71,14 @@ namespace ADS.Bot.V1.Bots
                     }
                     else if(userProfile.Details != null)
                     {
-                        await turnContext.SendActivityAsync(string.Format(WelcomePersonal, userProfile.FirstName), cancellationToken: cancellationToken);
+                        if (newGreeting)
+                        {
+                            await turnContext.SendActivityAsync(string.Format(WelcomeMeeting, userProfile.FirstName), cancellationToken: cancellationToken);
+                        }
+                        else
+                        {
+                            await turnContext.SendActivityAsync(string.Format(WelcomePersonal, userProfile.FirstName), cancellationToken: cancellationToken);
+                        }
                     }
                     else
                     {

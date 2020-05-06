@@ -103,7 +103,8 @@ namespace ADS.Bot1.Dialogs
                 await Services.SetUserProfileAsync(userData, stepContext, cancellationToken);
             }
 
-            return await stepContext.NextAsync(cancellationToken: cancellationToken);
+            //pass forward reponse for greeting logic specifically
+            return await stepContext.NextAsync(stepContext.Result, cancellationToken: cancellationToken);
         }
 
 
@@ -118,8 +119,18 @@ namespace ADS.Bot1.Dialogs
                 return await stepContext.NextAsync(cancellationToken: cancellationToken);
             }
 
+            string line = "";
+            if (stepContext.Result != null)
+            {
+                line = $"Great to meet you, {userData.Name}! Can I get your cell number in case we get disconnected?";
+            }
+            else
+            {
+                line = "Real quick, can I get your cell number in case we get disconnected?";
+            }
+
             return await stepContext.PromptAsync(PROMPT_Phone, new PromptOptions {
-                Prompt = MessageFactory.Text("Great to meet you, " + userData.Name + "! Can I get your cell number in case we get disconnected?"),
+                Prompt = MessageFactory.Text(line),
                 RetryPrompt = MessageFactory.Text("Um, that seems wrong. Try again?")
             }, cancellationToken);
         }
@@ -199,6 +210,7 @@ namespace ADS.Bot1.Dialogs
                 }
                 else
                 {
+                    //This shouldn't actually happen as we should skip the whole dialog if this is already present
                     Services.Zoho.UpdateLead(userData);
                 }
             }
