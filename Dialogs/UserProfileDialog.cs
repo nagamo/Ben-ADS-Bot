@@ -58,14 +58,25 @@ namespace ADS.Bot1.Dialogs
         private async Task<DialogTurnResult> InitStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            userData.Details = new BasicDetails();
-
+            
+            if(userData.Details == null)
+            {
+                userData.Details = new BasicDetails();
+            }
+            
             return await stepContext.NextAsync(cancellationToken: cancellationToken);
         }
 
 
         private async Task<DialogTurnResult> NameStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
+
+            if (userData.Details?.Name != null)
+            {
+                return await stepContext.NextAsync(cancellationToken: cancellationToken);
+            }
+
             return await stepContext.PromptAsync(PROMPT_Name, new PromptOptions
             {
                 Prompt = MessageFactory.Text("So, first of all - I can't keep saying 'hey you'! Can I get your name, please?"),
@@ -84,10 +95,16 @@ namespace ADS.Bot1.Dialogs
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
 
-            userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            userData.Details.Name = (string)stepContext.Result;
+            //Skip if we have a null result (name already filled out)
+            if(stepContext.Result != null)
+            {
+                userData.Details.Name = (string)stepContext.Result;
 
-            return await stepContext.NextAsync(cancellationToken: cancellationToken);
+                await Services.SetUserProfileAsync(userData, stepContext, cancellationToken);
+            }
+
+            //pass forward reponse for greeting logic specifically
+            return await stepContext.NextAsync(stepContext.Result, cancellationToken: cancellationToken);
         }
 
 
@@ -97,8 +114,23 @@ namespace ADS.Bot1.Dialogs
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
 
+            if(userData.Details.Phone != null)
+            {
+                return await stepContext.NextAsync(cancellationToken: cancellationToken);
+            }
+
+            string line = "";
+            if (stepContext.Result != null)
+            {
+                line = $"Great to meet you, {userData.Name}! Can I get your cell number in case we get disconnected?";
+            }
+            else
+            {
+                line = "Real quick, can I get your cell number in case we get disconnected?";
+            }
+
             return await stepContext.PromptAsync(PROMPT_Phone, new PromptOptions {
-                Prompt = MessageFactory.Text("Great to meet you, " + userData.Name + "! Can I get your cell number in case we get disconnected?"),
+                Prompt = MessageFactory.Text(line),
                 RetryPrompt = MessageFactory.Text("Um, that seems wrong. Try again?")
             }, cancellationToken);
         }
@@ -113,8 +145,14 @@ namespace ADS.Bot1.Dialogs
         private async Task<DialogTurnResult> PhoneConfirmStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            userData.Details.Phone = (string)stepContext.Result;
+            if(stepContext.Result != null)
+            {
+                var phoneDetails = SequenceRecognizer.RecognizePhoneNumber(stepContext.Context.Activity.Text, "en");
+                userData.Details.Phone = phoneDetails.First().Text;
 
+                await Services.SetUserProfileAsync(userData, stepContext, cancellationToken);
+            }
+            
             return await stepContext.NextAsync(cancellationToken: cancellationToken);
         }
 
@@ -124,6 +162,11 @@ namespace ADS.Bot1.Dialogs
         private async Task<DialogTurnResult> EmailStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
+
+            if (userData.Details.Email != null)
+            {
+                return await stepContext.NextAsync(cancellationToken: cancellationToken);
+            }
 
             return await stepContext.PromptAsync(PROMPT_Email, new PromptOptions
             {
@@ -142,7 +185,14 @@ namespace ADS.Bot1.Dialogs
         private async Task<DialogTurnResult> EmailConfirmStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            userData.Details.Email = (string)stepContext.Result;
+
+            if (stepContext.Result != null)
+            {
+                var emailDetails = SequenceRecognizer.RecognizeEmail(stepContext.Result as string, "en");
+                userData.Details.Email = emailDetails.First().Text;
+
+                await Services.SetUserProfileAsync(userData, stepContext, cancellationToken);
+            }
 
             return await stepContext.NextAsync(cancellationToken: cancellationToken);
         }
@@ -151,6 +201,26 @@ namespace ADS.Bot1.Dialogs
         private async Task<DialogTurnResult> FinalizeStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
+
+            if (Services.Zoho.Connected)
+            {
+                if (!userData.ADS_CRM_ID.HasValue)
+                {
+                    Services.Zoho.RegisterLead(userData);
+                }
+                else
+                {
+                    //This shouldn't actually happen as we should skip the whole dialog if this is already present
+                    Services.Zoho.UpdateLead(userData);
+                }
+            }
+            else
+            {
+                //TODO: What to do if CRM isn't configured properly...
+            }
+
+            //Save it back to our storage
+            await Services.SetUserProfileAsync(userData, stepContext, cancellationToken);
 
             await stepContext.Context.SendActivityAsync($"You're the cat's pyjamas, {userData.Details.Name}!");
             await stepContext.Context.SendActivityAsync("And now, without further ado - onto your destination!");

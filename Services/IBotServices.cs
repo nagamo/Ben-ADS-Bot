@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using ADS.Bot.V1.Models;
+using ADS.Bot.V1.Services;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.AI.Luis;
 using Microsoft.Bot.Builder.AI.QnA;
@@ -22,9 +23,12 @@ namespace ADS.Bot1
 
         IConfiguration Configuration { get; }
 
+        ZohoBotService Zoho { get; }
+
         QnAMaker LeadQualQnA { get; }
 
         Task<UserProfile> GetUserProfileAsync(ITurnContext turnContext, CancellationToken cancellationToken = default);
-        Task SetUserProfileAsync(UserProfile profile, ITurnContext turnContext, CancellationToken cancellationToken = default);
+        Task SetUserProfileAsync(UserProfile profile, DialogContext dialogContext, CancellationToken cancellationToken = default);
+        Task SaveUserProfileAsync(UserProfile profile, ITurnContext turnContext, CancellationToken cancellationToken = default);
     }
 }

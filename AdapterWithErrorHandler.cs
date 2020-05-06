@@ -40,6 +40,14 @@ namespace ADS.Bot1
                     }
                 }
 
+                if (bool.TryParse(configuration["debug_messages"], out var msg_debug) && msg_debug)
+                {
+                    if (turnContext.Activity.ChannelId == "emulator")
+                    {
+                        await turnContext.SendActivityAsync($"{exception.Message}\r\n{exception.StackTrace}");
+                    }
+                }
+
                 // Send a trace activity, which will be displayed in the Bot Framework Emulator
                 await turnContext.TraceActivityAsync("OnTurnError Trace", exception.Message, "https://www.botframework.com/schemas/error", "TurnError");
             };

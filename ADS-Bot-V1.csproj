@@ -24,6 +24,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="System.Collections" Version="4.3.0" />
+    <PackageReference Include="ZCRMSDK" Version="2.1.8" />
   </ItemGroup>
 
   <ItemGroup>

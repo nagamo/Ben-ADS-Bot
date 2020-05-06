@@ -3,7 +3,7 @@
 
 namespace ADS.Bot.V1.Models
 {
-    public class TradeInDetails
+    public class TradeInDetails : IADSCRMRecord
     {
         public bool IsCompleted
         {
@@ -17,6 +17,8 @@ namespace ADS.Bot.V1.Models
                     !string.IsNullOrEmpty(AmountOwed);
             }
         }
+
+        public long? ADS_CRM_ID { get; set; } = null;
 
         public string Make { get; set; }
         public string Model { get; set; }

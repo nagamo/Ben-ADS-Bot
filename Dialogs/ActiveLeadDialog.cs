@@ -86,21 +86,8 @@ namespace ADS.Bot.V1.Dialogs
                         {
                             new IfCondition()
                             {
-                                Condition = "user.UserProfile.Details == null",
+                                Condition = "user.UserProfile.IsRegistered",
                                 Actions = new List<Dialog>()
-                                {
-                                    new SetProperty()
-                                    {
-                                        Property = "conversation.residual_interest",
-                                        Value = "conversation.interest"
-                                    },
-                                    new DeleteProperty()
-                                    {
-                                        Property = "conversation.interest"
-                                    },
-                                    new EmitEvent(Constants.Event_Card, "'profile'")
-                                },
-                                ElseActions = new List<Dialog>()
                                 {
                                     new SwitchCondition()
                                     {
@@ -125,6 +112,19 @@ namespace ADS.Bot.V1.Dialogs
                                             }
                                         }
                                     }
+                                },
+                                ElseActions = new List<Dialog>()
+                                {
+                                    new SetProperty()
+                                    {
+                                        Property = "conversation.residual_interest",
+                                        Value = "conversation.interest"
+                                    },
+                                    new DeleteProperty()
+                                    {
+                                        Property = "conversation.interest"
+                                    },
+                                    new EmitEvent(Constants.Event_Card, "'profile'")
                                 }
                             },
                             //Delete the property so we don't loop forever
@@ -184,7 +184,7 @@ namespace ADS.Bot.V1.Dialogs
                                     {
                                         Actions = new List<Dialog>()
                                         {
-                                            new BeginDialog(nameof(TradeDialog))
+                                            new BeginDialog(nameof(ValueTradeInDialog))
                                         }
                                     },
                                     new Case("inventory")
@@ -266,6 +266,10 @@ namespace ADS.Bot.V1.Dialogs
 #if DEBUG
                             new TraceActivity(){Name = "OnBeginDialog"},
 #endif
+                            new CodeAction(async (context, _)=>{
+                                await Services.SetUserProfileAsync(await Services.GetUserProfileAsync(context.Context), context);
+                                return new DialogTurnResult(DialogTurnStatus.Complete);
+                            }),
                             new EmitEvent(Constants.Event_Help),
                         }
                     },
@@ -276,12 +280,11 @@ namespace ADS.Bot.V1.Dialogs
 #if DEBUG
                             new TraceActivity("OnMessageActivity"){Name = "OnMessageActivity"},
 #endif
-                            new CodeAction(PrimaryHandler),
                             new CodeAction(async (context, _)=>{
-                                var userData = await Services.GetUserProfileAsync(context.Context);
-                                context.GetState().SetValue("user.UserProfile", userData);
+                                await Services.SetUserProfileAsync(await Services.GetUserProfileAsync(context.Context), context);
                                 return new DialogTurnResult(DialogTurnStatus.Complete);
-                            })
+                            }),
+                            new CodeAction(PrimaryHandler)
                         }
                     }
                 }
@@ -408,15 +411,15 @@ namespace ADS.Bot.V1.Dialogs
             {
                 new IfCondition()
                 {
-                    Condition = "user.UserProfile == null",
+                    Condition = "user.UserProfile.IsRegistered",
                     Actions = new List<Dialog>()
                     {
-                        new SendActivity("Sure! I'd love to help you with that, but I need to collect a few details first."),
-                        new BeginDialog(nameof(UserProfileDialog)),
+                        new SendActivity("Sure! I'd love to help finance you. Let me ask you a few questions about that.")
                     },
                     ElseActions = new List<Dialog>()
                     {
-                        new SendActivity("Sure! I'd love to help finance you. Let me ask you a few questions about that.")
+                        new SendActivity("Sure! I'd love to help you with that, but I need to collect a few details first."),
+                        new BeginDialog(nameof(UserProfileDialog)),
                     }
                 },
                 new BeginDialog(DialogID)

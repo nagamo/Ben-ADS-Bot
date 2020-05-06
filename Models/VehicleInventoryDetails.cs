@@ -3,7 +3,7 @@
 
 namespace ADS.Bot.V1.Models
 {
-    public class VehicleInventoryDetails
+    public class VehicleInventoryDetails : IADSCRMRecord
     {
         public bool IsCompleted
         {
@@ -16,6 +16,8 @@ namespace ADS.Bot.V1.Models
                     !string.IsNullOrEmpty(Color);
             }
         }
+
+        public long? ADS_CRM_ID { get; set; } = null;
 
         public string Make { get; set; }
         public string Model { get; set; }

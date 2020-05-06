@@ -43,7 +43,7 @@ namespace ADS.Bot.V1.Cards
 
             currentProfiles.TradeDetails = submission;
 
-            await Services.SetUserProfileAsync(currentProfiles, context, cancellationToken);
+            //await Services.SetUserProfileAsync(currentProfiles, context, cancellationToken);
 
             await context.SendActivityAsync($"Thanks so much, {currentProfiles.Details.Name}!", cancellationToken: cancellationToken);
         }

@@ -43,7 +43,7 @@ namespace ADS.Bot.V1.Cards
 
             currentProfiles.VehicleProfile = submission;
 
-            await Services.SetUserProfileAsync(currentProfiles, context, cancellationToken);
+            //await Services.SetUserProfileAsync(currentProfiles, context, cancellationToken);
 
             await context.SendActivityAsync($"Beep boop. Checking inventory for {submission.Model}!\nJust kidding, I can't do that yet. :)", cancellationToken: cancellationToken);
         }

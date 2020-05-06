@@ -2,25 +2,32 @@
 // Licensed under the MIT License.
 
 using ADS.Bot.V1.Models;
+using ADS.Bot.V1.Services;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.AI.Luis;
 using Microsoft.Bot.Builder.AI.QnA;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
+using ZCRMSDK.CRM.Library.CRMException;
+using ZCRMSDK.CRM.Library.Setup.RestClient;
+using ZCRMSDK.OAuth.Client;
 
 namespace ADS.Bot1
 {
     public class Services : IBotServices
     {
-        public Services(IConfiguration configuration, ConversationState conversationState, UserState userState)
+        public Services(IConfiguration configuration, ConversationState conversationState, UserState userState, ZohoBotService zohoService)
         {
             Configuration = configuration;
             ConversationState = conversationState;
             UserState = userState;
+            Zoho = zohoService;
 
             UserProfileAccessor = UserState.CreateProperty<UserProfile>(nameof(UserProfile));
             DialogStateAccessor = ConversationState.CreateProperty<DialogState>(nameof(DialogState));
@@ -43,6 +50,8 @@ namespace ADS.Bot1
 
         public IConfiguration Configuration { get; }
 
+        public ZohoBotService Zoho { get; private set; }
+
         private ConversationState ConversationState { get; set; }
         private UserState UserState { get; set; }
 
@@ -51,9 +60,17 @@ namespace ADS.Bot1
             return await UserProfileAccessor.GetAsync(turnContext, () => new UserProfile(), cancellationToken);
         }
 
-        public async Task SetUserProfileAsync(UserProfile profile, ITurnContext turnContext, CancellationToken cancellationToken)
+        public async Task SaveUserProfileAsync(UserProfile profile, ITurnContext turnContext, CancellationToken cancellationToken)
         {
-            await UserProfileAccessor.SetAsync(turnContext, profile, cancellationToken);
+            //Update accessors with latest version
+            await UserState.SaveChangesAsync(turnContext, cancellationToken: cancellationToken);
+        }
+
+        public async Task SetUserProfileAsync(UserProfile profile, DialogContext dialogContext, CancellationToken cancellationToken)
+        {
+            //Also update the dialog contexts state
+            await UserProfileAccessor.SetAsync(dialogContext.Context, profile, cancellationToken);
+            dialogContext.GetState().SetValue("user.UserProfile", profile);
         }
     }
 }
