@@ -55,7 +55,7 @@ namespace ADS.Bot.V1.Services
             record.SetFieldValue("Last_Name", profile.LastName);
             record.SetFieldValue("Email", profile.Details.Email);
             record.SetFieldValue("Phone", profile.Details.Phone);
-            record.SetFieldValue("LeadSource", "Chat");
+            record.SetFieldValue("Lead_Source", "Chat");
         }
 
         private void PopulateFinancingNote(FinancingDetails financing, ZCRMNote note)
