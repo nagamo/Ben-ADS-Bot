@@ -199,6 +199,15 @@ namespace ADS.Bot.V1.Dialogs
                 $"Condition: {userData.TradeDetails.Condition}",
             };
 
+            if (Services.Zoho.Connected)
+            {
+                Services.Zoho.UpdateLead(userData);
+            }
+            else
+            {
+                //TODO: What to do if CRM isn't configure properly...
+            }
+
             await stepContext.Context.SendActivityAsync(MessageFactory.Text(string.Join(Environment.NewLine, lines)), cancellationToken);
 
             return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);

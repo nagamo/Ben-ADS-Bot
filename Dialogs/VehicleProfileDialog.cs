@@ -15,7 +15,9 @@ namespace ADS.Bot.V1.Dialogs
     {
         private IStatePropertyAccessor<UserProfile> _userProfileAccessor;
 
-        public VehicleProfileDialog(UserState userState)
+        public IBotServices Services { get; }
+
+        public VehicleProfileDialog(UserState userState, IBotServices services)
             : base(nameof(VehicleProfileDialog))
         {
             _userProfileAccessor = userState.CreateProperty<UserProfile>(nameof(UserProfile));
@@ -60,6 +62,7 @@ namespace ADS.Bot.V1.Dialogs
 
             // The initial child Dialog to run.
             InitialDialogId = nameof(WaterfallDialog);
+            Services = services;
         }
 
 
@@ -306,6 +309,15 @@ namespace ADS.Bot.V1.Dialogs
                 lines.Add($"Model: {userData.TradeDetails.Model}");
                 lines.Add($"Year: {userData.TradeDetails.Year}");
                 lines.Add($"Condition: {userData.TradeDetails.Condition}");
+            }
+
+            if (Services.Zoho.Connected)
+            {
+                Services.Zoho.UpdateLead(userData);
+            }
+            else
+            {
+                //TODO: What to do if CRM isn't configure properly...
             }
 
             await stepContext.Context.SendActivityAsync(MessageFactory.Text(string.Join(Environment.NewLine, lines)), cancellationToken);

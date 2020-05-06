@@ -58,7 +58,15 @@ namespace ADS.Bot.V1.Bots
 
             await Services.UserProfileAccessor.SetAsync(turnContext, userProfile, cancellationToken);
         }
-        
+
+        protected override async Task OnEventActivityAsync(ITurnContext<IEventActivity> turnContext, CancellationToken cancellationToken)
+        {
+            if (bool.TryParse(Services.Configuration["debug_messages"], out var debug_msg) && debug_msg)
+            {
+                await turnContext.SendActivityAsync(JsonConvert.SerializeObject(turnContext.Activity));
+            }
+        }
+
         // This is the primary message handler
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {

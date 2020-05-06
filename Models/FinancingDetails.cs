@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ADS.Bot.V1.Models
 {
-    public class FinancingDetails
+    public class FinancingDetails : IADSCRMRecord
     {
         public bool IsCompleted
         {
@@ -20,6 +20,8 @@ namespace ADS.Bot.V1.Models
                     !string.IsNullOrEmpty(Employment);
             }
         }
+
+        public long? ADS_CRM_ID { get; set; } = null;
 
         public string CreditScore { get; set; }
         public string Employment { get; set; }

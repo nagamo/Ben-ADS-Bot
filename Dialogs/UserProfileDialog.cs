@@ -152,6 +152,15 @@ namespace ADS.Bot1.Dialogs
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
 
+            if (Services.Zoho.Connected)
+            {
+                Services.Zoho.UpdateLead(userData);
+            }
+            else
+            {
+                //TODO: What to do if CRM isn't configure properly...
+            }
+
             await stepContext.Context.SendActivityAsync($"You're the cat's pyjamas, {userData.Details.Name}!");
             await stepContext.Context.SendActivityAsync("And now, without further ado - onto your destination!");
 

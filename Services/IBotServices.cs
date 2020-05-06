@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using ADS.Bot.V1.Models;
+using ADS.Bot.V1.Services;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.AI.Luis;
 using Microsoft.Bot.Builder.AI.QnA;
@@ -21,6 +22,8 @@ namespace ADS.Bot1
         IStatePropertyAccessor<DialogState> DialogStateAccessor { get; }
 
         IConfiguration Configuration { get; }
+
+        ZohoBotService Zoho { get; }
 
         QnAMaker LeadQualQnA { get; }
 

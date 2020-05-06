@@ -169,17 +169,14 @@ namespace ADS.Bot1.Dialogs
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
 
-            string details = string.Join(Environment.NewLine, new string[]
+            if (Services.Zoho.Connected)
             {
-                $"Wow {userData.Name}! Thanks! That wasn't so bad, was it? Here's what I picked up,",
-                $"and I sure hope we've got it nailed, 'cause we don't want to do THAT again, right?:)",
-                $"Credit Score: {userData.Financing.CreditScore}",
-                $"Income: {userData.Financing.Income}",
-                $"Home Ownership: {userData.Financing.HomeOwnership}",
-                $"Employment History: {userData.Financing.Employment}",
-            });
-
-            await stepContext.Context.SendActivityAsync(MessageFactory.Text(details), cancellationToken);
+                Services.Zoho.UpdateLead(userData);
+            }
+            else
+            {
+                //TODO: What to do if CRM isn't configure properly...
+            }
 
             return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
         }

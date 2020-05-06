@@ -17,6 +17,8 @@ namespace ADS.Bot.V1.Models
             }
         }
 
+        public long? ADS_CRM_ID { get; set; } = null;
+
         public string Make { get; set; }
         public string Model { get; set; }
         public string Year { get; set; }

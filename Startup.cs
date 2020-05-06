@@ -18,6 +18,7 @@ using Microsoft.Bot.Builder.Azure;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
 using ADS.Bot.V1.Models;
+using ADS.Bot.V1.Services;
 
 namespace ADS.Bot1
 {
@@ -55,6 +56,7 @@ namespace ADS.Bot1
             services.AddSingleton<ConversationState>();
 
             // Create the bot services (LUIS, QnA) as a singleton.
+            services.AddSingleton<ZohoBotService>();
             services.AddSingleton<IBotServices, Services>();
 
             services.AddSingleton<ICardFactory<BasicDetails>, JSONProfileCardFactory>();
