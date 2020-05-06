@@ -58,8 +58,12 @@ namespace ADS.Bot1.Dialogs
         private async Task<DialogTurnResult> InitStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            userData.Details = new BasicDetails();
-
+            
+            if(userData.Details == null)
+            {
+                userData.Details = new BasicDetails();
+            }
+            
             return await stepContext.NextAsync(cancellationToken: cancellationToken);
         }
 
@@ -84,7 +88,6 @@ namespace ADS.Bot1.Dialogs
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
 
-            userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
             userData.Details.Name = (string)stepContext.Result;
 
             return await stepContext.NextAsync(cancellationToken: cancellationToken);
@@ -154,7 +157,14 @@ namespace ADS.Bot1.Dialogs
 
             if (Services.Zoho.Connected)
             {
-                Services.Zoho.UpdateLead(userData);
+                if (!userData.ADS_CRM_ID.HasValue)
+                {
+                    Services.Zoho.RegisterLead(userData);
+                }
+                else
+                {
+                    Services.Zoho.UpdateLead(userData);
+                }
             }
             else
             {

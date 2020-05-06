@@ -408,15 +408,15 @@ namespace ADS.Bot.V1.Dialogs
             {
                 new IfCondition()
                 {
-                    Condition = "user.UserProfile == null",
+                    Condition = "user.UserProfile?.IsRegistered",
                     Actions = new List<Dialog>()
                     {
-                        new SendActivity("Sure! I'd love to help you with that, but I need to collect a few details first."),
-                        new BeginDialog(nameof(UserProfileDialog)),
+                        new SendActivity("Sure! I'd love to help finance you. Let me ask you a few questions about that.")
                     },
                     ElseActions = new List<Dialog>()
                     {
-                        new SendActivity("Sure! I'd love to help finance you. Let me ask you a few questions about that.")
+                        new SendActivity("Sure! I'd love to help you with that, but I need to collect a few details first."),
+                        new BeginDialog(nameof(UserProfileDialog)),
                     }
                 },
                 new BeginDialog(DialogID)

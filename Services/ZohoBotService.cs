@@ -97,6 +97,8 @@ namespace ADS.Bot.V1.Services
         public bool RegisterLead(UserProfile profile)
         {
             if (!Connected) return false;
+            if (profile.ADS_CRM_ID.HasValue)
+                throw new Exception("Profile already has a registered CRM ID.");
 
             var newLead = new ZCRMRecord("Leads");
             PopulateCRMLead(profile, newLead);
@@ -115,6 +117,8 @@ namespace ADS.Bot.V1.Services
         public bool UpdateLead(UserProfile profile)
         {
             if (!Connected) return false;
+            if (!profile.ADS_CRM_ID.HasValue)
+                throw new Exception("Profile does not have a registered CRM ID");
 
             var existingRecord = LeadsModule.GetRecord(profile.ADS_CRM_ID.Value);
 

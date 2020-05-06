@@ -16,7 +16,9 @@ namespace ADS.Bot.V1.Bots
     public class BenBot : ActivityHandler
     {
         // General messages sent to the user.
-        private const string WelcomeMessage = "Hey there! I'm Chad. Welcome!";
+        private const string WelcomeSimple = "Hey there! I'm Chad. Welcome!";
+        private const string WelcomePersonal = "Hey there {0}! I'm Chad. Let's get started!";
+        private const string WelcomeReturn = "Welcome back {0}! I'm Chad. What can I help you with today?";
 
         private DialogManager DialogManager;
         //Hey there!
@@ -46,7 +48,32 @@ namespace ADS.Bot.V1.Bots
             {
                 if (member.Id != turnContext.Activity.Recipient.Id)
                 {
-                    await turnContext.SendActivityAsync(WelcomeMessage, cancellationToken: cancellationToken);
+                    //Handle having a users name from the conversation metadata already.
+                    if(userProfile.Details == null)
+                    {
+                        if(!string.IsNullOrWhiteSpace(turnContext.Activity.From.Name) && turnContext.Activity.From.Name != "User")
+                        {
+                            userProfile.Details = new Models.BasicDetails()
+                            {
+                                Name = turnContext.Activity.From.Name
+                            };
+                        }
+                    }
+
+                    //Print a personalized hello when we have their information already
+                    //And even more "friendly" when we have already converted them as a lead before
+                    if(userProfile.ADS_CRM_ID.HasValue)
+                    {
+                        await turnContext.SendActivityAsync(string.Format(WelcomeReturn, userProfile.FirstName), cancellationToken: cancellationToken);
+                    }
+                    else if(userProfile.Details != null)
+                    {
+                        await turnContext.SendActivityAsync(string.Format(WelcomePersonal, userProfile.FirstName), cancellationToken: cancellationToken);
+                    }
+                    else
+                    {
+                        await turnContext.SendActivityAsync(WelcomeSimple, cancellationToken: cancellationToken);
+                    }
                     await DialogManager.OnTurnAsync(turnContext, cancellationToken);
                 }
             }
