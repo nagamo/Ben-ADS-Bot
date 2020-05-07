@@ -3,6 +3,7 @@ using ADS.Bot1;
 using ADS.Bot1.Dialogs;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Bot.Builder.Dialogs.Choices;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,6 +22,7 @@ namespace ADS.Bot.V1.Dialogs
             // This array defines how the Waterfall will execute.
             var waterfallSteps = new WaterfallStep[]
             {
+                PreInitializeStep,
                 InitializeStep,
 
                 MakeStep,
@@ -53,22 +55,54 @@ namespace ADS.Bot.V1.Dialogs
         }
 
 
-        private async Task<DialogTurnResult> InitializeStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        private async Task<DialogTurnResult> PreInitializeStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-
             if (userData?.TradeDetails != null)
             {
                 if (userData.TradeDetails.IsCompleted)
                 {
-                    return await stepContext.EndDialogAsync();
+                    var resetOptions = Utilities.CreateOptions(new string[] { "Reset", "Use Previous" },
+                        "Look's like I've already got trade-in details for you.\r\nWould you to fill those details out again?",
+                        "Not sure what you meant, try again?");
+                    return await stepContext.PromptAsync(nameof(ChoicePrompt), resetOptions, cancellationToken);
+                }
+                else
+                {
+                    var resetOptions = Utilities.CreateOptions(new string[] { "Reset", "Resume" },
+                        "Look's like you have some details filled in already.\r\nDo you want to pick up where you left off, or fill things out again?",
+                        "Not sure what you meant, try again?");
+                    return await stepContext.PromptAsync(nameof(ChoicePrompt), resetOptions, cancellationToken);
                 }
             }
             else
             {
                 userData.TradeDetails = new TradeInDetails();
+                return await stepContext.NextAsync(cancellationToken: cancellationToken);
+            }
+        }
+
+        private async Task<DialogTurnResult> InitializeStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        {
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
+
+            if (stepContext.Result is FoundChoice choice)
+            {
+                //User was prompted about reseting/continuing
+                switch (choice.Value)
+                {
+                    case "Reset":
+                        userData.TradeDetails = new TradeInDetails();
+                        break;
+                    case "Resume":
+                        //Don't need to do anything, each sub-dialog will skip
+                        break;
+                    case "Use Previous":
+                        return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
+                }
             }
 
+            //For every other case, we can just continue in the dialog
             return await stepContext.NextAsync(cancellationToken: cancellationToken);
         }
 
