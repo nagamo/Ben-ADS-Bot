@@ -224,36 +224,11 @@ namespace ADS.Bot.V1.Dialogs
                                 },
                                 ElseActions = new List<Dialog>()
                                 {
-                                    new SendActivity("All done!"),
                                     new DeleteProperty()
                                     {
                                         Property = "conversation.interest"
                                     },
-                                    new ChoiceInput()
-                                    {
-                                        Prompt = new ActivityTemplate("Thank you for filling out all those details. Can I help you with anything else?"),
-                                        Choices = new ChoiceSet(new string[]{ "No Thanks" }.Union(Constants.HelpOptions).Select(o => new Choice(o)).ToList()),
-                                        Property = "conversation.interest",
-                                        AlwaysPrompt = true,
-                                        AllowInterruptions = "true"
-                                    },
-                                    new TraceActivity(),
-                                    new IfCondition()
-                                    {
-                                        Condition = "conversation.interest == null || conversation.interest == 'No Thanks'",
-                                        Actions = new List<Dialog>()
-                                        {
-                                            new SendActivity("All right then, thank you for you interest!"),
-                                            new EndDialog()
-                                            {
-                                                Value = "user.UserProfile"
-                                            }
-                                        },
-                                        ElseActions = new List<Dialog>()
-                                        {
-                                            new EmitEvent(Constants.Event_Interest)
-                                        }
-                                    }
+                                    new EmitEvent(Constants.Event_Help)
                                 }
                             },
                         }

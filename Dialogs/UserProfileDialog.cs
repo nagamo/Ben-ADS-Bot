@@ -211,7 +211,6 @@ namespace ADS.Bot1.Dialogs
                 else
                 {
                     //This shouldn't actually happen as we should skip the whole dialog if this is already present
-                    Services.Zoho.UpdateLead(userData);
                 }
             }
             else

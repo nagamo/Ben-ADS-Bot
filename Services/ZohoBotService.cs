@@ -20,6 +20,7 @@ namespace ADS.Bot.V1.Services
         public ZCRMRestClient ZohoCRMClient { get; private set; }
 
         private ZCRMModule LeadsModule { get; set; }
+        public IConfiguration Configuration { get; }
 
         public ZohoBotService(IConfiguration configuration)
         {
@@ -47,6 +48,8 @@ namespace ADS.Bot.V1.Services
             {
                 Console.WriteLine("Unable to initialize CRM Connection");
             }
+
+            Configuration = configuration;
         }
 
         private void PopulateCRMLead(UserProfile profile, ZCRMRecord record)
@@ -58,6 +61,11 @@ namespace ADS.Bot.V1.Services
             record.SetFieldValue("Lead_Source", "Chat");
         }
 
+
+        public bool WriteFinancingNote(UserProfile profile)
+        {
+            return CreateAndPopulateNote(profile, profile.Financing, PopulateFinancingNote);
+        }
         private void PopulateFinancingNote(FinancingDetails financing, ZCRMNote note)
         {
             var lines = financing.GoodCredit ?
@@ -73,10 +81,15 @@ namespace ADS.Bot.V1.Services
                     $"Employment History: {financing.Employment}",
                 };
 
-            note.Title = "Financing Details";
+            note.Title = $"Financing Details {DateTime.Now:g}";
             note.Content = string.Join(Environment.NewLine, lines);
         }
 
+
+        public bool WriteTradeInNote(UserProfile profile)
+        {
+            return CreateAndPopulateNote(profile, profile.TradeDetails, PopulateTradeInNote);
+        }
         private void PopulateTradeInNote(TradeInDetails tradein, ZCRMNote note)
         {
             string details = string.Join(Environment.NewLine, new string[]
@@ -89,10 +102,15 @@ namespace ADS.Bot.V1.Services
                 $"Amount Owed: {tradein.AmountOwed}",
             });
 
-            note.Title = "Trade-In Details";
+            note.Title = $"Trade-In Details {DateTime.Now:g}";
             note.Content = details;
         }
 
+
+        public bool WriteVehicleProfileNote(UserProfile profile)
+        {
+            return CreateAndPopulateNote(profile, profile.VehicleProfile, PopulateVehicleProfileNote);
+        }
         private void PopulateVehicleProfileNote(VehicleInventoryDetails vehicleProfile, ZCRMNote note)
         {
             string details = string.Join(Environment.NewLine, new string[]
@@ -106,30 +124,39 @@ namespace ADS.Bot.V1.Services
                 $"Color: {vehicleProfile.Color}"
             });
 
-            note.Title = "Vehilcle Profile Details";
+            note.Title = $"Vehilcle Profile Details {DateTime.Now:g}";
             note.Content = details;
         }
 
-        private void PopulateNote<T>(ZCRMRecord ParentRecord, T UserData, Action<T, ZCRMNote> PopulateNoteFunction) where T : IADSCRMRecord
+        private bool CreateAndPopulateNote<T>(UserProfile profile, T UserData, Action<T, ZCRMNote> PopulateNoteFunction) where T : IADSCRMRecord
         {
+            if (!Connected) return false;
+            if (!profile.ADS_CRM_ID.HasValue)
+                throw new Exception("Profile does not have a registered CRM ID");
+            
+            var leadRecord = ZCRMRecord.GetInstance("Leads", profile.ADS_CRM_ID);
+
             if (UserData != null && UserData.ADS_CRM_ID == null)
             {
-                var newExistingNote = UserData.ADS_CRM_ID == null ? new ZCRMNote(ParentRecord) : ZCRMNote.GetInstance(ParentRecord, UserData.ADS_CRM_ID.Value);
+                var newExistingNote = UserData.ADS_CRM_ID == null ? new ZCRMNote(leadRecord) : ZCRMNote.GetInstance(leadRecord, UserData.ADS_CRM_ID.Value);
 
                 PopulateNoteFunction(UserData, newExistingNote);
 
                 if (UserData.ADS_CRM_ID == null)
                 {
-                    var createdNote = ParentRecord.AddNote(newExistingNote);
+                    var createdNote = leadRecord.AddNote(newExistingNote);
                     if (createdNote.HttpStatusCode != APIConstants.ResponseCode.CREATED) throw new Exception("Failed to create note for lead.");
                     UserData.ADS_CRM_ID = (createdNote.Data as ZCRMNote).Id;
                 }
                 else
                 {
-                    var updatedNote = ParentRecord.UpdateNote(newExistingNote);
+                    var updatedNote = leadRecord.UpdateNote(newExistingNote);
                     if (updatedNote.HttpStatusCode != APIConstants.ResponseCode.OK) throw new Exception("Failed to update note for lead.");
                 }
             }
+
+            return false;
+
         }
 
         public bool RegisterLead(UserProfile profile)
@@ -146,31 +173,6 @@ namespace ADS.Bot.V1.Services
             {
                 profile.ADS_CRM_ID = (createResponse.Data as ZCRMRecord).EntityId;
             
-                return true;
-            }
-
-            return false;
-        }
-
-        public bool UpdateLead(UserProfile profile)
-        {
-            if (!Connected) return false;
-            if (!profile.ADS_CRM_ID.HasValue)
-                throw new Exception("Profile does not have a registered CRM ID");
-
-            var existingRecord = LeadsModule.GetRecord(profile.ADS_CRM_ID.Value);
-
-            if(existingRecord.HttpStatusCode == APIConstants.ResponseCode.OK)
-            {
-                var leadRecord = existingRecord.Data as ZCRMRecord;
-                
-                PopulateCRMLead(profile, leadRecord);
-                leadRecord.Update();
-
-                PopulateNote(leadRecord, profile.Financing, PopulateFinancingNote);
-                PopulateNote(leadRecord, profile.VehicleProfile, PopulateVehicleProfileNote);
-                PopulateNote(leadRecord, profile.TradeDetails, PopulateTradeInNote);
-
                 return true;
             }
 

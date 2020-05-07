@@ -23,6 +23,7 @@ namespace ADS.Bot.V1.Models
         public string Model { get; set; }
         public string Year { get; set; }
         public string Color { get; set; }
+
         public bool? NeedFinancing { get; set; }
         public bool? TradingIn { get; set; }
     }

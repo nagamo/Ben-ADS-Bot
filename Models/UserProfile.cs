@@ -11,11 +11,22 @@ namespace ADS.Bot.V1.Models
     /// </summary>
     public class UserProfile
     {
-        public bool IsRegistered { get { return Details != null && ADS_CRM_ID.HasValue; } }
+        public bool IsRegistered { get { return Details?.IsCompleted ?? false; } }
 
         public string Name { get { return Details?.Name; } }
         public string FirstName { get { return Details?.Name?.Split(' ')?.First(); } }
-        public string LastName { get { return Details?.Name?.Split(' ', 2)?.Last(); } }
+        public string LastName
+        {
+            get
+            {
+                var nameParts = Details?.Name?.Split(' ', 2);
+                if(nameParts?.Length == 2)
+                {
+                    return nameParts.Last();
+                }
+                else { return ""; }
+            }
+        }
 
         public BasicDetails Details { get; set; }
         public FinancingDetails Financing { get; set; }

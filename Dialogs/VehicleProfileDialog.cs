@@ -299,7 +299,7 @@ namespace ADS.Bot.V1.Dialogs
 
             if (Services.Zoho.Connected)
             {
-                Services.Zoho.UpdateLead(userData);
+                Services.Zoho.WriteVehicleProfileNote(userData);
             }
             else
             {
