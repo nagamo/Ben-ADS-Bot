@@ -95,9 +95,9 @@ namespace ADS.Bot1.Dialogs
                         break;
                     case "Resume":
                         //Don't need to do anything, each sub-dialog will skip
-                        break;
                     case "Use Previous":
-                        return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
+                        //Let this ripple through all stages, will go to end if everything is already there.
+                        break;
                 }
             }
 

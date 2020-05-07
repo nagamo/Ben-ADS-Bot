@@ -86,7 +86,7 @@ namespace ADS.Bot1.Dialogs
                         userData.Inventory = new VehicleInventoryDetails();
                         break;
                     case "Resume":
-                    //Don't need to do anything, each sub-dialog will skip
+                        //Don't need to do anything, each sub-dialog will skip
                     case "Use Previous":
                         //Let this ripple through all stages, will go to end if everything is already there.
                         break;
