@@ -107,7 +107,7 @@ namespace ADS.Bot1.Dialogs
             if (userData.Inventory.SkipPrimaryConcern) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
 
-            var concernOptions = Utilities.CreateOptions(new string[] { "Overall Price", "Monthly Payment", "Car" }, "What is your primary concern with for a vehicle puchase?");
+            var concernOptions = Utilities.CreateOptions(new string[] { "Overall Price", "Monthly Payment", "Nothing Specific" }, "What is your primary concern regarding a vehicle puchase?");
             return await stepContext.PromptAsync(nameof(ChoicePrompt), concernOptions, cancellationToken);
         }
 
@@ -137,8 +137,8 @@ namespace ADS.Bot1.Dialogs
                 case "Monthly Payment":
                     goalOptions = Utilities.CreateOptions(new string[] { "<$100/month", "$100-200/month", "$200-400/month", "$400+/month" }, "What are you aiming for a monthly payment?");
                     break;
-                case "Car":
-                    goalOptions = Utilities.CreateOptions(new string[] { "I know what I want!", "I have some questions..", "Just looking." }, "Do you know what kind of vehicle you want?");
+                case "Nothing Specific":
+                    goalOptions = Utilities.CreateOptions(new string[] { "Yes!", "Not Exactly..", "Just looking" }, "Do you know what kind of vehicle you want?");
                     break;
             }
 
@@ -156,7 +156,7 @@ namespace ADS.Bot1.Dialogs
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
             if (stepContext.Result != null)
-                userData.TradeDetails.Model = Utilities.ReadChoiceWithManual(stepContext);
+                userData.Inventory.ConcernGoal = Utilities.ReadChoiceWithManual(stepContext);
 
             return await stepContext.NextAsync();
         }
@@ -169,7 +169,7 @@ namespace ADS.Bot1.Dialogs
 
             if (Services.Zoho.Connected)
             {
-                var appointmentOptions = Utilities.CreateOptions(new string[] { "Yes!", "No" }, "Would you like to confirm an appointment for a quick appraisal?");
+                var appointmentOptions = Utilities.CreateOptions(new string[] { "Yes!", "No" }, "Would you like a call from the GM?");
                 return await stepContext.PromptAsync(nameof(ChoicePrompt), appointmentOptions, cancellationToken);
             }
             else
@@ -189,7 +189,7 @@ namespace ADS.Bot1.Dialogs
                     if (appointmentChoice.Value == "Yes!")
                     {
                         Services.Zoho.CreateUpdateLead(userData);
-                        Services.Zoho.WriteTradeInNote(userData);
+                        Services.Zoho.WriteInventoryNote(userData);
 
                         await stepContext.Context.SendActivityAsync("Thanks! Someone will be in touch with you shortly.");
                         return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
