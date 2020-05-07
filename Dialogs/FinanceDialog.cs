@@ -37,6 +37,7 @@ namespace ADS.Bot1.Dialogs
                 EmploymentStep,
                 ValidateEmploymentStep,
 
+                ConfirmAppointmentStep,
                 FinalizeStep
             };
 
@@ -200,19 +201,44 @@ namespace ADS.Bot1.Dialogs
 
 
 
+        private async Task<DialogTurnResult> ConfirmAppointmentStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        {
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
+
+            if (Services.Zoho.Connected)
+            {
+                var appointmentOptions = Utilities.CreateOptions(new string[] { "Yes!", "No" }, "Would you like to confirm an appointment?");
+                return await stepContext.PromptAsync(nameof(ChoicePrompt), appointmentOptions, cancellationToken);
+            }
+            else
+            {
+                return await stepContext.NextAsync(null, cancellationToken: cancellationToken);
+            }
+        }
+
         private async Task<DialogTurnResult> FinalizeStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
 
             if (Services.Zoho.Connected)
             {
-                Services.Zoho.WriteFinancingNote(userData);
-            }
-            else
-            {
-                //TODO: What to do if CRM isn't configured properly...
+                if (stepContext.Result is FoundChoice appointmentChoice)
+                {
+                    if (appointmentChoice.Value == "Yes!")
+                    {
+                        Services.Zoho.CreateUpdateLead(userData);
+                        Services.Zoho.WriteFinancingNote(userData);
+
+                        await stepContext.Context.SendActivityAsync("Thanks! Someone will be in touch with you shortly.");
+                        return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
+                    }
+                }
+
+                await stepContext.Context.SendActivityAsync("Thanks for filling that out, I'll remember your details in case you want to come back and make an appointment later.");
+                return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
             }
 
+            await stepContext.Context.SendActivityAsync("Thanks for filling that out!");
             return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
         }
     }

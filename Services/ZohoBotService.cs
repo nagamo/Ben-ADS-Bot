@@ -156,10 +156,9 @@ namespace ADS.Bot.V1.Services
             }
 
             return false;
-
         }
 
-        public bool RegisterLead(UserProfile profile)
+        private bool RegisterLead(UserProfile profile)
         {
             if (!Connected) return false;
             if (profile.ADS_CRM_ID.HasValue)
@@ -177,6 +176,16 @@ namespace ADS.Bot.V1.Services
             }
 
             return false;
+        }
+
+        public long CreateUpdateLead(UserProfile profile)
+        {
+            if (profile.ADS_CRM_ID.HasValue) return profile.ADS_CRM_ID.Value;
+
+            if (RegisterLead(profile))
+                return profile.ADS_CRM_ID.Value;
+            else
+                throw new Exception("Error creating lead in CRM system.");
         }
     }
 }

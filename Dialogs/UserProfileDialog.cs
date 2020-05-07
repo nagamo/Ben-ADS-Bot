@@ -202,22 +202,6 @@ namespace ADS.Bot1.Dialogs
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
 
-            if (Services.Zoho.Connected)
-            {
-                if (!userData.ADS_CRM_ID.HasValue)
-                {
-                    Services.Zoho.RegisterLead(userData);
-                }
-                else
-                {
-                    //This shouldn't actually happen as we should skip the whole dialog if this is already present
-                }
-            }
-            else
-            {
-                //TODO: What to do if CRM isn't configured properly...
-            }
-
             //Save it back to our storage
             await Services.SetUserProfileAsync(userData, stepContext, cancellationToken);
 
