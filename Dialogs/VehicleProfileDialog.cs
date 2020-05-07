@@ -78,7 +78,7 @@ namespace ADS.Bot.V1.Dialogs
             }
             else
             {
-                userData.VehicleProfile = new VehicleInventoryDetails();
+                userData.VehicleProfile = new VehicleProfileDetails();
             }
 
             return await stepContext.NextAsync(cancellationToken: cancellationToken);

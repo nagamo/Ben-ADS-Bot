@@ -61,7 +61,7 @@ namespace ADS.Bot1
 
             services.AddSingleton<ICardFactory<BasicDetails>, JSONProfileCardFactory>();
             services.AddSingleton<ICardFactory<FinancingDetails>, JSONFinanceCardFactory>();
-            services.AddSingleton<ICardFactory<VehicleInventoryDetails>, JSONVehicleInventoryCardFactory>();
+            services.AddSingleton<ICardFactory<VehicleProfileDetails>, JSONVehicleInventoryCardFactory>();
             services.AddSingleton<ICardFactory<TradeInDetails>, JSONTradeInCardFactory>();
             //services.AddSingleton<SendAdaptiveDialog<ProfileCardFactory, BasicDetails>>();
 
@@ -70,7 +70,7 @@ namespace ADS.Bot1
             services.AddSingleton<VehicleProfileDialog>();
             services.AddSingleton<ValueTradeInDialog>();
             services.AddSingleton<FinanceDialog>();
-            services.AddSingleton<InventoryDialog>();
+            services.AddSingleton<VehicleInventoryDialog>();
 
             services.AddSingleton<ActiveLeadDialog>();
 

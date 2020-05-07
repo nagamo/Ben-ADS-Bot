@@ -30,8 +30,10 @@ namespace ADS.Bot.V1.Models
 
         public BasicDetails Details { get; set; }
         public FinancingDetails Financing { get; set; }
-        public VehicleInventoryDetails VehicleProfile { get; set; }
+        public VehicleProfileDetails VehicleProfile { get; set; }
         public TradeInDetails TradeDetails { get; set; }
+        public VehicleInventoryDetails Inventory { get; set; }
+
 
         public long? ADS_CRM_ID { get; set; } = null;
     }

@@ -1,5 +1,6 @@
 ﻿using ADS.Bot.V1.Models;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -55,7 +56,8 @@ namespace ADS.Bot.V1.Services
         private void PopulateCRMLead(UserProfile profile, ZCRMRecord record)
         {
             record.SetFieldValue("First_Name", profile.FirstName);
-            record.SetFieldValue("Last_Name", profile.LastName);
+            //Bit of a hack for people who don't enter a last name.
+            record.SetFieldValue("Last_Name", string.IsNullOrWhiteSpace(profile.LastName) ? "-" : profile.LastName);
             record.SetFieldValue("Email", profile.Details.Email);
             record.SetFieldValue("Phone", profile.Details.Phone);
             record.SetFieldValue("Lead_Source", "Chat");
@@ -107,11 +109,28 @@ namespace ADS.Bot.V1.Services
         }
 
 
+        public bool WriteInventoryNote(UserProfile profile)
+        {
+            return CreateAndPopulateNote(profile, profile.Inventory, PopulateInventoryNote);
+        }
+        private void PopulateInventoryNote(VehicleInventoryDetails inventory, ZCRMNote note)
+        {
+            string details = string.Join(Environment.NewLine, new string[]
+            {
+                $"Primary Concern: {inventory.PrimaryConcern}",
+                $"Goal: {inventory.ConcernGoal}"
+            });
+
+            note.Title = $"Inventory Inquiry {DateTime.Now:g}";
+            note.Content = details;
+        }
+
+
         public bool WriteVehicleProfileNote(UserProfile profile)
         {
             return CreateAndPopulateNote(profile, profile.VehicleProfile, PopulateVehicleProfileNote);
         }
-        private void PopulateVehicleProfileNote(VehicleInventoryDetails vehicleProfile, ZCRMNote note)
+        private void PopulateVehicleProfileNote(VehicleProfileDetails vehicleProfile, ZCRMNote note)
         {
             string details = string.Join(Environment.NewLine, new string[]
             {
@@ -166,13 +185,20 @@ namespace ADS.Bot.V1.Services
 
             var newLead = new ZCRMRecord("Leads");
             PopulateCRMLead(profile, newLead);
-            var createResponse = newLead.Create();
-
-            if(createResponse.HttpStatusCode == APIConstants.ResponseCode.CREATED)
+            try
             {
-                profile.ADS_CRM_ID = (createResponse.Data as ZCRMRecord).EntityId;
+                var createResponse = newLead.Create();
+
+                if(createResponse.HttpStatusCode == APIConstants.ResponseCode.CREATED)
+                {
+                    profile.ADS_CRM_ID = (createResponse.Data as ZCRMRecord).EntityId;
             
-                return true;
+                    return true;
+                }
+            }
+            catch (ZCRMException ex)
+            {
+                throw new Exception($"ZOHO Error: {ex.Message} ({JsonConvert.SerializeObject(ex.Data)})", ex);
             }
 
             return false;

@@ -53,7 +53,7 @@ namespace ADS.Bot.V1.Bots
                     //Handle having a users name from the conversation metadata already.
                     if(userProfile.Details == null)
                     {
-                        if(!string.IsNullOrWhiteSpace(turnContext.Activity.From.Name))// && turnContext.Activity.From.Name != "User")
+                        if(!string.IsNullOrWhiteSpace(turnContext.Activity.From.Name) && turnContext.Activity.From.Name != "User")
                         {
                             userProfile.Details = new Models.BasicDetails()
                             {

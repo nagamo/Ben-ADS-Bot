@@ -36,11 +36,11 @@ namespace ADS.Bot.V1.Dialogs
             FinanceDialog financeDialog,
             VehicleProfileDialog vehicleProfileDialog,
             ValueTradeInDialog valueTradeInDialog,
-            InventoryDialog inventoryDialog,
+            VehicleInventoryDialog inventoryDialog,
             ICardFactory<BasicDetails> profileFactory,
             ICardFactory<FinancingDetails> financeFactory,
             ICardFactory<TradeInDetails> tradeinFactory,
-            ICardFactory<VehicleInventoryDetails> vehicleFactory,
+            ICardFactory<VehicleProfileDetails> vehicleFactory,
             IBotServices botServices) 
             : base(nameof(ActiveLeadDialog))
         {
@@ -191,7 +191,7 @@ namespace ADS.Bot.V1.Dialogs
                                     {
                                         Actions = new List<Dialog>()
                                         {
-                                            new BeginDialog(nameof(InventoryDialog))
+                                            new BeginDialog(nameof(VehicleInventoryDialog))
                                         }
                                     },
                                 },
