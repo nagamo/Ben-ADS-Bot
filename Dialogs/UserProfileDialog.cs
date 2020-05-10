@@ -234,6 +234,7 @@ namespace ADS.Bot1.Dialogs
 
             PromptOptions interestOptions = null;
 
+            //Send a different question based on focus
             switch (userData.Details.Focus)
             {
                 case "Buy":
@@ -247,7 +248,6 @@ namespace ADS.Bot1.Dialogs
                     break;
             }
 
-            
             return await stepContext.PromptAsync(nameof(ChoicePrompt), interestOptions, cancellationToken);
         }
 
