@@ -19,25 +19,35 @@ namespace ADS.Bot.V1
 
 
 
-        public const string HELP_Financing = "Explore Financing";
-        //public const string HELP_Identify = "Identify a Vehicle";
-        public const string HELP_TradeIn = "Value a Trade-In";
-        public const string HELP_Inventory = "Search Inventory";
+        public const string INTEREST_Financing = "Explore Financing";
+        public const string INTEREST_Identify = "Identify a Vehicle";
+        public const string INTEREST_TradeIn = "Value a Trade-In";
+        public const string INTEREST_Inventory = "Search Inventory";
 
         public static string[] HelpOptions = new string[]
         {
-            HELP_Financing,
+            INTEREST_Financing,
             //HELP_Identify,
-            HELP_TradeIn,
-            HELP_Inventory
+            INTEREST_TradeIn,
+            INTEREST_Inventory
         };
 
         public static Dictionary<string, string> DialogEventTriggers = new Dictionary<string, string>()
         {
-            {"financing", HELP_Financing },
+            {"financing", INTEREST_Financing },
             //{"identify", HELP_Identify },
-            {"tradein", HELP_TradeIn },
-            {"inventory", HELP_Inventory }
+            {"tradein", INTEREST_TradeIn },
+            {"inventory", INTEREST_Inventory }
+        };
+
+        public static Dictionary<string, float> IntentThresholds = new Dictionary<string, float>()
+        {
+            {"CheckInventory", 0.8f },
+            {"FindVehicle", 0.8f },
+            {"GetFinanced", 0.8f },
+            {"Utilities_Cancel", 0.9f },
+            {"Utilities_GoBack", 0.9f },
+            {"ValueTrade", 0.8f },
         };
     }
 }

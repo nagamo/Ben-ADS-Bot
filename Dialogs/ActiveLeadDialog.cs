@@ -95,19 +95,19 @@ namespace ADS.Bot.V1.Dialogs
                                         Cases = new List<Case>()
                                         {
                                             new Case() {
-                                                Value = "Explore Financing",
+                                                Value = Constants.INTEREST_Financing,
                                                 Actions = new List<Dialog>(){ new EmitEvent(Constants.Event_Card, "'financing'") }
                                             },
                                             new Case() {
-                                                Value = "Identify a Vehicle",
+                                                Value = Constants.INTEREST_Identify,
                                                 Actions = new List<Dialog>(){ new EmitEvent(Constants.Event_Card, "'vehicle'") }
                                             },
                                             new Case() {
-                                                Value = "Value a Trade-In",
+                                                Value = Constants.INTEREST_TradeIn,
                                                 Actions = new List<Dialog>(){ new EmitEvent(Constants.Event_Card, "'tradein'") }
                                             },
                                             new Case() {
-                                                Value = "Search Inventory",
+                                                Value = Constants.INTEREST_Inventory,
                                                 Actions = new List<Dialog>(){ new EmitEvent(Constants.Event_Card, "'inventory'") }
                                             }
                                         }
@@ -291,7 +291,21 @@ namespace ADS.Bot.V1.Dialogs
         {
             bool isBusy = context.GetState().GetValue<bool>("conversation.busy", () => false);
 
-            
+            //Always hit LUIS first
+            if(Services.LuisRecognizer != null)
+            {
+                var recognizerResult = await Services.LuisRecognizer.RecognizeAsync(context.Context, CancellationToken.None);
+
+                foreach(var checkIntent in recognizerResult.Intents)
+                {
+                    if (Constants.IntentThresholds.ContainsKey(checkIntent.Key) && checkIntent.Value.Score >= Constants.IntentThresholds[checkIntent.Key])
+                    {
+                        return await PerformIntent(checkIntent.Key, recognizerResult, context);
+                    }
+                }
+            }
+
+
             if (Services.LeadQualQnA != null)
             {
                 if(Constants.HelpOptions.Contains(context.Context.Activity.Text))
@@ -311,6 +325,36 @@ namespace ADS.Bot.V1.Dialogs
 
             //You can change status to alter the behaviour post-completion
             return new DialogTurnResult(DialogTurnStatus.Waiting, null);
+        }
+
+        public async Task<DialogTurnResult> PerformIntent(string Intent, RecognizerResult result, DialogContext context)
+        {
+            switch (Intent)
+            {
+                case "CheckInventory":
+                    await SendInterest(context, Constants.INTEREST_Inventory);
+                    break;
+                case "FindVehicle":
+                    await SendInterest(context, Constants.INTEREST_Inventory);
+                    break;
+                case "GetFinanced":
+                    await SendInterest(context, Constants.INTEREST_Financing);
+                    break;
+                case "Utilities_Cancel":
+                    await context.EmitEventAsync(Constants.Event_Cancel);
+                    break;
+                case "Utilities_GoBack":
+                    await context.EmitEventAsync(Constants.Event_Cancel);
+                    break;
+                case "ValueTrade":
+                    await SendInterest(context, Constants.INTEREST_TradeIn);
+                    break;
+                default:
+                    //New intent?
+                    break;
+            }
+
+            return new DialogTurnResult(DialogTurnStatus.Complete, null);
         }
 
         public async Task<DialogTurnResult> ProcessDefaultResponse(DialogContext context, object data, bool isBusy)
@@ -338,8 +382,7 @@ namespace ADS.Bot.V1.Dialogs
                     {
                         //Remap the card event value from it's shorthand form, so we can reuse the residual interest logic
                         //eg. ('financing') to full name ('Explore Financing')
-                        context.GetState().SetValue("conversation.interest", Constants.DialogEventTriggers[resultTags["card"]]);
-                        await context.EmitEventAsync(Constants.Event_Interest);
+                        await SendInterest(context, Constants.DialogEventTriggers[resultTags["card"]]);
                     }
                 }
 
@@ -379,6 +422,12 @@ namespace ADS.Bot.V1.Dialogs
             return new DialogTurnResult(DialogTurnStatus.Complete);
         }
 
+
+        private async Task SendInterest(DialogContext Context, string InterestName)
+        {
+            Context.GetState().SetValue("conversation.interest", InterestName);
+            await Context.EmitEventAsync(Constants.Event_Interest);
+        }
 
         public List<Dialog> VerifyProfile(string DialogID)
         {

@@ -25,6 +25,7 @@ namespace ADS.Bot1
 
         ZohoBotService Zoho { get; }
 
+        LuisRecognizer LuisRecognizer { get; }
         QnAMaker LeadQualQnA { get; }
 
         Task<UserProfile> GetUserProfileAsync(ITurnContext turnContext, CancellationToken cancellationToken = default);

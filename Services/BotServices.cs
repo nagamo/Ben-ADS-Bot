@@ -40,6 +40,23 @@ namespace ADS.Bot1
                 EndpointKey = configuration["qna:QnAEndpointKey"],
                 Host = configuration["qna:QnAEndpointHostName"]
             });
+
+            var luisApplication = new LuisApplication(
+                configuration["luis:id"],
+                configuration["luis:endpointKey"],
+                configuration["luis:endpoint"]);
+
+            var recognizerOptions = new LuisRecognizerOptionsV3(luisApplication)
+            {
+                IncludeAPIResults = true,
+                PredictionOptions = new Microsoft.Bot.Builder.AI.LuisV3.LuisPredictionOptions()
+                {
+                    IncludeAllIntents = true,
+                    IncludeInstanceData = true
+                }
+            };
+
+            LuisRecognizer = new LuisRecognizer(recognizerOptions);
         }
 
         public QnAMaker LeadQualQnA { get; private set; }
@@ -50,6 +67,7 @@ namespace ADS.Bot1
 
         public IConfiguration Configuration { get; }
 
+        public LuisRecognizer LuisRecognizer { get; private set; }
         public ZohoBotService Zoho { get; private set; }
 
         private ConversationState ConversationState { get; set; }
