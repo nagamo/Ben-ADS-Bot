@@ -11,6 +11,8 @@ namespace ADS.Bot.V1
 
         public const string Event_Cancel = "cancel";
 
+        public const string Event_Reject = "reject";
+
         public const string Event_Card = "card";
 
         public const string Event_Card_Submit = "card_submit";
@@ -47,6 +49,7 @@ namespace ADS.Bot.V1
             {"GetFinanced", 0.8f },
             {"Utilities_Cancel", 0.9f },
             {"Utilities_GoBack", 0.9f },
+            {"Utilities_Reject", 0.9f },
             {"ValueTrade", 0.8f },
         };
     }

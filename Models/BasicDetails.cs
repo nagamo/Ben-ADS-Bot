@@ -9,10 +9,13 @@ namespace ADS.Bot.V1.Models
         {
             get
             {
-                return
-                    !string.IsNullOrEmpty(Name) &&
-                    !string.IsNullOrEmpty(Phone) &&
-                    !string.IsNullOrEmpty(Email);
+                return !string.IsNullOrEmpty(Name) &&
+                    (
+                        !string.IsNullOrEmpty(Phone) ||
+                        !string.IsNullOrEmpty(Email)
+                    ) &&
+                    !string.IsNullOrEmpty(Focus) &&
+                    !string.IsNullOrEmpty(Timeframe);
             }
         }
 

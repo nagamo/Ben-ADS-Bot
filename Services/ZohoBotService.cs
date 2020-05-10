@@ -60,6 +60,7 @@ namespace ADS.Bot.V1.Services
             record.SetFieldValue("Last_Name", string.IsNullOrWhiteSpace(profile.LastName) ? "-" : profile.LastName);
             record.SetFieldValue("Email", profile.Details.Email);
             record.SetFieldValue("Phone", profile.Details.Phone);
+            record.SetFieldValue("Description", $"Focus: {profile.Details.Focus}. Timeframe: {profile.Details.Timeframe}");
             record.SetFieldValue("Lead_Source", "Chat");
         }
 

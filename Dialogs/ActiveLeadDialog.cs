@@ -346,6 +346,9 @@ namespace ADS.Bot.V1.Dialogs
                 case "Utilities_GoBack":
                     await context.EmitEventAsync(Constants.Event_Cancel);
                     break;
+                case "Utilities_Reject":
+                    await context.EmitEventAsync(Constants.Event_Reject);
+                    break;
                 case "ValueTrade":
                     await SendInterest(context, Constants.INTEREST_TradeIn);
                     break;
