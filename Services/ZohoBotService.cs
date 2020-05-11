@@ -58,9 +58,9 @@ namespace ADS.Bot.V1.Services
             record.SetFieldValue("First_Name", profile.FirstName);
             //Bit of a hack for people who don't enter a last name.
             record.SetFieldValue("Last_Name", string.IsNullOrWhiteSpace(profile.LastName) ? "-" : profile.LastName);
-            record.SetFieldValue("Email", profile.Details.Email);
-            record.SetFieldValue("Phone", profile.Details.Phone);
-            record.SetFieldValue("Description", $"Focus: {profile.Details.Focus}. Timeframe: {profile.Details.Timeframe}");
+            if (!string.IsNullOrEmpty(profile.Details.Email)) record.SetFieldValue("Email", profile.Details.Email);
+            if (!string.IsNullOrEmpty(profile.Details.Phone)) record.SetFieldValue("Phone", profile.Details.Phone);
+            //record.SetFieldValue("Description", $"Focus: {profile.Details.Focus}. Timeframe: {profile.Details.Timeframe}");
             record.SetFieldValue("Lead_Source", "Chat");
         }
 
