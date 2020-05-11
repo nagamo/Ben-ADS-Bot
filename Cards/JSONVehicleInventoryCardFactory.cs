@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace ADS.Bot.V1.Cards
 {
-    public class JSONVehicleInventoryCardFactory : JSONCardFactory<VehicleInventoryDetails>
+    public class JSONVehicleInventoryCardFactory : JSONCardFactory<VehicleProfileDetails>
     {
         public IBotServices Services { get; }
 
@@ -20,24 +20,24 @@ namespace ADS.Bot.V1.Cards
             Services = services;
         }
 
-        internal override async Task<VehicleInventoryDetails> DoPopulate(ITurnContext context, CancellationToken cancellationToken = default)
+        internal override async Task<VehicleProfileDetails> DoPopulate(ITurnContext context, CancellationToken cancellationToken = default)
         {
             var userProfile = await Services.GetUserProfileAsync(context, cancellationToken);
 
             if (userProfile.VehicleProfile == null)
             {
-                userProfile.VehicleProfile = new VehicleInventoryDetails();
+                userProfile.VehicleProfile = new VehicleProfileDetails();
             }
 
             return userProfile.VehicleProfile;
         }
 
-        internal override async Task<bool> DoValidate(VehicleInventoryDetails submission, ITurnContext context, CancellationToken cancellationToken)
+        internal override async Task<bool> DoValidate(VehicleProfileDetails submission, ITurnContext context, CancellationToken cancellationToken)
         {
             return submission.IsCompleted;
         }
 
-        internal override async Task DoFinalize(VehicleInventoryDetails submission, ITurnContext context, CancellationToken cancellationToken)
+        internal override async Task DoFinalize(VehicleProfileDetails submission, ITurnContext context, CancellationToken cancellationToken)
         {
             var currentProfiles = await Services.GetUserProfileAsync(context, cancellationToken);
 

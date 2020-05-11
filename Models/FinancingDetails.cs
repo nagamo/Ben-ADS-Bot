@@ -13,11 +13,14 @@ namespace ADS.Bot.V1.Models
         {
             get
             {
-                return
-                    !string.IsNullOrEmpty(CreditScore) &&
-                    !string.IsNullOrEmpty(Income) &&
-                    !string.IsNullOrEmpty(HomeOwnership) &&
-                    !string.IsNullOrEmpty(Employment);
+                return GoodCredit ? 
+                    (!string.IsNullOrEmpty(CreditScore))
+                    : (
+                        !string.IsNullOrEmpty(CreditScore) &&
+                        !string.IsNullOrEmpty(Income) &&
+                        !string.IsNullOrEmpty(HomeOwnership) &&
+                        !string.IsNullOrEmpty(Employment)
+                    );
             }
         }
 

@@ -1,5 +1,8 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License.
+﻿using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace ADS.Bot.V1.Models
 {
@@ -10,21 +13,22 @@ namespace ADS.Bot.V1.Models
             get
             {
                 return
-                    !string.IsNullOrEmpty(Make) &&
-                    !string.IsNullOrEmpty(Model) &&
-                    !string.IsNullOrEmpty(Year) &&
-                    !string.IsNullOrEmpty(Color);
+                    !string.IsNullOrEmpty(PrimaryConcern) &&
+                    !string.IsNullOrEmpty(ConcernGoal);
             }
         }
 
         public long? ADS_CRM_ID { get; set; } = null;
 
-        public string Make { get; set; }
-        public string Model { get; set; }
-        public string Year { get; set; }
-        public string Color { get; set; }
-        public bool? NeedFinancing { get; set; }
-        public bool? TradingIn { get; set; }
-    }
+        public string PrimaryConcern { get; set; }
+        public string ConcernGoal { get; set; }
 
+        [JsonIgnore]
+        public bool SkipPrimaryConcern
+        { get { return !string.IsNullOrEmpty(PrimaryConcern); } }
+
+        [JsonIgnore]
+        public bool SkipConcernGoal
+        { get { return !string.IsNullOrEmpty(ConcernGoal); } }
+    }
 }

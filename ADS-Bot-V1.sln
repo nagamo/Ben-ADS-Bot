@@ -5,6 +5,8 @@ VisualStudioVersion = 16.0.30002.166
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ADS-Bot-V1", "ADS-Bot-V1.csproj", "{A8FF2DBA-122D-4678-8D7A-10F02016BDC8}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ADS_Sync", "ADS_Sync\ADS_Sync.csproj", "{4E0F7C61-BCBB-46E5-9F06-DAA40C783FC0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{A8FF2DBA-122D-4678-8D7A-10F02016BDC8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A8FF2DBA-122D-4678-8D7A-10F02016BDC8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A8FF2DBA-122D-4678-8D7A-10F02016BDC8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E0F7C61-BCBB-46E5-9F06-DAA40C783FC0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E0F7C61-BCBB-46E5-9F06-DAA40C783FC0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E0F7C61-BCBB-46E5-9F06-DAA40C783FC0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E0F7C61-BCBB-46E5-9F06-DAA40C783FC0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

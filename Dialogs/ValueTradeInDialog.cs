@@ -3,6 +3,7 @@ using ADS.Bot1;
 using ADS.Bot1.Dialogs;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Bot.Builder.Dialogs.Choices;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,6 +22,7 @@ namespace ADS.Bot.V1.Dialogs
             // This array defines how the Waterfall will execute.
             var waterfallSteps = new WaterfallStep[]
             {
+                PreInitializeStep,
                 InitializeStep,
 
                 MakeStep,
@@ -38,6 +40,7 @@ namespace ADS.Bot.V1.Dialogs
                 AmountOwedStep,
                 ValidateAmountOwedStep,
 
+                ConfirmAppointmentStep,
                 FinalizeStep
             };
 
@@ -53,22 +56,54 @@ namespace ADS.Bot.V1.Dialogs
         }
 
 
-        private async Task<DialogTurnResult> InitializeStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        private async Task<DialogTurnResult> PreInitializeStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-
             if (userData?.TradeDetails != null)
             {
                 if (userData.TradeDetails.IsCompleted)
                 {
-                    return await stepContext.EndDialogAsync();
+                    var resetOptions = Utilities.CreateOptions(new string[] { "Reset", "Use Previous" },
+                        "Look's like I've already got trade-in details for you.\r\nWould you to fill those details out again?",
+                        "Not sure what you meant, try again?");
+                    return await stepContext.PromptAsync(nameof(ChoicePrompt), resetOptions, cancellationToken);
+                }
+                else
+                {
+                    var resetOptions = Utilities.CreateOptions(new string[] { "Reset", "Resume" },
+                        "Look's like you have some details filled in already.\r\nDo you want to pick up where you left off, or fill things out again?",
+                        "Not sure what you meant, try again?");
+                    return await stepContext.PromptAsync(nameof(ChoicePrompt), resetOptions, cancellationToken);
                 }
             }
             else
             {
                 userData.TradeDetails = new TradeInDetails();
+                return await stepContext.NextAsync(cancellationToken: cancellationToken);
+            }
+        }
+
+        private async Task<DialogTurnResult> InitializeStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        {
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
+
+            if (stepContext.Result is FoundChoice choice)
+            {
+                //User was prompted about reseting/continuing
+                switch (choice.Value)
+                {
+                    case "Reset":
+                        userData.TradeDetails = new TradeInDetails();
+                        break;
+                    case "Resume":
+                        //Don't need to do anything, each sub-dialog will skip
+                    case "Use Previous":
+                        //Let this ripple through all stages, will go to end if everything is already there.
+                        break;
+                }
             }
 
+            //For every other case, we can just continue in the dialog
             return await stepContext.NextAsync(cancellationToken: cancellationToken);
         }
 
@@ -79,7 +114,7 @@ namespace ADS.Bot.V1.Dialogs
         private async Task<DialogTurnResult> MakeStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            if (!string.IsNullOrEmpty(userData.TradeDetails.Make)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
+            if (userData.TradeDetails.SkipMake) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
 
             var makeOptions = Utilities.CreateOptions(new string[] { "Chevrolet", "Toyota", "Honda" }, "What is the make of your trade-in?");
@@ -100,7 +135,7 @@ namespace ADS.Bot.V1.Dialogs
         private async Task<DialogTurnResult> ModelStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            if (!string.IsNullOrEmpty(userData.TradeDetails.Model)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
+            if (userData.TradeDetails.SkipModel) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
 
 
@@ -122,7 +157,7 @@ namespace ADS.Bot.V1.Dialogs
         private async Task<DialogTurnResult> YearStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            if (!string.IsNullOrEmpty(userData.TradeDetails.Year)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
+            if (userData.TradeDetails.SkipYear) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
 
 
@@ -144,7 +179,7 @@ namespace ADS.Bot.V1.Dialogs
         private async Task<DialogTurnResult> ConditionStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            if (!string.IsNullOrEmpty(userData.TradeDetails.Condition)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
+            if (userData.TradeDetails.SkipCondition) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
 
 
@@ -166,7 +201,7 @@ namespace ADS.Bot.V1.Dialogs
         private async Task<DialogTurnResult> AmountOwedStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            if (!string.IsNullOrEmpty(userData.TradeDetails.AmountOwed)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
+            if (userData.TradeDetails.SkipAmountOwed) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
 
 
@@ -185,6 +220,20 @@ namespace ADS.Bot.V1.Dialogs
 
 
 
+        private async Task<DialogTurnResult> ConfirmAppointmentStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        {
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
+
+            if (Services.Zoho.Connected)
+            {
+                var appointmentOptions = Utilities.CreateOptions(new string[] { "Yes!", "No" }, "Would you like to confirm an appointment for a quick appraisal?");
+                return await stepContext.PromptAsync(nameof(ChoicePrompt), appointmentOptions, cancellationToken);
+            }
+            else
+            {
+                return await stepContext.NextAsync(null, cancellationToken: cancellationToken);
+            }
+        }
 
         private async Task<DialogTurnResult> FinalizeStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
@@ -192,13 +241,23 @@ namespace ADS.Bot.V1.Dialogs
 
             if (Services.Zoho.Connected)
             {
-                Services.Zoho.UpdateLead(userData);
-            }
-            else
-            {
-                //TODO: What to do if CRM isn't configured properly...
+                if(stepContext.Result is FoundChoice appointmentChoice)
+                {
+                    if(appointmentChoice.Value == "Yes!")
+                    {
+                        Services.Zoho.CreateUpdateLead(userData);
+                        Services.Zoho.WriteTradeInNote(userData);
+
+                        await stepContext.Context.SendActivityAsync("Thanks! Someone will be in touch with you shortly.");
+                        return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
+                    }
+                }
+
+                await stepContext.Context.SendActivityAsync("Thanks for filling that out, I'll remember your details in case you want to come back and make an appointment later.");
+                return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
             }
 
+            await stepContext.Context.SendActivityAsync("Thanks for filling that out!");
             return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
         }
     }

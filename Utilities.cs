@@ -102,5 +102,10 @@ namespace ADS.Bot.V1
                 return false;
             }
         }
+
+        public static string CheckEvent(ITurnContext context)
+        {
+            return (context.TurnState["turn"] as JObject)?["dialogEvent"]?.Value<string>("name");
+        }
     }
 }

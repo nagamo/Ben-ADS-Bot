@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using ADS.Bot.V1;
 using ADS.Bot.V1.Models;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
@@ -13,11 +14,14 @@ using Microsoft.Recognizers.Text.Sequence;
 
 namespace ADS.Bot1.Dialogs
 {
+    using Constants = ADS.Bot.V1.Constants;
+
     public class UserProfileDialog : ComponentDialog
     {
         const string PROMPT_Name = "NameInput";
-        const string PROMPT_Phone = "PhoneInput";
-        const string PROMPT_Email = "EmailInput";
+        const string PROMPT_Contact = "Contact";
+        const string PROMPT_Focus = "Focus";
+        const string PROMPT_Timeframe = "Timeframe";
 
         public IBotServices Services { get; }
 
@@ -32,11 +36,14 @@ namespace ADS.Bot1.Dialogs
                 NameStepAsync,
                 NameConfirmStepAsync,
                 
-                PhoneStepAsync,
-                PhoneConfirmStepAsync,
+                ContactStepAsync,
+                ContactConfirmStepAsync,
 
-                EmailStepAsync,
-                EmailConfirmStepAsync,
+                FocusStepAsync,
+                FocusConfirmStepAsync,
+
+                TimeframeStepAsync,
+                TimeframeConfirmStepAsync,
 
                 FinalizeStepAsync
             };
@@ -45,8 +52,7 @@ namespace ADS.Bot1.Dialogs
             // Add named dialogs to the DialogSet. These names are saved in the dialog state.
             AddDialog(new WaterfallDialog(nameof(WaterfallDialog), waterfallSteps));
             AddDialog(new TextPrompt(PROMPT_Name, ValidateNameAsync));
-            AddDialog(new TextPrompt(PROMPT_Phone, ValidatePhoneAsync));
-            AddDialog(new TextPrompt(PROMPT_Email, ValidateEmailAsync));
+            AddDialog(new TextPrompt(PROMPT_Contact, ValidateContactAsync));
             AddDialog(new ChoicePrompt(nameof(ChoicePrompt)));
             AddDialog(new ConfirmPrompt(nameof(ConfirmPrompt)));
 
@@ -110,117 +116,173 @@ namespace ADS.Bot1.Dialogs
 
 
 
-        private async Task<DialogTurnResult> PhoneStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        private async Task<DialogTurnResult> ContactStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-
-            if(userData.Details.Phone != null)
+            
+            if(userData.Details.Phone != null && userData.Details.Email != null)
             {
                 return await stepContext.NextAsync(cancellationToken: cancellationToken);
             }
 
             string line = "";
-            if (stepContext.Result != null)
+
+            if (userData.Details.Phone != null)
             {
-                line = $"Great to meet you, {userData.Name}! Can I get your cell number in case we get disconnected?";
+                line = "Can I get your email just in case we need to get in touch?";
+            }
+            else if (userData.Details.Email != null)
+            {
+                line = "Can I get your cell number in case one of our representatives needs to give you a call?";
             }
             else
             {
-                line = "Real quick, can I get your cell number in case we get disconnected?";
+                line = "Can I get your email or cell number in case we get disconnected?";
             }
-
-            return await stepContext.PromptAsync(PROMPT_Phone, new PromptOptions {
-                Prompt = MessageFactory.Text(line),
-                RetryPrompt = MessageFactory.Text("Um, that seems wrong. Try again?")
-            }, cancellationToken);
-        }
-
-        private async Task<bool> ValidatePhoneAsync(PromptValidatorContext<string> promptContext, CancellationToken cancellationToken)
-        {
-            var phoneDetails = SequenceRecognizer.RecognizePhoneNumber(promptContext.Context.Activity.Text, "en");
-            
-            return phoneDetails.Count != 0;
-        }
-
-        private async Task<DialogTurnResult> PhoneConfirmStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
-        {
-            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            if(stepContext.Result != null)
-            {
-                var phoneDetails = SequenceRecognizer.RecognizePhoneNumber(stepContext.Context.Activity.Text, "en");
-                userData.Details.Phone = phoneDetails.First().Text;
-
-                await Services.SetUserProfileAsync(userData, stepContext, cancellationToken);
-            }
-            
-            return await stepContext.NextAsync(cancellationToken: cancellationToken);
-        }
-
-
-
-
-        private async Task<DialogTurnResult> EmailStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
-        {
-            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-
-            if (userData.Details.Email != null)
-            {
-                return await stepContext.NextAsync(cancellationToken: cancellationToken);
-            }
-
-            return await stepContext.PromptAsync(PROMPT_Email, new PromptOptions
-            {
-                Prompt = MessageFactory.Text("So far, so good, " + userData.Name + "! Now, could we get your email? And seriously, we won't pass it to anyone."),
-                RetryPrompt = MessageFactory.Text("Not to be critical, but I think that's invalid. Wanna give it another go?")
-            }, cancellationToken);
-        }
-
-        private async Task<bool> ValidateEmailAsync(PromptValidatorContext<string> promptContext, CancellationToken cancellationToken)
-        {
-            var emailDetails = SequenceRecognizer.RecognizeEmail(promptContext.Context.Activity.Text, "en");
-
-            return emailDetails.Count != 0;
-        }
-
-        private async Task<DialogTurnResult> EmailConfirmStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
-        {
-            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
 
             if (stepContext.Result != null)
             {
-                var emailDetails = SequenceRecognizer.RecognizeEmail(stepContext.Result as string, "en");
-                userData.Details.Email = emailDetails.First().Text;
+                //Result is non-null when the user manuall entered their name
+                //So we greet them specifically here
+                line = $"Great to meet you, {userData.Name}! {line}";
+            }
+
+            return await stepContext.PromptAsync(PROMPT_Contact, new PromptOptions {
+                Prompt = MessageFactory.Text(line)
+            }, cancellationToken);
+        }
+
+        private async Task<bool> ValidateContactAsync(PromptValidatorContext<string> promptContext, CancellationToken cancellationToken)
+        {
+            var userData = await Services.GetUserProfileAsync(promptContext.Context, cancellationToken);
+
+            var pendingEvent = Utilities.CheckEvent(promptContext.Context);
+            if(pendingEvent == Constants.Event_Reject)
+            {
+                var canSkip = userData.Details.Phone != null || userData.Details.Email != null;
+                if (!canSkip)
+                {
+                    await promptContext.Context.SendActivityAsync("I'm sorry, but I need some contact information to go forward.\r\nPlease provide an email or phone numebr.");
+                }
+                return canSkip;
+            }
+
+            var phoneDetails = SequenceRecognizer.RecognizePhoneNumber(promptContext.Context.Activity.Text, "en");
+            var emailDetails = SequenceRecognizer.RecognizeEmail(promptContext.Context.Activity.Text, "en");
+
+            return phoneDetails.Count != 0 || emailDetails.Count != 0;
+        }
+
+        private async Task<DialogTurnResult> ContactConfirmStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        {
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
+
+            var currentEvent = Utilities.CheckEvent(stepContext.Context);
+
+            //Ignore whatever the response was if the user rejected input
+            //TODO: Make this a setting per-dealer?
+            if(currentEvent != Constants.Event_Reject)
+            {
+                if (stepContext.Result != null)
+                {
+                    var phoneDetails = SequenceRecognizer.RecognizePhoneNumber(stepContext.Context.Activity.Text, "en");
+                    var emailDetails = SequenceRecognizer.RecognizeEmail(stepContext.Context.Activity.Text, "en");
+
+                    if (phoneDetails.Count > 0) userData.Details.Phone = phoneDetails.First().Text;
+                    if (emailDetails.Count > 0) userData.Details.Email = emailDetails.First().Text;
+
+                    await Services.SetUserProfileAsync(userData, stepContext, cancellationToken);
+                }
+            }
+            
+            return await stepContext.NextAsync(cancellationToken: cancellationToken);
+        }
+
+
+
+        private async Task<DialogTurnResult> FocusStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        {
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
+            if (!string.IsNullOrEmpty(userData.Details.Focus)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
+
+            var goalOptions = Utilities.CreateOptions(new string[] { "Buy", "Lease", "Not Sure" }, "What are you looking to do?");
+            return await stepContext.PromptAsync(nameof(ChoicePrompt), goalOptions, cancellationToken);
+        }
+
+        private async Task<DialogTurnResult> FocusConfirmStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        {
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
+
+            //Skip if we have a null result (name already filled out)
+            if (stepContext.Result != null)
+            {
+                userData.Details.Focus = Utilities.ReadChoiceWithManual(stepContext);
 
                 await Services.SetUserProfileAsync(userData, stepContext, cancellationToken);
             }
 
-            return await stepContext.NextAsync(cancellationToken: cancellationToken);
+            //pass forward reponse for greeting logic specifically
+            return await stepContext.NextAsync(stepContext.Result, cancellationToken: cancellationToken);
         }
+
+
+
+        private async Task<DialogTurnResult> TimeframeStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        {
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
+            if (!string.IsNullOrEmpty(userData.Details.Timeframe)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
+
+            PromptOptions interestOptions = null;
+
+            //Send a different question based on focus
+            switch (userData.Details.Focus)
+            {
+                case "Buy":
+                    interestOptions = Utilities.CreateOptions(new string[] { "Ready now", "<30 Days", "30-90 Days", "90+ Days" }, "How soon are you looking to make your purchase?");
+                    break;
+                case "Lease":
+                    interestOptions = Utilities.CreateOptions(new string[] { "Ready now", "<30 Days", "30-90 Days", "90+ Days" }, "How soon are you looking to lease?");
+                    break;
+                default:
+                    interestOptions = Utilities.CreateOptions(new string[] { "Ready now", "<30 Days", "30-90 Days", "90+ Days" }, "How soon were you hoping to move forward?");
+                    break;
+            }
+
+            return await stepContext.PromptAsync(nameof(ChoicePrompt), interestOptions, cancellationToken);
+        }
+
+        private async Task<DialogTurnResult> TimeframeConfirmStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        {
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
+
+            //Skip if we have a null result (name already filled out)
+            if (stepContext.Result != null)
+            {
+                userData.Details.Timeframe = Utilities.ReadChoiceWithManual(stepContext);
+
+                await Services.SetUserProfileAsync(userData, stepContext, cancellationToken);
+            }
+
+            //pass forward reponse for greeting logic specifically
+            return await stepContext.NextAsync(stepContext.Result, cancellationToken: cancellationToken);
+        }
+
+
+
+
 
 
         private async Task<DialogTurnResult> FinalizeStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
 
-            if (Services.Zoho.Connected)
-            {
-                if (!userData.ADS_CRM_ID.HasValue)
-                {
-                    Services.Zoho.RegisterLead(userData);
-                }
-                else
-                {
-                    //This shouldn't actually happen as we should skip the whole dialog if this is already present
-                    Services.Zoho.UpdateLead(userData);
-                }
-            }
-            else
-            {
-                //TODO: What to do if CRM isn't configured properly...
-            }
-
             //Save it back to our storage
             await Services.SetUserProfileAsync(userData, stepContext, cancellationToken);
+
+            if (Services.Zoho.Connected)
+            {
+                Services.Zoho.CreateUpdateLead(userData);
+            }
 
             await stepContext.Context.SendActivityAsync($"You're the cat's pyjamas, {userData.Details.Name}!");
             await stepContext.Context.SendActivityAsync("And now, without further ado - onto your destination!");

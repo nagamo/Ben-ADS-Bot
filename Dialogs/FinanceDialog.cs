@@ -22,6 +22,7 @@ namespace ADS.Bot1.Dialogs
             // This array defines how the Waterfall will execute.
             var waterfallSteps = new WaterfallStep[]
             {
+                PreInitializeStep,
                 InitializeStep,
 
                 CreditScoreStep,
@@ -36,6 +37,7 @@ namespace ADS.Bot1.Dialogs
                 EmploymentStep,
                 ValidateEmploymentStep,
 
+                ConfirmAppointmentStep,
                 FinalizeStep
             };
 
@@ -51,21 +53,55 @@ namespace ADS.Bot1.Dialogs
         }
 
 
-        private async Task<DialogTurnResult> InitializeStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+
+        private async Task<DialogTurnResult> PreInitializeStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
             if (userData?.Financing != null)
             {
                 if (userData.Financing.IsCompleted)
                 {
-                    return await stepContext.EndDialogAsync();
+                    var resetOptions = Utilities.CreateOptions(new string[] { "Reset", "Use Previous" }, 
+                        "Look's like I've already got financing details for you.\r\nWould you to fill those details out again?",
+                        "Not sure what you meant, try again?");
+                    return await stepContext.PromptAsync(nameof(ChoicePrompt), resetOptions, cancellationToken);
+                }
+                else
+                {
+                    var resetOptions = Utilities.CreateOptions(new string[] { "Reset", "Resume" }, 
+                        "Look's like you have some details filled in already.\r\nDo you want to pick up where you left off, or fill things out again?",
+                        "Not sure what you meant, try again?");
+                    return await stepContext.PromptAsync(nameof(ChoicePrompt), resetOptions, cancellationToken);
                 }
             }
             else
             {
                 userData.Financing = new FinancingDetails();
+                return await stepContext.NextAsync(cancellationToken: cancellationToken);
+            }
+        }
+
+        private async Task<DialogTurnResult> InitializeStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        {
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
+            
+            if(stepContext.Result is FoundChoice choice)
+            {
+                //User was prompted about reseting/continuing
+                switch (choice.Value)
+                {
+                    case "Reset":
+                        userData.Financing = new FinancingDetails();
+                        break;
+                    case "Resume":
+                        //Don't need to do anything, each sub-dialog will skip
+                    case "Use Previous":
+                        //Let this ripple through all stages, will go to end if everything is already there.
+                        break;
+                }
             }
 
+            //For every other case, we can just continue in the dialog
             return await stepContext.NextAsync(cancellationToken: cancellationToken);
         }
 
@@ -165,19 +201,44 @@ namespace ADS.Bot1.Dialogs
 
 
 
+        private async Task<DialogTurnResult> ConfirmAppointmentStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        {
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
+
+            if (Services.Zoho.Connected)
+            {
+                var appointmentOptions = Utilities.CreateOptions(new string[] { "Yes!", "No" }, "Would you like to confirm an appointment?");
+                return await stepContext.PromptAsync(nameof(ChoicePrompt), appointmentOptions, cancellationToken);
+            }
+            else
+            {
+                return await stepContext.NextAsync(null, cancellationToken: cancellationToken);
+            }
+        }
+
         private async Task<DialogTurnResult> FinalizeStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
 
             if (Services.Zoho.Connected)
             {
-                Services.Zoho.UpdateLead(userData);
-            }
-            else
-            {
-                //TODO: What to do if CRM isn't configured properly...
+                if (stepContext.Result is FoundChoice appointmentChoice)
+                {
+                    if (appointmentChoice.Value == "Yes!")
+                    {
+                        Services.Zoho.CreateUpdateLead(userData);
+                        Services.Zoho.WriteFinancingNote(userData);
+
+                        await stepContext.Context.SendActivityAsync("Thanks! Someone will be in touch with you shortly.");
+                        return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
+                    }
+                }
+
+                await stepContext.Context.SendActivityAsync("Thanks for filling that out, I'll remember your details in case you want to come back and make an appointment later.");
+                return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
             }
 
+            await stepContext.Context.SendActivityAsync("Thanks for filling that out!");
             return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
         }
     }
