@@ -7,6 +7,7 @@ using Microsoft.Bot.Builder.Dialogs.Choices;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -185,9 +186,44 @@ namespace ADS.Bot1.Dialogs
             {
                 switch (userData.Inventory.PrimaryConcern)
                 {
-                    //case "Overall Price":
-                    //carQuery.Where(c => c.Price < )
-                    //    break;
+                    //Quick and dirty parsing of premade and limited user-supplied prices
+                    case "Overall Price":
+                        var enteredPrices = Regex.Matches(userData.Inventory.ConcernGoal, @"([<]*\$?[<]*(\d+)[kK\+]*)");
+
+                        int? minPrice = null, maxPrice = null;
+
+                        if (enteredPrices.Count == 1)
+                        {
+                            var priceFilter = enteredPrices.First();
+                            var thousands = priceFilter.Value.Contains("k", StringComparison.OrdinalIgnoreCase);
+                            if (priceFilter.Value.Contains("<")) { maxPrice = int.Parse(priceFilter.Groups[2].Value) * (thousands ? 1000 : 1); }
+                            else if (priceFilter.Value.Contains("+")) { minPrice = int.Parse(priceFilter.Groups[2].Value) * (thousands ? 1000 : 1); }
+                        }
+                        else if (enteredPrices.Count >= 2)
+                        {
+                            //Bit ugly, but it works :)
+                            minPrice = int.Parse(enteredPrices[0].Groups[2].Value) * (enteredPrices[0].Value.Contains("k", StringComparison.OrdinalIgnoreCase) ? 1000 : 1);
+                            maxPrice = int.Parse(enteredPrices[1].Groups[2].Value) * (enteredPrices[1].Value.Contains("k", StringComparison.OrdinalIgnoreCase) ? 1000 : 1);
+                        }
+
+                        if (minPrice.HasValue && maxPrice.HasValue)
+                        {
+                            carQuery = carQuery.Where(c => c.Price >= minPrice.Value && c.Price <= maxPrice.Value);
+                        }
+                        else if (minPrice.HasValue)
+                        {
+                            carQuery = carQuery.Where(c => c.Price >= minPrice.Value);
+                        }
+                        else if (maxPrice.HasValue)
+                        {
+                            carQuery = carQuery.Where(c => c.Price <= maxPrice.Value);
+                        }
+                        else
+                        {
+                            carQuery = null;
+                        }
+
+                        break;
                     //case "Monthly Payment":
                     //    break;
                     case "Make":
