@@ -1,5 +1,6 @@
 ﻿using ADS.Bot.V1;
 using ADS.Bot.V1.Models;
+using Microsoft.Azure.Cosmos.Table;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Dialogs.Choices;
@@ -48,6 +49,10 @@ namespace ADS.Bot1.Dialogs
 
         private async Task<DialogTurnResult> PreInitializeStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
+            //Select as little data as possible
+            var foundCars = Services.CarStorage.ExecuteQuery(new TableQuery<VS_Car>() {SelectColumns = new string[] { "RowKey" } });
+            await stepContext.Context.SendActivityAsync($"I'm glad you asked aobut my inventory. I just so happen to have {foundCars.Count():n0} cars available!");
+
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
             if (userData?.Inventory != null)
             {
@@ -107,7 +112,7 @@ namespace ADS.Bot1.Dialogs
             if (userData.Inventory.SkipPrimaryConcern) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
 
-            var concernOptions = Utilities.CreateOptions(new string[] { "Overall Price", "Monthly Payment", "Nothing Specific" }, "What is your primary concern regarding a vehicle puchase?");
+            var concernOptions = Utilities.CreateOptions(new string[] { "Overall Price", "Monthly Payment", "Make", "Color", "Nothing Specific" }, "What is your primary concern regarding a vehicle puchase?");
             return await stepContext.PromptAsync(nameof(ChoicePrompt), concernOptions, cancellationToken);
         }
 
@@ -136,6 +141,12 @@ namespace ADS.Bot1.Dialogs
                     break;
                 case "Monthly Payment":
                     goalOptions = Utilities.CreateOptions(new string[] { "<$100/month", "$100-200/month", "$200-400/month", "$400+/month" }, "What are you aiming for a monthly payment?");
+                    break;
+                case "Make":
+                    goalOptions = Utilities.CreateOptions(new string[] { "Chevrolet", "Honda", "Toyota", "Ford" }, "What make of car are you interested in?");
+                    break;
+                case "Color":
+                    goalOptions = Utilities.CreateOptions(new string[] { "Red", "Blue", "Green", "Black", "Silver" }, "What are you aiming for a monthly payment?");
                     break;
                 case "Nothing Specific":
                     goalOptions = Utilities.CreateOptions(new string[] { "Yes!", "Not Exactly..", "Just looking" }, "Do you know what kind of vehicle you want?");
@@ -166,10 +177,61 @@ namespace ADS.Bot1.Dialogs
         private async Task<DialogTurnResult> ConfirmAppointmentStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
+            IQueryable<VS_Car> carQuery = Services.CarStorage.CreateQuery<VS_Car>();
+            (carQuery as TableQuery<VS_Car>).SelectColumns = new string[] { "RowKey" };
+
+
+            if (userData.Inventory.PrimaryConcern != "Nothing Specific")
+            {
+                switch (userData.Inventory.PrimaryConcern)
+                {
+                    //case "Overall Price":
+                    //carQuery.Where(c => c.Price < )
+                    //    break;
+                    //case "Monthly Payment":
+                    //    break;
+                    case "Make":
+                        carQuery = carQuery.Where(c => c.Make.Equals(userData.Inventory.ConcernGoal, StringComparison.OrdinalIgnoreCase));
+                        break;
+                    case "Color":
+                        carQuery = carQuery.Where(c => c.Color.Equals(userData.Inventory.ConcernGoal, StringComparison.OrdinalIgnoreCase));
+                        break;
+                    default:
+                        carQuery = null;
+                        break;
+                }
+
+                if (carQuery != null)
+                {
+                    var results = Services.CarStorage.ExecuteQuery<VS_Car>(carQuery as TableQuery<VS_Car>);
+                    var resultsCount = results.Count();
+
+                    if (resultsCount >= 100)
+                    {
+                        //100+
+                        await stepContext.Context.SendActivityAsync($"Great news {userData.FirstName}! I've actually got {resultsCount:n0} cars that match that {userData.Inventory.PrimaryConcern.ToLower()}!");
+                    }
+                    else if (resultsCount >= 10)
+                    {
+                        //10-100
+                        await stepContext.Context.SendActivityAsync($"I was able to find {resultsCount:n0} cars for that {userData.Inventory.PrimaryConcern.ToLower()} {userData.FirstName}.");
+                    }
+                    else if (resultsCount >= 1)
+                    {
+                        //1-10
+                        await stepContext.Context.SendActivityAsync($"I found {resultsCount:n0} cars that match that {userData.Inventory.PrimaryConcern.ToLower()}\r\nI know its not a lot, but we've got plenty of other vehilcles available!");
+                    }
+                    else
+                    {
+                        //0
+                        await stepContext.Context.SendActivityAsync($"I'm sorry, I dont actually seem to have any cars that match that {userData.Inventory.PrimaryConcern.ToLower()}.\r\nWe'd still love to get in touch to explore what vehicles we have to offer you.");
+                    }
+                }
+            }
 
             if (Services.Zoho.Connected)
             {
-                var appointmentOptions = Utilities.CreateOptions(new string[] { "Yes!", "No" }, "Would you like a call from the GM?");
+                var appointmentOptions = Utilities.CreateOptions(new string[] { "Yes!", "No" }, "Would you like a call from the GM to further narrow down on a vehicle?");
                 return await stepContext.PromptAsync(nameof(ChoicePrompt), appointmentOptions, cancellationToken);
             }
             else

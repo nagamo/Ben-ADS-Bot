@@ -3,6 +3,7 @@
 
 using ADS.Bot.V1.Models;
 using ADS.Bot.V1.Services;
+using Microsoft.Azure.Cosmos.Table;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.AI.Luis;
 using Microsoft.Bot.Builder.AI.QnA;
@@ -24,6 +25,11 @@ namespace ADS.Bot1
         IConfiguration Configuration { get; }
 
         ZohoBotService Zoho { get; }
+
+
+        CloudTableClient StorageClient { get; }
+        CloudTable CarStorage { get; }
+        CloudTable DealerStorage { get; }
 
         LuisRecognizer LuisRecognizer { get; }
         QnAMaker LeadQualQnA { get; }

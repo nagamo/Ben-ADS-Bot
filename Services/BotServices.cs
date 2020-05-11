@@ -3,6 +3,7 @@
 
 using ADS.Bot.V1.Models;
 using ADS.Bot.V1.Services;
+using Microsoft.Azure.Cosmos.Table;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.AI.Luis;
 using Microsoft.Bot.Builder.AI.QnA;
@@ -22,10 +23,11 @@ namespace ADS.Bot1
 {
     public class Services : IBotServices
     {
-        public Services(IConfiguration configuration, ConversationState conversationState, UserState userState, ZohoBotService zohoService)
+        public Services(IConfiguration configuration, ConversationState conversationState, UserState userState, ZohoBotService zohoService, CloudTableClient dataStorage)
         {
-            Configuration = configuration;
             ConversationState = conversationState;
+            Configuration = configuration;
+            StorageClient = dataStorage;
             UserState = userState;
             Zoho = zohoService;
 
@@ -57,6 +59,7 @@ namespace ADS.Bot1
             };
 
             LuisRecognizer = new LuisRecognizer(recognizerOptions);
+
         }
 
         public QnAMaker LeadQualQnA { get; private set; }
@@ -66,6 +69,20 @@ namespace ADS.Bot1
         public IStatePropertyAccessor<DialogState> DialogStateAccessor { get; private set; }
 
         public IConfiguration Configuration { get; }
+
+
+        public CloudTableClient StorageClient { get; private set; }
+
+        public CloudTable CarStorage
+        {
+            get { return StorageClient.GetTableReference("Cars"); }
+        }
+        public CloudTable DealerStorage
+        {
+            get { return StorageClient.GetTableReference("Dealerships"); }
+        }
+
+
 
         public LuisRecognizer LuisRecognizer { get; private set; }
         public ZohoBotService Zoho { get; private set; }

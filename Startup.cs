@@ -19,6 +19,9 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
 using ADS.Bot.V1.Models;
 using ADS.Bot.V1.Services;
+using Microsoft.Azure.Cosmos.Table;
+using System;
+using System.Linq;
 
 namespace ADS.Bot1
 {
@@ -43,14 +46,27 @@ namespace ADS.Bot1
             var dbConnectionString = Configuration.GetConnectionString("UserData");
             if(dbConnectionString != null)
             {
-                services.AddSingleton<IStorage>(new AzureBlobStorage(dbConnectionString, "bottest"));
+                //services.AddSingleton<IStorage>(new AzureBlobStorage(dbConnectionString, "bottest"));
             }
             else
             {
                 services.AddSingleton<IStorage, MemoryStorage>();
             }
-            
-            
+
+            var vinDBConnectionString = Configuration.GetConnectionString("VinSolutionsDB");
+            if (vinDBConnectionString != null)
+            {
+                try
+                {
+                    CloudStorageAccount account = CloudStorageAccount.Parse(vinDBConnectionString);
+                    services.AddSingleton(account.CreateCloudTableClient());
+                }
+                catch (Exception ex)
+                {
+                    services.AddSingleton((CloudTableClient)null);
+                }
+            }
+
             // Create the User and Conversation State
             services.AddSingleton<UserState>();
             services.AddSingleton<ConversationState>();
