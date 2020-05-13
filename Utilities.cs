@@ -18,20 +18,20 @@ namespace ADS.Bot.V1
     public class Utilities
     {
 
-        public static PromptOptions CreateOptions(string[] Options, string PromptText, string RetryText = null)
+        public static PromptOptions CreateOptions(IEnumerable<string> Options, string PromptText, string RetryText = null)
         {
-            return CreateOptions(Options, MessageFactory.Text(PromptText), MessageFactory.Text(RetryText));
+            return CreateOptions(Options.ToArray(), MessageFactory.Text(PromptText), MessageFactory.Text(RetryText));
         }
 
-        public static PromptOptions CreateOptions(string[] Options, Activity Prompt, Activity Retry = null)
+        public static PromptOptions CreateOptions(IEnumerable<string> Options, Activity Prompt, Activity Retry = null)
         {
             var promptOpts = new PromptOptions();
 
             promptOpts.Choices = Options.Select(opt =>
             {
-                return new Microsoft.Bot.Builder.Dialogs.Choices.Choice(opt);
+                return new Choice(opt);
             }).ToList();
-
+            
             promptOpts.Prompt = Prompt;
             promptOpts.RetryPrompt = Retry;
 
@@ -108,13 +108,15 @@ namespace ADS.Bot.V1
             return (context.TurnState["turn"] as JObject)?["dialogEvent"]?.Value<string>("name");
         }
 
-        public static Activity CreateCarousel(ITurnContext context, IEnumerable<HeroCard> cards)
+        public static IMessageActivity CreateCarousel(ITurnContext context, IEnumerable<HeroCard> cards)
         {
             return CreateCarousel(context, cards.Select(c => c.ToAttachment()));
         }
 
-        public static Activity CreateCarousel(ITurnContext context, IEnumerable<Attachment> attachments)
+        public static IMessageActivity CreateCarousel(ITurnContext context, IEnumerable<Attachment> attachments)
         {
+            return MessageFactory.Carousel(attachments);
+
             var carouselReply = context.Activity.CreateReply("...Reply Text...");
             carouselReply.Recipient = context.Activity.From;
             carouselReply.Type = "message";

@@ -18,6 +18,9 @@ namespace ADS.Bot1.Dialogs
     {
         private IBotServices Services { get; }
 
+        const string InventoryChoice = "INVENTORY";
+
+
         public VehicleInventoryDialog(IBotServices services)
             : base(nameof(VehicleInventoryDialog))
         {
@@ -41,6 +44,10 @@ namespace ADS.Bot1.Dialogs
             AddDialog(new WaterfallDialog(nameof(WaterfallDialog), waterfallSteps));
             AddDialog(new TextPrompt(nameof(TextPrompt)));
             AddDialog(new ChoicePrompt(nameof(ChoicePrompt)));
+            AddDialog(new ChoicePrompt(InventoryChoice)
+            {
+                Style = ListStyle.None
+            });
             AddDialog(new ConfirmPrompt(nameof(ConfirmPrompt)));
 
             // The initial child Dialog to run.
@@ -266,7 +273,9 @@ namespace ADS.Bot1.Dialogs
 
                     if(resultsCount > 0)
                     {
-                        var carAttachments = results.Take(10).Select((car_result) => {
+                        var trimmedResults = results.Take(10);
+
+                        var carAttachments = trimmedResults.Select((car_result) => {
                             var card = new HeroCard()
                             {
                                 Title = $"{car_result.Year} {car_result.Make} {car_result.Model}",
@@ -274,22 +283,24 @@ namespace ADS.Bot1.Dialogs
                                 Subtitle = $"Even more text can go here!",
                                 Images = new List<CardImage>()
                                 {
-                                    new CardImage(car_result.ImageURL, tap: new CardAction("showImage", value: car_result.ImageURL))
+                                    new CardImage(car_result.ImageURL, tap: new CardAction(ActionTypes.ShowImage, value: car_result.ImageURL))
                                 },
                                 //Tap = new CardAction("postBack", "I like this one!", value: car_result.VIN),
                                 Buttons = new List<CardAction>()
                                 {
-                                    new CardAction("openUrl", "Show Details", text: "Open URL", value: car_result.URL),
-                                    new CardAction("imBack", "Im Back", text: "Im Back", value: car_result.VIN),
-                                    new CardAction("postBack", "Post Back", text: "Post Back", value: car_result.VIN)
+                                    new CardAction(ActionTypes.OpenUrl, "Show Details", text: "Open URL", value: car_result.URL),
+                                    new CardAction(ActionTypes.ImBack, "Im Back", text: "Im Back", value: car_result.VIN),
+                                    new CardAction(ActionTypes.PostBack, "Post Back", text: "Post Back", value: car_result.VIN)
                                 }
                             };
 
                             return card;
                         });
 
-                        await stepContext.Context.SendActivityAsync(Utilities.CreateCarousel(stepContext.Context, carAttachments), cancellationToken: cancellationToken);
-                        return new DialogTurnResult(DialogTurnStatus.Waiting);
+                        var CARouselActivity = Utilities.CreateCarousel(stepContext.Context, carAttachments);
+
+                        var carOptions = Utilities.CreateOptions(trimmedResults.Select(c => c.VIN), CARouselActivity as Activity);
+                        return await stepContext.PromptAsync(InventoryChoice, carOptions, cancellationToken: cancellationToken);
                     }
                 }
             }
