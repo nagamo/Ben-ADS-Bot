@@ -46,7 +46,7 @@ namespace ADS.Bot1
                     //if (turnContext.Activity.ChannelId == "emulator")
                     if(exception is Microsoft.Bot.Schema.ErrorResponseException erex)
                     {
-                        await turnContext.SendActivityAsync($"Error Reponse\r\n{erex.Message}\r\n{erex.Body}\r\n{JsonConvert.SerializeObject(erex.Data)}");
+                        await turnContext.SendActivityAsync($"Error Reponse\r\n{erex.Message}\r\n{JsonConvert.SerializeObject(erex.Body)}\r\n{JsonConvert.SerializeObject(erex.Data)}");
                     }
                     else
                     {
