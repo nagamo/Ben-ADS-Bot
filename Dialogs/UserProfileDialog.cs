@@ -83,6 +83,12 @@ namespace ADS.Bot1.Dialogs
                 return await stepContext.NextAsync(cancellationToken: cancellationToken);
             }
 
+            if (!string.IsNullOrWhiteSpace(stepContext.Context.Activity.From.Name))
+            {
+                //Use their name if they have one supplied.
+                userData.Details.Name = stepContext.Context.Activity.From.Name;
+            }
+
             return await stepContext.PromptAsync(PROMPT_Name, new PromptOptions
             {
                 Prompt = MessageFactory.Text("So, first of all - I can't keep saying 'hey you'! Can I get your name, please?"),
