@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.ApplicationInsights;
 
 namespace ADS.Bot1
 {
@@ -33,6 +34,10 @@ namespace ADS.Bot1
                     {
                         logging.AddDebug();
                         logging.AddConsole();
+#if RELEASE
+                        logging.AddApplicationInsights();
+                        logging.AddFilter<ApplicationInsightsLoggerProvider>("", LogLevel.Information);
+#endif
                     });
                     webBuilder.UseStartup<Startup>();
                 });
