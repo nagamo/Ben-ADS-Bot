@@ -297,8 +297,8 @@ namespace ADS.Bot1.Dialogs
                             return card;
                         });
 
-                        var otherTest = Utilities.CreateTestCarousel(stepContext.Context);
-                        await stepContext.Context.SendActivityAsync(otherTest, cancellationToken: cancellationToken);
+                        //var otherTest = Utilities.CreateTestCarousel(stepContext.Context);
+                        //await stepContext.Context.SendActivityAsync(otherTest, cancellationToken: cancellationToken);
 
                         var CARouselActivity = Utilities.CreateCarousel(carAttachments);
 
