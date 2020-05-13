@@ -17,6 +17,6 @@ namespace ADS.Bot.V1.Models
 
         public string ImageURL { get; set; }
         public string URL { get; set; }
-        public string VIN { get; set; }
+        public string VIN => RowKey;
     }
 }

@@ -5,6 +5,8 @@ using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Dialogs.Choices;
 using Microsoft.Bot.Schema;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,6 +37,8 @@ namespace ADS.Bot1.Dialogs
 
                 ConcernGoalStep,
                 ValidateConcernStep,
+
+                ShowInventoryStep,
 
                 ConfirmAppointmentStep,
                 FinalizeStep
@@ -181,15 +185,15 @@ namespace ADS.Bot1.Dialogs
             return await stepContext.NextAsync();
         }
 
-
-
-        private async Task<DialogTurnResult> ConfirmAppointmentStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        private async Task<DialogTurnResult> ShowInventoryStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
+
+
             IQueryable<DB_Car> carQuery = Services.CarStorage.CreateQuery<DB_Car>();
             //(carQuery as TableQuery<VS_Car>).SelectColumns = new string[] { "RowKey" };
 
-
+            #region Inventory Carousel
             if (userData.Inventory.PrimaryConcern != "Nothing Specific")
             {
                 switch (userData.Inventory.PrimaryConcern)
@@ -265,50 +269,100 @@ namespace ADS.Bot1.Dialogs
                         //1-10
                         await stepContext.Context.SendActivityAsync($"I found {resultsCount:n0} cars that match that {userData.Inventory.PrimaryConcern.ToLower()}\r\nI know its not a lot, but we've got plenty of other vehilcles available!");
                     }
-                    else
-                    {
-                        //0
-                        await stepContext.Context.SendActivityAsync($"I'm sorry, I dont actually seem to have any cars that match that {userData.Inventory.PrimaryConcern.ToLower()}.\r\nWe'd still love to get in touch to explore what vehicles we have to offer you.");
-                    }
 
-                    if(resultsCount > 0)
+                    if (resultsCount > 0)
                     {
-                        var trimmedResults = results.Take(10);
+                        var trimmedResults = results.Take(5);
+
+                        await stepContext.Context.SendActivityAsync($"Here are the top {trimmedResults.Count()} cars I was able to find for you.");
+
 
                         var carAttachments = trimmedResults.Select((car_result) => {
                             var card = new HeroCard()
                             {
                                 Title = $"{car_result.Year} {car_result.Make} {car_result.Model}",
-                                //Text = $"{car_result.Price:C2}",
-                                //Subtitle = $"Even more text can go here!",
+                                Text = $"{car_result.Price:C2}",
+                                Subtitle = $"Even more text can go here!",
                                 Images = new List<CardImage>()
                                 {
-                                    new CardImage(car_result.ImageURL)//, tap: new CardAction(ActionTypes.ShowImage, value: car_result.ImageURL))
+                                    new CardImage()
+                                    {
+                                        Url = car_result.ImageURL,
+                                        Tap = new CardAction()
+                                        {
+                                            Type = ActionTypes.ShowImage,
+                                            Value = car_result.ImageURL
+                                        }
+                                    }
                                 },
-                                //Tap = new CardAction("postBack", "I like this one!", value: car_result.VIN),
                                 Buttons = new List<CardAction>()
                                 {
-                                    //new CardAction(ActionTypes.OpenUrl, "Show Details", text: "Open URL", value: car_result.URL),
-                                    new CardAction(ActionTypes.ImBack, title: "Im Back", value: car_result.VIN),
-                                    //new CardAction(ActionTypes.PostBack, "Post Back", text: "Post Back", value: car_result.VIN)
+                                    new CardAction()
+                                    {
+                                        Type = ActionTypes.OpenUrl,
+                                        Title = "See Details Online",
+                                        Value = $"https://example.com/car/{car_result.VIN}"
+                                    },
+                                    new CardAction()
+                                    {
+                                        Type = ActionTypes.PostBack,
+                                        Title = "I like this one!",
+                                        DisplayText = $"I like #{car_result.VIN}",
+                                        Text = $"I like #{car_result.VIN}",
+                                        Value = car_result.VIN
+                                    }
                                 }
                             };
 
-                            return card;
+                            return card.ToAttachment();
                         });
-
-                        //var otherTest = Utilities.CreateTestCarousel(stepContext.Context);
-                        //await stepContext.Context.SendActivityAsync(otherTest, cancellationToken: cancellationToken);
 
                         var CARouselActivity = Utilities.CreateCarousel(carAttachments);
 
-                        await stepContext.Context.SendActivityAsync(CARouselActivity);
-
-                        var carOptions = Utilities.CreateOptions(trimmedResults.Select(c => c.VIN), "See any card you like?");
+                        //Supply the options here so the prompt code can line up out postback values to our list of VINs
+                        var carOptions = Utilities.CreateOptions(trimmedResults.Select(c => c.VIN), CARouselActivity as Activity);
                         return await stepContext.PromptAsync(InventoryChoice, carOptions, cancellationToken: cancellationToken);
                     }
+                    else
+                    {
+                        await stepContext.Context.SendActivityAsync($"I'm sorry, I dont actually seem to have any cars that match that {userData.Inventory.PrimaryConcern.ToLower()}.\r\nWe'd still love to get in touch to explore what vehicles we have to offer you.");
+                        return await stepContext.NextAsync(cancellationToken: cancellationToken);
+                    }
+                }
+                else
+                {
+                    //Invalid/Unsupported Query
                 }
             }
+            else
+            {
+                //Nothing specific concern
+            }
+            #endregion
+
+            return await stepContext.NextAsync(cancellationToken: cancellationToken);
+        }
+
+
+        private async Task<DialogTurnResult> ConfirmAppointmentStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        {
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
+
+            if (stepContext.Result is FoundChoice vinChoice)
+            {
+                var vehicle = Services.CarStorage.ExecuteQuery(Services.CarStorage.CreateQuery<DB_Car>().Where(c => c.RowKey == vinChoice.Value) as TableQuery<DB_Car>).FirstOrDefault();
+
+                if (vehicle != null)
+                {
+                    await stepContext.Context.SendActivityAsync($"I'm a {vehicle.Make} guy myself, good choice! I've marked down your interest for the VIN {vehicle.VIN}.");
+                }
+
+            }
+            else
+            {
+                await stepContext.Context.SendActivityAsync("Thanks for filling that out!");
+            }
+
 
             if (Services.Zoho.Connected)
             {
@@ -343,7 +397,6 @@ namespace ADS.Bot1.Dialogs
                 return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
             }
 
-            await stepContext.Context.SendActivityAsync("Thanks for filling that out!");
             return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
         }
 
