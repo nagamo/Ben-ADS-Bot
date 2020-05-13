@@ -288,7 +288,7 @@ namespace ADS.Bot1.Dialogs
                                 //Tap = new CardAction("postBack", "I like this one!", value: car_result.VIN),
                                 Buttons = new List<CardAction>()
                                 {
-                                    new CardAction(ActionTypes.OpenUrl, "Show Details", text: "Open URL", value: car_result.URL),
+                                    //new CardAction(ActionTypes.OpenUrl, "Show Details", text: "Open URL", value: car_result.URL),
                                     new CardAction(ActionTypes.ImBack, title: "Im Back", value: car_result.VIN),
                                     //new CardAction(ActionTypes.PostBack, "Post Back", text: "Post Back", value: car_result.VIN)
                                 }
