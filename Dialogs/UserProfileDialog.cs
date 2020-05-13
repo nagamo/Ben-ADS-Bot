@@ -69,7 +69,34 @@ namespace ADS.Bot1.Dialogs
             {
                 userData.Details = new BasicDetails();
             }
-            
+
+            if (!string.IsNullOrWhiteSpace(stepContext.Context.Activity.From.Name))
+            {
+                /*
+                if (stepContext.Context.Activity.From.Name == "Ben Ab")
+                {
+                    userData.Details = new BasicDetails()
+                    {
+                        Name = "Ben",
+                        Phone = "1231231",
+                        Focus = "Focused",
+                        Timeframe = "Right now!",
+                        Email = "t"
+                    };
+                    userData.Inventory = new VehicleInventoryDetails()
+                    {
+                        PrimaryConcern = "Make",
+                        ConcernGoal = "Toyota"
+                    };
+                }
+                else
+                */
+                {
+                    //Use their name if they have one supplied.
+                    userData.Details.Name = stepContext.Context.Activity.From.Name;
+                }
+            }
+
             return await stepContext.NextAsync(cancellationToken: cancellationToken);
         }
 

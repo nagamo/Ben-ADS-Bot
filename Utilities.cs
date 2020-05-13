@@ -18,18 +18,18 @@ namespace ADS.Bot.V1
     public class Utilities
     {
 
-        public static PromptOptions CreateOptions(string[] Options, string PromptText, string RetryText = null)
+        public static PromptOptions CreateOptions(IEnumerable<string> Options, string PromptText, string RetryText = null)
         {
-            return CreateOptions(Options, MessageFactory.Text(PromptText), MessageFactory.Text(RetryText));
+            return CreateOptions(Options.ToArray(), MessageFactory.Text(PromptText), MessageFactory.Text(RetryText));
         }
 
-        public static PromptOptions CreateOptions(string[] Options, Activity Prompt, Activity Retry = null)
+        public static PromptOptions CreateOptions(IEnumerable<string> Options, Activity Prompt, Activity Retry = null)
         {
             var promptOpts = new PromptOptions();
 
             promptOpts.Choices = Options.Select(opt =>
             {
-                return new Microsoft.Bot.Builder.Dialogs.Choices.Choice(opt);
+                return new Choice(opt);
             }).ToList();
 
             promptOpts.Prompt = Prompt;
@@ -40,9 +40,9 @@ namespace ADS.Bot.V1
 
         public static string ReadChoiceWithManual(WaterfallStepContext stepContext)
         {
-            if(stepContext.Result is FoundChoice choice)
+            if (stepContext.Result is FoundChoice choice)
             {
-                if(choice.Value != stepContext.Context.Activity.Text)
+                if (choice.Value != stepContext.Context.Activity.Text)
                 {
                     return stepContext.Context.Activity.Text;
                 }
@@ -106,6 +106,16 @@ namespace ADS.Bot.V1
         public static string CheckEvent(ITurnContext context)
         {
             return (context.TurnState["turn"] as JObject)?["dialogEvent"]?.Value<string>("name");
+        }
+
+        public static IMessageActivity CreateCarousel(IEnumerable<HeroCard> cards)
+        {
+            return CreateCarousel(cards.Select(c => c.ToAttachment()));
+        }
+
+        public static IMessageActivity CreateCarousel(IEnumerable<Attachment> attachments)
+        {
+            return MessageFactory.Carousel(attachments);
         }
     }
 }
