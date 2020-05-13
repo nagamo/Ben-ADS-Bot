@@ -107,5 +107,20 @@ namespace ADS.Bot.V1
         {
             return (context.TurnState["turn"] as JObject)?["dialogEvent"]?.Value<string>("name");
         }
+
+        public static Activity CreateCarousel(ITurnContext context, IEnumerable<HeroCard> cards)
+        {
+            return CreateCarousel(context, cards.Select(c => c.ToAttachment()));
+        }
+
+        public static Activity CreateCarousel(ITurnContext context, IEnumerable<Attachment> attachments)
+        {
+            var carouselReply = context.Activity.CreateReply("...Reply Text...");
+            carouselReply.Recipient = context.Activity.From;
+            carouselReply.Type = "message";
+            carouselReply.Attachments = attachments.ToList();
+            carouselReply.AttachmentLayout = "carousel";
+            return carouselReply;
+        }
     }
 }

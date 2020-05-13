@@ -4,6 +4,7 @@ using Microsoft.Azure.Cosmos.Table;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Dialogs.Choices;
+using Microsoft.Bot.Schema;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -51,7 +52,7 @@ namespace ADS.Bot1.Dialogs
         private async Task<DialogTurnResult> PreInitializeStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             //Select as little data as possible
-            var foundCars = Services.CarStorage.ExecuteQuery(new TableQuery<VS_Car>() {SelectColumns = new string[] { "RowKey" } });
+            var foundCars = Services.CarStorage.ExecuteQuery(new TableQuery<DB_Car>() {SelectColumns = new string[] { "RowKey" } });
             await stepContext.Context.SendActivityAsync($"I'm glad you asked aobut my inventory. I just so happen to have {foundCars.Count():n0} cars available!");
 
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
@@ -178,8 +179,8 @@ namespace ADS.Bot1.Dialogs
         private async Task<DialogTurnResult> ConfirmAppointmentStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            IQueryable<VS_Car> carQuery = Services.CarStorage.CreateQuery<VS_Car>();
-            (carQuery as TableQuery<VS_Car>).SelectColumns = new string[] { "RowKey" };
+            IQueryable<DB_Car> carQuery = Services.CarStorage.CreateQuery<DB_Car>();
+            //(carQuery as TableQuery<VS_Car>).SelectColumns = new string[] { "RowKey" };
 
 
             if (userData.Inventory.PrimaryConcern != "Nothing Specific")
@@ -239,7 +240,7 @@ namespace ADS.Bot1.Dialogs
 
                 if (carQuery != null)
                 {
-                    var results = Services.CarStorage.ExecuteQuery<VS_Car>(carQuery as TableQuery<VS_Car>);
+                    var results = Services.CarStorage.ExecuteQuery<DB_Car>(carQuery as TableQuery<DB_Car>);
                     var resultsCount = results.Count();
 
                     if (resultsCount >= 100)
@@ -261,6 +262,34 @@ namespace ADS.Bot1.Dialogs
                     {
                         //0
                         await stepContext.Context.SendActivityAsync($"I'm sorry, I dont actually seem to have any cars that match that {userData.Inventory.PrimaryConcern.ToLower()}.\r\nWe'd still love to get in touch to explore what vehicles we have to offer you.");
+                    }
+
+                    if(resultsCount > 0)
+                    {
+                        var carAttachments = results.Take(10).Select((car_result) => {
+                            var card = new HeroCard()
+                            {
+                                Title = $"{car_result.Year} {car_result.Make} {car_result.Model}",
+                                Text = $"{car_result.Price:C2}",
+                                Subtitle = $"Even more text can go here!",
+                                Images = new List<CardImage>()
+                                {
+                                    new CardImage(car_result.ImageURL, tap: new CardAction("showImage", value: car_result.ImageURL))
+                                },
+                                //Tap = new CardAction("postBack", "I like this one!", value: car_result.VIN),
+                                Buttons = new List<CardAction>()
+                                {
+                                    new CardAction("openUrl", "Show Details", text: "Open URL", value: car_result.URL),
+                                    new CardAction("imBack", "Im Back", text: "Im Back", value: car_result.VIN),
+                                    new CardAction("postBack", "Post Back", text: "Post Back", value: car_result.VIN)
+                                }
+                            };
+
+                            return card;
+                        });
+
+                        await stepContext.Context.SendActivityAsync(Utilities.CreateCarousel(stepContext.Context, carAttachments), cancellationToken: cancellationToken);
+                        return new DialogTurnResult(DialogTurnStatus.Waiting);
                     }
                 }
             }
