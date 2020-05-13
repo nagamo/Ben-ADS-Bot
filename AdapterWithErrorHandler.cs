@@ -7,6 +7,7 @@ using Microsoft.Bot.Builder.Integration.AspNet.Core;
 using Microsoft.Bot.Builder.TraceExtensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace ADS.Bot1
 {
@@ -43,8 +44,13 @@ namespace ADS.Bot1
                 if (bool.TryParse(configuration["debug_messages"], out var msg_debug) && msg_debug)
                 {
                     //if (turnContext.Activity.ChannelId == "emulator")
+                    if(exception is Microsoft.Bot.Schema.ErrorResponseException erex)
                     {
-                        await turnContext.SendActivityAsync($"{exception.Message}\r\n{exception.StackTrace}");
+                        await turnContext.SendActivityAsync($"Error Reponse\r\n{erex.Message}\r\n{erex.Body}\r\n{JsonConvert.SerializeObject(erex.Data)}");
+                    }
+                    else
+                    {
+                        await turnContext.SendActivityAsync($"{exception.GetType().FullName}\r\n{exception.Message}\r\n{exception.StackTrace}");
                     }
                 }
 
