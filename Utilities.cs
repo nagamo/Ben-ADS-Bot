@@ -115,14 +115,16 @@ namespace ADS.Bot.V1
 
         public static IMessageActivity CreateCarousel(ITurnContext context, IEnumerable<Attachment> attachments)
         {
-            //return MessageFactory.Carousel(attachments);
+            return MessageFactory.Carousel(attachments);
 
+            /*
             var carouselReply = context.Activity.CreateReply("...Reply Text...");
             carouselReply.Recipient = context.Activity.From;
             carouselReply.Type = "message";
             carouselReply.Attachments = attachments.ToList();
             carouselReply.AttachmentLayout = "carousel";
             return carouselReply;
+            */
         }
     }
 }

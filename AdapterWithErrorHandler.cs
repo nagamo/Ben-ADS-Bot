@@ -42,7 +42,7 @@ namespace ADS.Bot1
 
                 if (bool.TryParse(configuration["debug_messages"], out var msg_debug) && msg_debug)
                 {
-                    if (turnContext.Activity.ChannelId == "emulator")
+                    //if (turnContext.Activity.ChannelId == "emulator")
                     {
                         await turnContext.SendActivityAsync($"{exception.Message}\r\n{exception.StackTrace}");
                     }
