@@ -279,17 +279,17 @@ namespace ADS.Bot1.Dialogs
                             var card = new HeroCard()
                             {
                                 Title = $"{car_result.Year} {car_result.Make} {car_result.Model}",
-                                Text = $"{car_result.Price:C2}",
-                                Subtitle = $"Even more text can go here!",
+                                //Text = $"{car_result.Price:C2}",
+                                //Subtitle = $"Even more text can go here!",
                                 Images = new List<CardImage>()
                                 {
-                                    new CardImage(car_result.ImageURL, tap: new CardAction(ActionTypes.ShowImage, value: car_result.ImageURL))
+                                    new CardImage(car_result.ImageURL)//, tap: new CardAction(ActionTypes.ShowImage, value: car_result.ImageURL))
                                 },
                                 //Tap = new CardAction("postBack", "I like this one!", value: car_result.VIN),
                                 Buttons = new List<CardAction>()
                                 {
                                     new CardAction(ActionTypes.OpenUrl, "Show Details", text: "Open URL", value: car_result.URL),
-                                    new CardAction(ActionTypes.ImBack, "Im Back", text: "Im Back", value: car_result.VIN),
+                                    //new CardAction(ActionTypes.ImBack, "Im Back", text: "Im Back", value: car_result.VIN),
                                     new CardAction(ActionTypes.PostBack, "Post Back", text: "Post Back", value: car_result.VIN)
                                 }
                             };
@@ -299,7 +299,9 @@ namespace ADS.Bot1.Dialogs
 
                         var CARouselActivity = Utilities.CreateCarousel(stepContext.Context, carAttachments);
 
-                        var carOptions = Utilities.CreateOptions(trimmedResults.Select(c => c.VIN), CARouselActivity as Activity);
+                        await stepContext.Context.SendActivityAsync(CARouselActivity);
+
+                        var carOptions = Utilities.CreateOptions(trimmedResults.Select(c => c.VIN), "See any card you like?");
                         return await stepContext.PromptAsync(InventoryChoice, carOptions, cancellationToken: cancellationToken);
                     }
                 }
