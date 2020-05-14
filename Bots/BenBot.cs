@@ -1,9 +1,12 @@
 ﻿using ADS.Bot.V1.Dialogs;
 using ADS.Bot1;
 using ADS.Bot1.Dialogs;
+using ADS_Sync;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;

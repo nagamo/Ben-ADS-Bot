@@ -31,7 +31,6 @@ namespace ADS.Bot.V1.Cards
                     Name = "Test",
                     Phone = "Data",
                     Email = "Saving",
-                    Focus = "1",
                     Timeframe = "1"
                 };
             }

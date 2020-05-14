@@ -14,7 +14,6 @@ namespace ADS.Bot.V1.Models
                         !string.IsNullOrEmpty(Phone) ||
                         !string.IsNullOrEmpty(Email)
                     ) &&
-                    !string.IsNullOrEmpty(Focus) &&
                     !string.IsNullOrEmpty(Timeframe);
             }
         }
@@ -24,8 +23,6 @@ namespace ADS.Bot.V1.Models
         public string Phone { get; set; }
         public string Email { get; set; }
         
-        //Not currently used.
-        public string Focus { get; set; }
         public string Timeframe { get; set; }
     }
 

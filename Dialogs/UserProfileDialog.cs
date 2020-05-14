@@ -39,9 +39,6 @@ namespace ADS.Bot1.Dialogs
                 ContactStepAsync,
                 ContactConfirmStepAsync,
 
-                FocusStepAsync,
-                FocusConfirmStepAsync,
-
                 TimeframeStepAsync,
                 TimeframeConfirmStepAsync,
 
@@ -227,53 +224,12 @@ namespace ADS.Bot1.Dialogs
 
 
 
-        private async Task<DialogTurnResult> FocusStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
-        {
-            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            if (!string.IsNullOrEmpty(userData.Details.Focus)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
-
-            var goalOptions = Utilities.CreateOptions(new string[] { "Buy", "Lease", "Not Sure" }, "What are you looking to do?");
-            return await stepContext.PromptAsync(nameof(ChoicePrompt), goalOptions, cancellationToken);
-        }
-
-        private async Task<DialogTurnResult> FocusConfirmStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
-        {
-            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-
-            //Skip if we have a null result (name already filled out)
-            if (stepContext.Result != null)
-            {
-                userData.Details.Focus = Utilities.ReadChoiceWithManual(stepContext);
-
-                await Services.SetUserProfileAsync(userData, stepContext, cancellationToken);
-            }
-
-            //pass forward reponse for greeting logic specifically
-            return await stepContext.NextAsync(stepContext.Result, cancellationToken: cancellationToken);
-        }
-
-
-
         private async Task<DialogTurnResult> TimeframeStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
             if (!string.IsNullOrEmpty(userData.Details.Timeframe)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
-            PromptOptions interestOptions = null;
-
-            //Send a different question based on focus
-            switch (userData.Details.Focus)
-            {
-                case "Buy":
-                    interestOptions = Utilities.CreateOptions(new string[] { "Ready now", "<30 Days", "30-90 Days", "90+ Days" }, "How soon are you looking to make your purchase?");
-                    break;
-                case "Lease":
-                    interestOptions = Utilities.CreateOptions(new string[] { "Ready now", "<30 Days", "30-90 Days", "90+ Days" }, "How soon are you looking to lease?");
-                    break;
-                default:
-                    interestOptions = Utilities.CreateOptions(new string[] { "Ready now", "<30 Days", "30-90 Days", "90+ Days" }, "How soon were you hoping to move forward?");
-                    break;
-            }
+            PromptOptions interestOptions = Utilities.CreateOptions(new string[] { "Ready now", "<30 Days", "30-90 Days", "90+ Days" }, "How soon are you looking to make your purchase?");
 
             return await stepContext.PromptAsync(nameof(ChoicePrompt), interestOptions, cancellationToken);
         }

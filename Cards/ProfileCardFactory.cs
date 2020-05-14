@@ -87,7 +87,6 @@ namespace ADS.Bot.V1.Cards
                 Name = "Test",
                 Phone = "If",
                 Email = "Prefilled",
-                Focus = "???",
                 Timeframe = "timef"
             };
         }

@@ -39,6 +39,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="ADS_Sync\ADS_Sync.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="AdaptiveExpressions">
       <HintPath>..\..\..\botbuilder-samples\experimental\adaptive-dialog\csharp_dotnetcore\19.waterfall-or-custom-dialog-with-adaptive\bin\Debug\netcoreapp3.1\AdaptiveExpressions.dll</HintPath>
     </Reference>
