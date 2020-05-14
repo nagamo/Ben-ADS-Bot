@@ -13,6 +13,7 @@ namespace ADS.Bot.V1.Models
             get
             {
                 return
+                    !string.IsNullOrEmpty(NewUsed) &&
                     !string.IsNullOrEmpty(PrimaryConcern) &&
                     !string.IsNullOrEmpty(ConcernGoal);
             }
@@ -20,8 +21,13 @@ namespace ADS.Bot.V1.Models
 
         public long? ADS_CRM_ID { get; set; } = null;
 
+        public string NewUsed { get; set; }
         public string PrimaryConcern { get; set; }
         public string ConcernGoal { get; set; }
+
+        [JsonIgnore]
+        public bool SkipNewUsed
+        { get { return !string.IsNullOrEmpty(NewUsed); } }
 
         [JsonIgnore]
         public bool SkipPrimaryConcern

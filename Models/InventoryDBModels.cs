@@ -15,11 +15,12 @@ namespace ADS.Bot.V1.Models
         public string Year { get; set; }
         public string Display_Name { get; set; }
         public string Stock_Number { get; set; }
-        public float? Price { get; set; }
-        public float? Mileage { get; set; }
+        public int Price { get; set; }
+        public int Mileage { get; set; }
         public string Engine { get; set; }
         public string Transmission { get; set; }
         public string Doors { get; set; }
+        public bool Used { get; set; }
         
         public string URL { get; set; }
         public string Image_URL { get; set; }

@@ -32,6 +32,9 @@ namespace ADS.Bot1.Dialogs
                 PreInitializeStep,
                 InitializeStep,
 
+                NewUsedStepAsync,
+                NewUsedConfirmStepAsync,
+
                 PrimaryConcernStep,
                 ValidatePrimaryConcernStep,
 
@@ -57,6 +60,81 @@ namespace ADS.Bot1.Dialogs
             // The initial child Dialog to run.
             InitialDialogId = nameof(WaterfallDialog);
             Services = services;
+        }
+
+        private TableQuery<DB_Car> BuildQuery(UserProfile UserData)
+        {
+            if(UserData.Inventory.PrimaryConcern == "Nothing Specific")
+                return null;
+
+            IQueryable<DB_Car> carQuery = Services.CarStorage.CreateQuery<DB_Car>();
+
+            switch (UserData.Inventory.NewUsed)
+            {
+                case "New":
+                    carQuery = carQuery.Where(car => car.Used == false);
+                    break;
+                case "Used":
+                    carQuery = carQuery.Where(car => car.Used == true);
+                    break;
+            }
+
+            switch (UserData.Inventory.PrimaryConcern)
+            {
+                //Quick and dirty parsing of premade and limited user-supplied prices
+                case "Overall Price":
+                    var enteredPrices = Regex.Matches(UserData.Inventory.ConcernGoal, @"([<]*\$?[<]*(\d+)[kK\+]*)");
+
+                    int? minPrice = null, maxPrice = null;
+
+                    if (enteredPrices.Count == 1)
+                    {
+                        var priceFilter = enteredPrices.First();
+                        var thousands = priceFilter.Value.Contains("k", StringComparison.OrdinalIgnoreCase);
+                        if (priceFilter.Value.Contains("<")) { maxPrice = int.Parse(priceFilter.Groups[2].Value) * (thousands ? 1000 : 1); }
+                        else if (priceFilter.Value.Contains("+")) { minPrice = int.Parse(priceFilter.Groups[2].Value) * (thousands ? 1000 : 1); }
+                    }
+                    else if (enteredPrices.Count >= 2)
+                    {
+                        //Bit ugly, but it works :)
+                        minPrice = int.Parse(enteredPrices[0].Groups[2].Value) * (enteredPrices[0].Value.Contains("k", StringComparison.OrdinalIgnoreCase) ? 1000 : 1);
+                        maxPrice = int.Parse(enteredPrices[1].Groups[2].Value) * (enteredPrices[1].Value.Contains("k", StringComparison.OrdinalIgnoreCase) ? 1000 : 1);
+                    }
+
+                    if (minPrice.HasValue && maxPrice.HasValue)
+                    {
+                        carQuery = carQuery.Where(c => c.Price >= minPrice.Value && c.Price <= maxPrice.Value);
+                    }
+                    else if (minPrice.HasValue)
+                    {
+                        carQuery = carQuery.Where(c => c.Price >= minPrice.Value);
+                    }
+                    else if (maxPrice.HasValue)
+                    {
+                        carQuery = carQuery.Where(c => c.Price <= maxPrice.Value);
+                    }
+                    else
+                    {
+                        carQuery = null;
+                    }
+
+                    break;
+                //case "Monthly Payment":
+                //    break;
+                case "Make":
+                    carQuery = carQuery.Where(c => c.Make.Equals(UserData.Inventory.ConcernGoal, StringComparison.OrdinalIgnoreCase));
+                    break;
+                case "Color":
+                    carQuery = carQuery.Where(c => c.Model.Equals(UserData.Inventory.ConcernGoal, StringComparison.OrdinalIgnoreCase));
+                    break;
+                case null://Hasn't been filled out yet
+                    break;
+                default:
+                    carQuery = null;
+                    break;
+            }
+
+            return carQuery as TableQuery<DB_Car>;
         }
 
 
@@ -113,6 +191,44 @@ namespace ADS.Bot1.Dialogs
 
             //For every other case, we can just continue in the dialog
             return await stepContext.NextAsync(cancellationToken: cancellationToken);
+        }
+
+
+
+        private async Task<DialogTurnResult> NewUsedStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        {
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
+            if (!string.IsNullOrEmpty(userData.Inventory.NewUsed)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
+
+            var goalOptions = Utilities.CreateOptions(new string[] { "Doesn't Matter", "New", "Used" }, "Are you shopping new or used?");
+            return await stepContext.PromptAsync(nameof(ChoicePrompt), goalOptions, cancellationToken);
+        }
+
+        private async Task<DialogTurnResult> NewUsedConfirmStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        {
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
+
+            if (stepContext.Result != null)
+            {
+                userData.Inventory.NewUsed = Utilities.ReadChoiceWithManual(stepContext);
+
+                await Services.SetUserProfileAsync(userData, stepContext, cancellationToken);
+
+                var newUsedQuery = BuildQuery(userData);
+
+                if(newUsedQuery != null)
+                {
+                    var foundCars = Services.CarStorage.ExecuteQuery(newUsedQuery).ToList();
+
+                    if (userData.Inventory.NewUsed != "Doesn't Matter")
+                    {
+                        await stepContext.Context.SendActivityAsync($"I've got {foundCars.Count()} {userData.Inventory.NewUsed?.ToLower()} cars.");
+                    }
+                }
+            }
+
+            //pass forward reponse for greeting logic specifically
+            return await stepContext.NextAsync(stepContext.Result, cancellationToken: cancellationToken);
         }
 
 
@@ -190,155 +306,100 @@ namespace ADS.Bot1.Dialogs
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
 
 
-            IQueryable<DB_Car> carQuery = Services.CarStorage.CreateQuery<DB_Car>();
-            //(carQuery as TableQuery<VS_Car>).SelectColumns = new string[] { "RowKey" };
+            var carQuery = BuildQuery(userData);
 
-            #region Inventory Carousel
-            if (userData.Inventory.PrimaryConcern != "Nothing Specific")
+            if (carQuery != null)
             {
-                switch (userData.Inventory.PrimaryConcern)
+                var results = Services.CarStorage.ExecuteQuery<DB_Car>(carQuery).ToList();
+                var resultsCount = results.Count();
+
+                if (resultsCount >= 100)
                 {
-                    //Quick and dirty parsing of premade and limited user-supplied prices
-                    case "Overall Price":
-                        var enteredPrices = Regex.Matches(userData.Inventory.ConcernGoal, @"([<]*\$?[<]*(\d+)[kK\+]*)");
+                    //100+
+                    await stepContext.Context.SendActivityAsync($"Great news {userData.FirstName}! I've actually got {resultsCount:n0} cars that match that {userData.Inventory.PrimaryConcern.ToLower()}!");
+                }
+                else if (resultsCount >= 10)
+                {
+                    //10-100
+                    await stepContext.Context.SendActivityAsync($"I was able to find {resultsCount:n0} cars for that {userData.Inventory.PrimaryConcern.ToLower()} {userData.FirstName}.");
+                }
+                else if (resultsCount >= 1)
+                {
+                    //1-10
+                    await stepContext.Context.SendActivityAsync($"I found {resultsCount:n0} cars that match that {userData.Inventory.PrimaryConcern.ToLower()}\r\nI know its not a lot, but we've got plenty of other vehilcles available!");
+                }
 
-                        int? minPrice = null, maxPrice = null;
+                if (resultsCount > 0)
+                {
+                    var trimmedResults = results.Take(5);
 
-                        if (enteredPrices.Count == 1)
-                        {
-                            var priceFilter = enteredPrices.First();
-                            var thousands = priceFilter.Value.Contains("k", StringComparison.OrdinalIgnoreCase);
-                            if (priceFilter.Value.Contains("<")) { maxPrice = int.Parse(priceFilter.Groups[2].Value) * (thousands ? 1000 : 1); }
-                            else if (priceFilter.Value.Contains("+")) { minPrice = int.Parse(priceFilter.Groups[2].Value) * (thousands ? 1000 : 1); }
-                        }
-                        else if (enteredPrices.Count >= 2)
-                        {
-                            //Bit ugly, but it works :)
-                            minPrice = int.Parse(enteredPrices[0].Groups[2].Value) * (enteredPrices[0].Value.Contains("k", StringComparison.OrdinalIgnoreCase) ? 1000 : 1);
-                            maxPrice = int.Parse(enteredPrices[1].Groups[2].Value) * (enteredPrices[1].Value.Contains("k", StringComparison.OrdinalIgnoreCase) ? 1000 : 1);
-                        }
+                    await stepContext.Context.SendActivityAsync($"Here are the top {trimmedResults.Count()} cars I was able to find for you.");
 
-                        if (minPrice.HasValue && maxPrice.HasValue)
+
+                    var carAttachments = trimmedResults.Select((car_result) => {
+                        var card = new HeroCard()
                         {
-                            carQuery = carQuery.Where(c => c.Price >= minPrice.Value && c.Price <= maxPrice.Value);
-                        }
-                        else if (minPrice.HasValue)
+                            Title = $"{car_result.Display_Name}",
+                            Text = $"{car_result.Price:C2}",
+                            Images = new List<CardImage>()
+                            {
+                                new CardImage()
+                                {
+                                    Url = car_result.Image_URL,
+                                    Tap = new CardAction()
+                                    {
+                                        Type = ActionTypes.ShowImage,
+                                        Value = car_result.Image_URL
+                                    }
+                                }
+                            },
+                            Buttons = new List<CardAction>()
+                            {
+                                new CardAction()
+                                {
+                                    Type = ActionTypes.OpenUrl,
+                                    Title = "See Details Online",
+                                    Value = car_result.URL
+                                },
+                                new CardAction()
+                                {
+                                    Type = ActionTypes.PostBack,
+                                    Title = "I like this one!",
+                                    DisplayText = $"I like #{car_result.VIN}",
+                                    Text = $"I like #{car_result.VIN}",
+                                    Value = car_result.VIN
+                                }
+                            }
+                        };
+
+                        if (car_result.Used)
                         {
-                            carQuery = carQuery.Where(c => c.Price >= minPrice.Value);
-                        }
-                        else if (maxPrice.HasValue)
-                        {
-                            carQuery = carQuery.Where(c => c.Price <= maxPrice.Value);
+                            card.Subtitle = $"Used: {car_result.Mileage:D0} Miles";
                         }
                         else
                         {
-                            carQuery = null;
+                            card.Subtitle = $"New. {car_result.Engine}, {car_result.Doors} Door";
                         }
 
-                        break;
-                    //case "Monthly Payment":
-                    //    break;
-                    case "Make":
-                        carQuery = carQuery.Where(c => c.Make.Equals(userData.Inventory.ConcernGoal, StringComparison.OrdinalIgnoreCase));
-                        break;
-                    case "Color":
-                        carQuery = carQuery.Where(c => c.Model.Equals(userData.Inventory.ConcernGoal, StringComparison.OrdinalIgnoreCase));
-                        break;
-                    default:
-                        carQuery = null;
-                        break;
-                }
+                        return card.ToAttachment();
+                    });
 
-                if (carQuery != null)
-                {
-                    var results = Services.CarStorage.ExecuteQuery<DB_Car>(carQuery as TableQuery<DB_Car>);
-                    var resultsCount = results.Count();
+                    var CARouselActivity = Utilities.CreateCarousel(carAttachments);
 
-                    if (resultsCount >= 100)
-                    {
-                        //100+
-                        await stepContext.Context.SendActivityAsync($"Great news {userData.FirstName}! I've actually got {resultsCount:n0} cars that match that {userData.Inventory.PrimaryConcern.ToLower()}!");
-                    }
-                    else if (resultsCount >= 10)
-                    {
-                        //10-100
-                        await stepContext.Context.SendActivityAsync($"I was able to find {resultsCount:n0} cars for that {userData.Inventory.PrimaryConcern.ToLower()} {userData.FirstName}.");
-                    }
-                    else if (resultsCount >= 1)
-                    {
-                        //1-10
-                        await stepContext.Context.SendActivityAsync($"I found {resultsCount:n0} cars that match that {userData.Inventory.PrimaryConcern.ToLower()}\r\nI know its not a lot, but we've got plenty of other vehilcles available!");
-                    }
-
-                    if (resultsCount > 0)
-                    {
-                        var trimmedResults = results.Take(5);
-
-                        await stepContext.Context.SendActivityAsync($"Here are the top {trimmedResults.Count()} cars I was able to find for you.");
-
-
-                        var carAttachments = trimmedResults.Select((car_result) => {
-                            var card = new HeroCard()
-                            {
-                                Title = $"{car_result.Display_Name}",
-                                Text = $"{car_result.Price:C2}",
-                                Subtitle = $"{car_result.Mileage:D0} Miles",
-                                Images = new List<CardImage>()
-                                {
-                                    new CardImage()
-                                    {
-                                        Url = car_result.Image_URL,
-                                        Tap = new CardAction()
-                                        {
-                                            Type = ActionTypes.ShowImage,
-                                            Value = car_result.Image_URL
-                                        }
-                                    }
-                                },
-                                Buttons = new List<CardAction>()
-                                {
-                                    new CardAction()
-                                    {
-                                        Type = ActionTypes.OpenUrl,
-                                        Title = "See Details Online",
-                                        Value = car_result.URL
-                                    },
-                                    new CardAction()
-                                    {
-                                        Type = ActionTypes.PostBack,
-                                        Title = "I like this one!",
-                                        DisplayText = $"I like #{car_result.VIN}",
-                                        Text = $"I like #{car_result.VIN}",
-                                        Value = car_result.VIN
-                                    }
-                                }
-                            };
-
-                            return card.ToAttachment();
-                        });
-
-                        var CARouselActivity = Utilities.CreateCarousel(carAttachments);
-
-                        //Supply the options here so the prompt code can line up out postback values to our list of VINs
-                        var carOptions = Utilities.CreateOptions(trimmedResults.Select(c => c.VIN), CARouselActivity as Activity);
-                        return await stepContext.PromptAsync(InventoryChoice, carOptions, cancellationToken: cancellationToken);
-                    }
-                    else
-                    {
-                        await stepContext.Context.SendActivityAsync($"I'm sorry, I dont actually seem to have any cars that match that {userData.Inventory.PrimaryConcern.ToLower()}.\r\nWe'd still love to get in touch to explore what vehicles we have to offer you.");
-                        return await stepContext.NextAsync(cancellationToken: cancellationToken);
-                    }
+                    //Supply the options here so the prompt code can line up out postback values to our list of VINs
+                    var carOptions = Utilities.CreateOptions(trimmedResults.Select(c => c.VIN), CARouselActivity as Activity);
+                    return await stepContext.PromptAsync(InventoryChoice, carOptions, cancellationToken: cancellationToken);
                 }
                 else
                 {
-                    //Invalid/Unsupported Query
+                    await stepContext.Context.SendActivityAsync($"I'm sorry, I dont actually seem to have any cars that match that {userData.Inventory.PrimaryConcern.ToLower()}.\r\nWe'd still love to get in touch to explore what vehicles we have to offer you.");
+                    return await stepContext.NextAsync(cancellationToken: cancellationToken);
                 }
             }
             else
             {
-                //Nothing specific concern
+                //Invalid/Unsupported Query
             }
-            #endregion
 
             return await stepContext.NextAsync(cancellationToken: cancellationToken);
         }
@@ -399,6 +460,5 @@ namespace ADS.Bot1.Dialogs
 
             return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
         }
-
     }
 }

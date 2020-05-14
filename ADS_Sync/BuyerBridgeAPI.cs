@@ -38,11 +38,12 @@ namespace ADS_Sync
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
                 var apiResponse = JsonConvert.DeserializeObject<BB_Response<T>>(response.Content);
+                logger.LogTrace($"Loaded api page [{response.ResponseUri}] {page}/{apiResponse.Meta?.Last_Page}");
+
                 return apiResponse;
             }
             else
             {
-                //?
                 throw new Exception($"Server returned error [{response.StatusCode}] {response.ErrorMessage} \r\n {response.ErrorException}\r\n{config["bb:token"]}");
             }
         }
@@ -117,14 +118,15 @@ namespace ADS_Sync
             public string Display_Name { get; set; }
             public string Stock_Number { get; set; }
             public string VIN { get; set; }
-            public float? Price { get; set; }
-            public float? Mileage { get; set; }
+            public int? Price { get; set; }
+            public int? Mileage { get; set; }
             public string Engine { get; set; }
             public string Transmission { get; set; }
             public string Doors { get; set; }
             public string Make_Name_Raw { get; set; }
             public string Model_Name_Raw { get; set; }
             public string Year { get; set; }
+            public bool Used { get; set; }
 
             public BB_DealerRecords Dealer_Vehicle { get; set; }
             public BB_Images Images { get; set; }

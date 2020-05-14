@@ -44,7 +44,7 @@ namespace ADS_Sync
             foreach(var dealer in liveDealers)
             {
                 log.LogInformation($"Pulling cars for dealer [{dealer.ID}]{dealer.Name}");
-                var apiCars = bbAPI.ListInventory(dealer.ID);
+                var apiCars = bbAPI.ListInventory(dealer.ID).ToList();
                 log.LogInformation($"Got {apiCars.Count()} cars for dealer");
 
                 TableQuery<CarDetails> dealerCurrent = new TableQuery<CarDetails>()
@@ -52,16 +52,23 @@ namespace ADS_Sync
                     .Select(new string[] { "PartitionKey" });
 
                 var dbRecords = ExecuteSegmented(dealerCurrent, Cars).ToList();
-                var staleRecords = dbRecords.Where(db_car => apiCars.Any(sync_car => sync_car.VIN == db_car.PartitionKey));
+                var staleRecords = dbRecords.Where(db_car => apiCars.Any(sync_car => sync_car.VIN == db_car.PartitionKey)).ToList();
 
                 //Delete all records for this delear that aren't in current sync set
                 log.LogInformation($"Removing {staleRecords.Count()} stale records");
-                MultiBatchOperations(staleRecords.Select(dr => TableOperation.Delete(dr)), Cars);
+                if (staleRecords.Count() > 0)
+                {
+                    var updateResults = MultiBatchOperations(staleRecords.Select(dr => TableOperation.Delete(dr)), Cars).ToList();
+                }
 
                 //Now do the sync for cars
                 log.LogInformation($"Merging {apiCars.Count()} cars for dealer");
-                var carRecords = apiCars.Select(car => CarDetails.FromBuyerBridge(dealer, car));
-                var carResults = SyncTable(carRecords, Cars).ToList();
+                if(apiCars.Count() > 0)
+                {
+                    var carRecords = apiCars.Select(car => CarDetails.FromBuyerBridge(dealer, car));
+                    var carResults = SyncTable(carRecords, Cars).ToList();
+                }
+
             }
         }
 
@@ -161,11 +168,12 @@ namespace ADS_Sync
         public string Year { get; set; }
         public string Display_Name { get; set; }
         public string Stock_Number { get; set; }
-        public float? Price { get; set; }
-        public float? Mileage { get; set; }
+        public int Price { get; set; }
+        public int Mileage { get; set; }
         public string Engine { get; set; }
         public string Transmission { get; set; }
         public string Doors { get; set; }
+        public bool Used { get; set; }
 
         public string URL { get; set; }
         public string Image_URL { get; set; }
@@ -181,11 +189,12 @@ namespace ADS_Sync
                 Year = car.Year,
                 Display_Name = car.Display_Name,
                 Stock_Number = car.Stock_Number,
-                Price = car.Price,
-                Mileage = car.Mileage,
+                Price = car.Price ?? 0,
+                Mileage = car.Mileage ?? 0,
                 Engine = car.Engine,
                 Transmission = car.Transmission,
                 Doors = car.Doors,
+                Used = car.Used,
                 URL = car?.Dealer_Vehicle?.Data?.FirstOrDefault()?.Vdp_Url ?? "",
                 Image_URL = car?.Images?.Data?.FirstOrDefault()?.Original_Url ?? ""
             };
