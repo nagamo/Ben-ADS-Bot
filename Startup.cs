@@ -22,6 +22,7 @@ using ADS.Bot.V1.Services;
 using Microsoft.Azure.Cosmos.Table;
 using System;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace ADS.Bot1
 {
@@ -66,6 +67,8 @@ namespace ADS.Bot1
                     services.AddSingleton((CloudTableClient)null);
                 }
             }
+
+
 
             // Create the User and Conversation State
             services.AddSingleton<UserState>();

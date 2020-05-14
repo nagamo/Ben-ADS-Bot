@@ -242,7 +242,7 @@ namespace ADS.Bot1.Dialogs
                         carQuery = carQuery.Where(c => c.Make.Equals(userData.Inventory.ConcernGoal, StringComparison.OrdinalIgnoreCase));
                         break;
                     case "Color":
-                        carQuery = carQuery.Where(c => c.Color.Equals(userData.Inventory.ConcernGoal, StringComparison.OrdinalIgnoreCase));
+                        carQuery = carQuery.Where(c => c.Model.Equals(userData.Inventory.ConcernGoal, StringComparison.OrdinalIgnoreCase));
                         break;
                     default:
                         carQuery = null;
@@ -280,18 +280,18 @@ namespace ADS.Bot1.Dialogs
                         var carAttachments = trimmedResults.Select((car_result) => {
                             var card = new HeroCard()
                             {
-                                Title = $"{car_result.Year} {car_result.Make} {car_result.Model}",
+                                Title = $"{car_result.Display_Name}",
                                 Text = $"{car_result.Price:C2}",
-                                Subtitle = $"Even more text can go here!",
+                                Subtitle = $"{car_result.Mileage:D0} Miles",
                                 Images = new List<CardImage>()
                                 {
                                     new CardImage()
                                     {
-                                        Url = car_result.ImageURL,
+                                        Url = car_result.Image_URL,
                                         Tap = new CardAction()
                                         {
                                             Type = ActionTypes.ShowImage,
-                                            Value = car_result.ImageURL
+                                            Value = car_result.Image_URL
                                         }
                                     }
                                 },
