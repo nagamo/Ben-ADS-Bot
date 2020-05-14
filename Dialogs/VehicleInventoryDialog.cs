@@ -1,5 +1,6 @@
 ﻿using ADS.Bot.V1;
 using ADS.Bot.V1.Models;
+using ADS.Bot.V1.Services;
 using Microsoft.Azure.Cosmos.Table;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
@@ -79,59 +80,57 @@ namespace ADS.Bot1.Dialogs
                     break;
             }
 
-            switch (UserData.Inventory.PrimaryConcern)
+            if (!string.IsNullOrEmpty(UserData.Inventory.ConcernGoal))
             {
-                //Quick and dirty parsing of premade and limited user-supplied prices
-                case "Overall Price":
-                    var enteredPrices = Regex.Matches(UserData.Inventory.ConcernGoal, @"([<]*\$?[<]*(\d+)[kK\+]*)");
+                switch (UserData.Inventory.PrimaryConcern)
+                {
+                    //Quick and dirty parsing of premade and limited user-supplied prices
+                    case "Price":
+                        var enteredPrices = Regex.Matches(UserData.Inventory.ConcernGoal, @"([<]*\$?[<]*(\d+)[kK\+]*)");
 
-                    int? minPrice = null, maxPrice = null;
+                        int? minPrice = null, maxPrice = null;
 
-                    if (enteredPrices.Count == 1)
-                    {
-                        var priceFilter = enteredPrices.First();
-                        var thousands = priceFilter.Value.Contains("k", StringComparison.OrdinalIgnoreCase);
-                        if (priceFilter.Value.Contains("<")) { maxPrice = int.Parse(priceFilter.Groups[2].Value) * (thousands ? 1000 : 1); }
-                        else if (priceFilter.Value.Contains("+")) { minPrice = int.Parse(priceFilter.Groups[2].Value) * (thousands ? 1000 : 1); }
-                    }
-                    else if (enteredPrices.Count >= 2)
-                    {
-                        //Bit ugly, but it works :)
-                        minPrice = int.Parse(enteredPrices[0].Groups[2].Value) * (enteredPrices[0].Value.Contains("k", StringComparison.OrdinalIgnoreCase) ? 1000 : 1);
-                        maxPrice = int.Parse(enteredPrices[1].Groups[2].Value) * (enteredPrices[1].Value.Contains("k", StringComparison.OrdinalIgnoreCase) ? 1000 : 1);
-                    }
+                        if (enteredPrices.Count == 1)
+                        {
+                            var priceFilter = enteredPrices.First();
+                            var thousands = priceFilter.Value.Contains("k", StringComparison.OrdinalIgnoreCase);
+                            if (priceFilter.Value.Contains("<")) { maxPrice = int.Parse(priceFilter.Groups[2].Value) * (thousands ? 1000 : 1); }
+                            else if (priceFilter.Value.Contains("+")) { minPrice = int.Parse(priceFilter.Groups[2].Value) * (thousands ? 1000 : 1); }
+                        }
+                        else if (enteredPrices.Count >= 2)
+                        {
+                            //Bit ugly, but it works :)
+                            minPrice = int.Parse(enteredPrices[0].Groups[2].Value) * (enteredPrices[0].Value.Contains("k", StringComparison.OrdinalIgnoreCase) ? 1000 : 1);
+                            maxPrice = int.Parse(enteredPrices[1].Groups[2].Value) * (enteredPrices[1].Value.Contains("k", StringComparison.OrdinalIgnoreCase) ? 1000 : 1);
+                        }
 
-                    if (minPrice.HasValue && maxPrice.HasValue)
-                    {
-                        carQuery = carQuery.Where(c => c.Price >= minPrice.Value && c.Price <= maxPrice.Value);
-                    }
-                    else if (minPrice.HasValue)
-                    {
-                        carQuery = carQuery.Where(c => c.Price >= minPrice.Value);
-                    }
-                    else if (maxPrice.HasValue)
-                    {
-                        carQuery = carQuery.Where(c => c.Price <= maxPrice.Value);
-                    }
-                    else
-                    {
+                        if (minPrice.HasValue && maxPrice.HasValue)
+                        {
+                            carQuery = carQuery.Where(c => c.Price >= minPrice.Value && c.Price <= maxPrice.Value);
+                        }
+                        else if (minPrice.HasValue)
+                        {
+                            carQuery = carQuery.Where(c => c.Price >= minPrice.Value);
+                        }
+                        else if (maxPrice.HasValue)
+                        {
+                            carQuery = carQuery.Where(c => c.Price <= maxPrice.Value);
+                        }
+                        else
+                        {
+                            carQuery = null;
+                        }
+
+                        break;
+                    //case "Monthly Payment":
+                    //    break;
+                    case "Make":
+                        carQuery = carQuery.Where(c => c.Make.Equals(UserData.Inventory.ConcernGoal, StringComparison.OrdinalIgnoreCase));
+                        break;
+                    default:
                         carQuery = null;
-                    }
-
-                    break;
-                //case "Monthly Payment":
-                //    break;
-                case "Make":
-                    carQuery = carQuery.Where(c => c.Make.Equals(UserData.Inventory.ConcernGoal, StringComparison.OrdinalIgnoreCase));
-                    break;
-                case "Color":
-                    carQuery = carQuery.Where(c => c.Model.Equals(UserData.Inventory.ConcernGoal, StringComparison.OrdinalIgnoreCase));
-                    break;
-                case null://Hasn't been filled out yet
-                    break;
-                default:
-                    carQuery = null;
-                    break;
+                        break;
+                }
             }
 
             return carQuery as TableQuery<DB_Car>;
@@ -241,7 +240,7 @@ namespace ADS.Bot1.Dialogs
             if (userData.Inventory.SkipPrimaryConcern) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
 
-            var concernOptions = Utilities.CreateOptions(new string[] { "Overall Price", "Monthly Payment", "Make", "Color", "Nothing Specific" }, "What is your primary concern regarding a vehicle puchase?");
+            var concernOptions = Utilities.CreateOptions(new string[] { "Price", "Make", "Nothing Specific" }, "What is your primary concern regarding a vehicle puchase?");
             return await stepContext.PromptAsync(nameof(ChoicePrompt), concernOptions, cancellationToken);
         }
 
@@ -265,17 +264,17 @@ namespace ADS.Bot1.Dialogs
 
             switch (userData.Inventory.PrimaryConcern)
             {
-                case "Overall Price":
-                    goalOptions = Utilities.CreateOptions(new string[] { "<$1000", "$1000-5000", "$5000-10k", "$10k+" }, "How much are you looking to spend?");
-                    break;
-                case "Monthly Payment":
-                    goalOptions = Utilities.CreateOptions(new string[] { "<$100/month", "$100-200/month", "$200-400/month", "$400+/month" }, "What are you aiming for a monthly payment?");
+                case "Price":
+                    goalOptions = Utilities.CreateOptions(new string[] { "<$10k", "$10k-20k", "$20k-30k", "$30k-40k", "$40k+" }, "How much are you looking to spend?");
                     break;
                 case "Make":
-                    goalOptions = Utilities.CreateOptions(new string[] { "Chevrolet", "Honda", "Toyota", "Ford" }, "What make of car are you interested in?");
-                    break;
-                case "Color":
-                    goalOptions = Utilities.CreateOptions(new string[] { "Red", "Blue", "Green", "Black", "Silver" }, "What are you aiming for a monthly payment?");
+                    var makeOptions = BuyerBridgeService
+                        .ListAvailableMakes(Services, BuildQuery(userData))
+                        .OrderByDescending(mo => mo.Count)
+                        .Select(mo => $"{mo.Make} ({mo.Count})")
+                        .Take(10);
+
+                    goalOptions = Utilities.CreateOptions(makeOptions, "What make of car are you interested in?");
                     break;
                 case "Nothing Specific":
                     goalOptions = Utilities.CreateOptions(new string[] { "Yes!", "Not Exactly..", "Just looking" }, "Do you know what kind of vehicle you want?");
@@ -296,7 +295,15 @@ namespace ADS.Bot1.Dialogs
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
             if (stepContext.Result != null)
+            {
                 userData.Inventory.ConcernGoal = Utilities.ReadChoiceWithManual(stepContext);
+
+                if(userData.Inventory.PrimaryConcern == "Make")
+                {
+                    //This is to turn "Make (Count)" into just "Make"
+                    userData.Inventory.ConcernGoal = userData.Inventory.ConcernGoal.Split(" (").First();
+                }
+            }
 
             return await stepContext.NextAsync();
         }
