@@ -301,7 +301,7 @@ namespace ADS.Bot1.Dialogs
                                     {
                                         Type = ActionTypes.OpenUrl,
                                         Title = "See Details Online",
-                                        Value = $"https://example.com/car/{car_result.VIN}"
+                                        Value = car_result.URL
                                     },
                                     new CardAction()
                                     {
