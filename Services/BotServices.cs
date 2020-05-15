@@ -36,12 +36,7 @@ namespace ADS.Bot1
             //Used by micrsoft dialog classes
             GenericUserProfileAccessor = UserState.CreateProperty<Dictionary<string, object>>(nameof(UserProfile));
 
-            QnAOptions = new QnAMakerOptions()
-            {
-                ScoreThreshold = 0,
-                Top = 1,
-                IsTest = true
-            };
+            QnAOptions = new QnAMakerOptions();
 
             LeadQualQnA = new QnAMaker(
                 new QnAMakerEndpoint
@@ -50,6 +45,9 @@ namespace ADS.Bot1
                     EndpointKey = configuration["qna:QnAEndpointKey"],
                     Host = configuration["qna:QnAEndpointHostName"]
                 }, QnAOptions);
+
+            //Apparently the constructor overrides the properties with defaults?
+            QnAOptions.ScoreThreshold = 0;
 
             var luisApplication = new LuisApplication(
                 configuration["luis:id"],
