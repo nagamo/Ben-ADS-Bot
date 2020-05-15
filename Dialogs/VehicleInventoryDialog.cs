@@ -439,12 +439,6 @@ namespace ADS.Bot1.Dialogs
                             {
                                 new CardAction()
                                 {
-                                    Type = ActionTypes.OpenUrl,
-                                    Title = "See Details Online",
-                                    Value = car_result.URL
-                                },
-                                new CardAction()
-                                {
                                     Type = ActionTypes.PostBack,
                                     Title = "I like this one!",
                                     DisplayText = $"I like #{car_result.VIN}",
@@ -453,6 +447,18 @@ namespace ADS.Bot1.Dialogs
                                 }
                             }
                         };
+
+                        //Sometimes there are null URLs ...?
+                        //Don't generate buttons for these because of facebook
+                        if (!string.IsNullOrEmpty(car_result.URL))
+                        {
+                            card.Buttons.Insert(0, new CardAction()
+                            {
+                                Type = ActionTypes.OpenUrl,
+                                Title = "See Details Online",
+                                Value = car_result.URL
+                            });
+                        }
 
                         if(car_result.Price > 0)
                         {
