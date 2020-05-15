@@ -14,9 +14,9 @@ namespace ADS.Bot.V1.Dialogs
 {
     public class ValueTradeInDialog : ComponentDialog
     {
-        private IBotServices Services { get; }
+        private ADSBotServices Services { get; }
 
-        public ValueTradeInDialog(IBotServices services)
+        public ValueTradeInDialog(ADSBotServices services)
             : base(nameof(ValueTradeInDialog))
         {
             // This array defines how the Waterfall will execute.

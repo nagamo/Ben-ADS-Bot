@@ -14,9 +14,9 @@ namespace ADS.Bot1.Dialogs
 {
     public class FinanceDialog : ComponentDialog
     {
-        public IBotServices Services { get; }
+        public ADSBotServices Services { get; }
 
-        public FinanceDialog(IBotServices services)
+        public FinanceDialog(ADSBotServices services)
             : base(nameof(FinanceDialog))
         {
             // This array defines how the Waterfall will execute.

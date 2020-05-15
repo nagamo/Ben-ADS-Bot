@@ -363,7 +363,7 @@ namespace ADS.Bot.V1.Dialogs
         public async Task<DialogTurnResult> ProcessDefaultResponse(DialogContext context, object data, bool isBusy)
         {
             //Get Top QnA result
-            var results = await Services.LeadQualQnA.GetAnswersAsync(context.Context);
+            var results = await Services.LeadQualQnA.GetAnswersAsync(context.Context, Services.QnAOptions);
             var topResult = results.FirstOrDefault();
 
 

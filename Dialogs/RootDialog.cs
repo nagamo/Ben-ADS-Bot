@@ -16,7 +16,7 @@ namespace ADS.Bot.V1.Dialogs
 {
     public class RootDialog : ComponentDialog
     {
-        public RootDialog(ActiveLeadDialog activeLeadDialog, IBotServices services)
+        public RootDialog(ActiveLeadDialog activeLeadDialog, ADSBotServices services)
         {
             Services = services;
 
@@ -77,6 +77,6 @@ namespace ADS.Bot.V1.Dialogs
             this.InitialDialogId = rootDialog.Id;
         }
 
-        public IBotServices Services { get; }
+        public ADSBotServices Services { get; }
     }
 }

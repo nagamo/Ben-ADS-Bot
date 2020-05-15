@@ -16,9 +16,9 @@ namespace ADS.Bot.V1.Cards
     public class ProfileCardFactory : ICardFactory<BasicDetails>
     {
         public string Id { get => nameof(ProfileCardFactory); }
-        public IBotServices BotServices { get; }
+        public ADSBotServices BotServices { get; }
 
-        public ProfileCardFactory(IBotServices botServices)
+        public ProfileCardFactory(ADSBotServices botServices)
         {
             BotServices = botServices;
         }

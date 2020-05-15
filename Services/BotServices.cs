@@ -36,18 +36,20 @@ namespace ADS.Bot1
             //Used by micrsoft dialog classes
             GenericUserProfileAccessor = UserState.CreateProperty<Dictionary<string, object>>(nameof(UserProfile));
 
+            QnAOptions = new QnAMakerOptions()
+            {
+                ScoreThreshold = 0,
+                Top = 1,
+                IsTest = true
+            };
+
             LeadQualQnA = new QnAMaker(
                 new QnAMakerEndpoint
                 {
                     KnowledgeBaseId = configuration["qna:QnAKnowledgebaseId"],
                     EndpointKey = configuration["qna:QnAEndpointKey"],
                     Host = configuration["qna:QnAEndpointHostName"]
-                },new QnAMakerOptions()
-                {
-                    ScoreThreshold = 0,
-                    Top = 1,
-                    IsTest = true
-                });
+                }, QnAOptions);
 
             var luisApplication = new LuisApplication(
                 configuration["luis:id"],
@@ -68,6 +70,7 @@ namespace ADS.Bot1
 
         }
 
+        public QnAMakerOptions QnAOptions { get; private set; }
         public QnAMaker LeadQualQnA { get; private set; }
 
         public IStatePropertyAccessor<Dictionary<string, object>> GenericUserProfileAccessor { get; private set; }

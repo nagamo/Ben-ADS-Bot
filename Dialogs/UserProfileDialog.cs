@@ -23,9 +23,9 @@ namespace ADS.Bot1.Dialogs
         const string PROMPT_Focus = "Focus";
         const string PROMPT_Timeframe = "Timeframe";
 
-        public IBotServices Services { get; }
+        public ADSBotServices Services { get; }
 
-        public UserProfileDialog(IBotServices services)
+        public UserProfileDialog(ADSBotServices services)
             : base(nameof(UserProfileDialog))
         {
             // This array defines how the Waterfall will execute.
