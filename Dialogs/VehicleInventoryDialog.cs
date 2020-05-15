@@ -23,6 +23,8 @@ namespace ADS.Bot1.Dialogs
 
         const string InventoryChoice = "INVENTORY";
 
+        const string CurrentFieldName = "CurrentField";
+
 
         public VehicleInventoryDialog(ADSBotServices services)
             : base(nameof(VehicleInventoryDialog))
@@ -39,14 +41,23 @@ namespace ADS.Bot1.Dialogs
                 PrimaryConcernStep,
                 ValidatePrimaryConcernStep,
 
-                ConcernGoalStep,
-                ValidateConcernStep,
+                RemainingGoalsStep,//Repeatable...
+                ValidateRemainingGoalsStep, //Continue on or repeat
 
-                ShowInventoryStep,
+                AdditionalOptions, //If repeating, show options
+                ValidateAdditonalOptions, //Tell how many results and go back to remaining goals to cycle
+
+                ShowInventoryStep, //When user requests listing, show them cars. This needs to cycle too...(pages/reset filters/etc.)
 
                 ConfirmAppointmentStep,
                 FinalizeStep
             };
+
+            //Examples...
+            //New -> Price -> 10k -> Inventory
+            //New -> Price -> 10k -> Make -> Honda
+            //New -> Make -> Honda -> Model -> Civic -> Inventory
+
 
             // Add named dialogs to the DialogSet. These names are saved in the dialog state.
             AddDialog(new WaterfallDialog(nameof(WaterfallDialog), waterfallSteps));
@@ -80,57 +91,29 @@ namespace ADS.Bot1.Dialogs
                     break;
             }
 
-            if (!string.IsNullOrEmpty(UserData.Inventory.ConcernGoal))
+            if (!string.IsNullOrEmpty(UserData.Inventory.Make))
             {
-                switch (UserData.Inventory.PrimaryConcern)
-                {
-                    //Quick and dirty parsing of premade and limited user-supplied prices
-                    case "Price":
-                        var enteredPrices = Regex.Matches(UserData.Inventory.ConcernGoal, @"([<]*\$?[<]*(\d+)[kK\+]*)");
-
-                        int? minPrice = null, maxPrice = null;
-
-                        if (enteredPrices.Count == 1)
-                        {
-                            var priceFilter = enteredPrices.First();
-                            var thousands = priceFilter.Value.Contains("k", StringComparison.OrdinalIgnoreCase);
-                            if (priceFilter.Value.Contains("<")) { maxPrice = int.Parse(priceFilter.Groups[2].Value) * (thousands ? 1000 : 1); }
-                            else if (priceFilter.Value.Contains("+")) { minPrice = int.Parse(priceFilter.Groups[2].Value) * (thousands ? 1000 : 1); }
-                        }
-                        else if (enteredPrices.Count >= 2)
-                        {
-                            //Bit ugly, but it works :)
-                            minPrice = int.Parse(enteredPrices[0].Groups[2].Value) * (enteredPrices[0].Value.Contains("k", StringComparison.OrdinalIgnoreCase) ? 1000 : 1);
-                            maxPrice = int.Parse(enteredPrices[1].Groups[2].Value) * (enteredPrices[1].Value.Contains("k", StringComparison.OrdinalIgnoreCase) ? 1000 : 1);
-                        }
-
-                        if (minPrice.HasValue && maxPrice.HasValue)
-                        {
-                            carQuery = carQuery.Where(c => c.Price >= minPrice.Value && c.Price <= maxPrice.Value);
-                        }
-                        else if (minPrice.HasValue)
-                        {
-                            carQuery = carQuery.Where(c => c.Price >= minPrice.Value);
-                        }
-                        else if (maxPrice.HasValue)
-                        {
-                            carQuery = carQuery.Where(c => c.Price <= maxPrice.Value);
-                        }
-                        else
-                        {
-                            carQuery = null;
-                        }
-
-                        break;
-                    //case "Monthly Payment":
-                    //    break;
-                    case "Make":
-                        carQuery = carQuery.Where(c => c.Make.Equals(UserData.Inventory.ConcernGoal, StringComparison.OrdinalIgnoreCase));
-                        break;
-                    default:
-                        carQuery = null;
-                        break;
-                }
+                carQuery = carQuery.Where(c => c.Make == UserData.Inventory.Make);
+            }
+            if (!string.IsNullOrEmpty(UserData.Inventory.Model))
+            {
+                carQuery = carQuery.Where(c => c.Model == UserData.Inventory.Model);
+            }
+            if (!string.IsNullOrEmpty(UserData.Inventory.Color))
+            {
+                carQuery = carQuery.Where(c => c.Color == UserData.Inventory.Color);
+            }
+            if (UserData.Inventory.MinPrice.HasValue && UserData.Inventory.MaxPrice.HasValue)
+            {
+                carQuery = carQuery.Where(c => c.Price >= UserData.Inventory.MinPrice.Value && c.Price <= UserData.Inventory.MaxPrice.Value);
+            }
+            else if (UserData.Inventory.MinPrice.HasValue)
+            {
+                carQuery = carQuery.Where(c => c.Price >= UserData.Inventory.MinPrice.Value);
+            }
+            else if (UserData.Inventory.MaxPrice.HasValue)
+            {
+                carQuery = carQuery.Where(c => c.Price <= UserData.Inventory.MaxPrice.Value);
             }
 
             return carQuery as TableQuery<DB_Car>;
@@ -199,17 +182,27 @@ namespace ADS.Bot1.Dialogs
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
             if (!string.IsNullOrEmpty(userData.Inventory.NewUsed)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
-            var goalOptions = Utilities.CreateOptions(new string[] { "Doesn't Matter", "New", "Used" }, "Are you shopping new or used?");
-            return await stepContext.PromptAsync(nameof(ChoicePrompt), goalOptions, cancellationToken);
+            var newUsedCounts = BuyerBridgeService.ListAvailableNewUsed(Services, null);
+
+            if(newUsedCounts.Count() == 0)
+            {
+                //Indicates no Used *and* New cars, so skip this
+                return await stepContext.NextAsync(cancellationToken: cancellationToken);
+            }
+            else
+            {
+                var newUsedOptions = Utilities.GroupedOptions(newUsedCounts, "Are you shopping new or used?");
+                return await stepContext.PromptAsync(nameof(ChoicePrompt), newUsedOptions, cancellationToken);
+            }
         }
 
         private async Task<DialogTurnResult> NewUsedConfirmStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
 
-            if (stepContext.Result != null)
+            if (stepContext.Result is FoundChoice newUsedChoice)
             {
-                userData.Inventory.NewUsed = Utilities.ReadChoiceWithManual(stepContext);
+                userData.Inventory.NewUsed = Utilities.CleanGroupedOption(newUsedChoice.Value);
 
                 await Services.SetUserProfileAsync(userData, stepContext, cancellationToken);
 
@@ -239,45 +232,105 @@ namespace ADS.Bot1.Dialogs
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
             if (userData.Inventory.SkipPrimaryConcern) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
-
-            var concernOptions = Utilities.CreateOptions(new string[] { "Price", "Make", "Nothing Specific" }, "What is your primary concern regarding a vehicle puchase?");
+            var concernOptions = Utilities.CreateOptions(userData.Inventory.MissingFields().Append("Nothing Specific"), "What is your primary concern regarding a vehicle puchase?");
             return await stepContext.PromptAsync(nameof(ChoicePrompt), concernOptions, cancellationToken);
         }
 
         private async Task<DialogTurnResult> ValidatePrimaryConcernStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            if (stepContext.Result != null)
+            if (stepContext.Result is FoundChoice choice)
+            {
                 userData.Inventory.PrimaryConcern = Utilities.ReadChoiceWithManual(stepContext);
+                stepContext.Values[CurrentFieldName] = choice.Value;
+            }
 
             return await stepContext.NextAsync();
         }
 
 
 
-        private async Task<DialogTurnResult> ConcernGoalStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+
+
+
+
+
+
+
+        private async Task<DialogTurnResult> RemainingGoalsStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            if (userData.Inventory.SkipConcernGoal) return await stepContext.NextAsync(cancellationToken: cancellationToken);
+
+            //If we have a field from primary concern, skip asking this time arund.
+            if (stepContext.Values.ContainsKey(CurrentFieldName))
+                return await stepContext.NextAsync(cancellationToken: cancellationToken);
+
+            var missingFields = userData.Inventory.MissingFields();
+
+
+            //If we have no more remaining fields to fill skip the prompt
+            //Also skip if user ever narrows down to a single entry, automatically advance them
+            if (missingFields.Count == 0 || stepContext.Context.Activity.Text.EndsWith(" (1)"))
+            {
+                stepContext.Values[CurrentFieldName] = "Show Cars";
+                return await stepContext.NextAsync(cancellationToken: cancellationToken);
+            }
+
+            var remainingOptions = Utilities.CreateOptions(missingFields.Prepend("Show Cars"), "Do you want to see those cars right now, or would you like to add another filter?");
+            return await stepContext.PromptAsync(nameof(ChoicePrompt), remainingOptions, cancellationToken);
+        }
+
+        private async Task<DialogTurnResult> ValidateRemainingGoalsStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        {
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
+            if (stepContext.Result is FoundChoice choice)
+                stepContext.Values[CurrentFieldName] = choice.Value;
+
+            return await stepContext.NextAsync();
+        }
+
+
+        private async Task<DialogTurnResult> AdditionalOptions(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        {
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
+
+            if (!stepContext.Values.ContainsKey(CurrentFieldName))
+                return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
             PromptOptions goalOptions = null;
 
-            switch (userData.Inventory.PrimaryConcern)
+            switch (stepContext.Values[CurrentFieldName])
             {
-                case "Price":
-                    goalOptions = Utilities.CreateOptions(new string[] { "<$10k", "$10k-20k", "$20k-30k", "$30k-40k", "$40k+" }, "How much are you looking to spend?");
+                case "Max Price":
+                    goalOptions = Utilities.GroupedOptions(BuyerBridgeService.ListAvailablePriceMaxes(Services, BuildQuery(userData)),
+                        "What is your upper limit on a car?");
                     break;
-                case "Make":
-                    var makeOptions = BuyerBridgeService
-                        .ListAvailableMakes(Services, BuildQuery(userData))
-                        .OrderByDescending(mo => mo.Count)
-                        .Select(mo => $"{mo.Make} ({mo.Count})")
-                        .Take(10);
-
-                    goalOptions = Utilities.CreateOptions(makeOptions, "What make of car are you interested in?");
+                case "Price Range":
+                    goalOptions = Utilities.GroupedOptions(BuyerBridgeService.ListAvailablePriceRanges(Services, BuildQuery(userData)),
+                        "What price range are you looking at?");
+                    break;
+                case nameof(VehicleInventoryDetails.Make):
+                    goalOptions = Utilities.GroupedOptions(BuyerBridgeService.ListAvailableMakes(Services, BuildQuery(userData)),
+                        "What make are you in store for?");
+                    break;
+                case nameof(VehicleInventoryDetails.Model):
+                    goalOptions = Utilities.GroupedOptions(BuyerBridgeService.ListAvailableModels(Services, BuildQuery(userData)),
+                        $"What kind of {userData.Inventory.Make} are you looking for?");
+                    break;
+                case nameof(VehicleInventoryDetails.Color):
+                    goalOptions = Utilities.GroupedOptions(BuyerBridgeService.ListAvailableColors(Services, BuildQuery(userData)),
+                        "What is your color preference?");
                     break;
                 case "Nothing Specific":
                     goalOptions = Utilities.CreateOptions(new string[] { "Yes!", "Not Exactly..", "Just looking" }, "Do you know what kind of vehicle you want?");
+                    break;
+                case "Show Cars":
+                    //Bit of a hack here to jump forward in the waterfall to the display section.
+                    //Ideally the parameter setting is its own dialog, along with inventory display, for cleaner looping
+                    stepContext.ActiveDialog.State["stepIndex"] = (int)stepContext.ActiveDialog.State["stepIndex"] + 1;
+                    return await stepContext.NextAsync(cancellationToken: cancellationToken);
+                default:
+                    //?
                     break;
             }
 
@@ -287,26 +340,50 @@ namespace ADS.Bot1.Dialogs
             }
             else
             {
-                return await stepContext.PromptAsync(nameof(TextPrompt), new PromptOptions() {Prompt = MessageFactory.Text("How can we help with that concern?") }, cancellationToken);
+                return await stepContext.NextAsync(cancellationToken: cancellationToken);
             }
         }
-
-        private async Task<DialogTurnResult> ValidateConcernStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        private async Task<DialogTurnResult> ValidateAdditonalOptions(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            if (stepContext.Result != null)
-            {
-                userData.Inventory.ConcernGoal = Utilities.ReadChoiceWithManual(stepContext);
 
-                if(userData.Inventory.PrimaryConcern == "Make")
+            if(stepContext.Result is FoundChoice selectedOption)
+            {
+                //Handle the results coming back, this should really be regex or something more reliable...
+                var cleanAnswer = Utilities.CleanGroupedOption(selectedOption.Value);
+
+                switch (stepContext.Values[CurrentFieldName])
                 {
-                    //This is to turn "Make (Count)" into just "Make"
-                    userData.Inventory.ConcernGoal = userData.Inventory.ConcernGoal.Split(" (").First();
+                    case nameof(VehicleInventoryDetails.Make):
+                        userData.Inventory.Make = cleanAnswer;
+                        break;
+                    case nameof(VehicleInventoryDetails.Model):
+                        userData.Inventory.Model = cleanAnswer;
+                        break;
+                    case nameof(VehicleInventoryDetails.Color):
+                        userData.Inventory.Color = cleanAnswer;
+                        break;
+                    //Price is special case.
+                    case "Max Price":
+                    case "Price Range":
+                        userData.Inventory.ParsePrices(cleanAnswer);
+                        break;
                 }
             }
 
-            return await stepContext.NextAsync();
+            //If we've made it to this point, the user has supplied a parameter (repeat or not)
+            //This means we need to jump back and prompt them if they'd like to supply an additional parameter
+            //Also need to delete the key in the state data so we ask again
+            stepContext.ActiveDialog.State["stepIndex"] = (int)stepContext.ActiveDialog.State["stepIndex"] - 4;
+            stepContext.Values.Remove(CurrentFieldName);
+            return await stepContext.NextAsync(cancellationToken: cancellationToken);
         }
+
+
+
+
+
+
 
         private async Task<DialogTurnResult> ShowInventoryStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
@@ -320,34 +397,32 @@ namespace ADS.Bot1.Dialogs
                 var results = Services.CarStorage.ExecuteQuery<DB_Car>(carQuery).ToList();
                 var resultsCount = results.Count();
 
-                if (resultsCount >= 100)
-                {
-                    //100+
-                    await stepContext.Context.SendActivityAsync($"Great news {userData.FirstName}! I've actually got {resultsCount:n0} cars that match that {userData.Inventory.PrimaryConcern.ToLower()}!");
-                }
-                else if (resultsCount >= 10)
-                {
-                    //10-100
-                    await stepContext.Context.SendActivityAsync($"I was able to find {resultsCount:n0} cars for that {userData.Inventory.PrimaryConcern.ToLower()} {userData.FirstName}.");
-                }
-                else if (resultsCount >= 1)
-                {
-                    //1-10
-                    await stepContext.Context.SendActivityAsync($"I found {resultsCount:n0} cars that match that {userData.Inventory.PrimaryConcern.ToLower()}\r\nI know its not a lot, but we've got plenty of other vehilcles available!");
-                }
-
                 if (resultsCount > 0)
                 {
-                    var trimmedResults = results.Take(5);
+                    var trimmedResults = results.Take(15);
 
-                    await stepContext.Context.SendActivityAsync($"Here are the top {trimmedResults.Count()} cars I was able to find for you.");
+                    if(trimmedResults.Count() != resultsCount)
+                    {
+                        await stepContext.Context.SendActivityAsync($"Here are the top {trimmedResults.Count()} cars I was able to find for you.");
+                    }
+                    else
+                    {
+                        if(resultsCount == 1)
+                        {
+                            await stepContext.Context.SendActivityAsync($"This is the only car I've got matching all those options!");
+                        }
+                        else
+                        {
+                            await stepContext.Context.SendActivityAsync($"Take a look at these {resultsCount} cars and see what you think.");
+                        }
+                    }
+                    
 
 
                     var carAttachments = trimmedResults.Select((car_result) => {
                         var card = new HeroCard()
                         {
                             Title = $"{car_result.Display_Name}",
-                            Text = $"{car_result.Price:C2}",
                             Images = new List<CardImage>()
                             {
                                 new CardImage()
@@ -379,9 +454,14 @@ namespace ADS.Bot1.Dialogs
                             }
                         };
 
+                        if(car_result.Price > 0)
+                        {
+                            card.Text = $"{car_result.Price:C2}";
+                        }
+
                         if (car_result.Used)
                         {
-                            card.Subtitle = $"Used: {car_result.Mileage:D0} Miles";
+                            card.Subtitle = $"Used: {car_result.Mileage:N0} Miles. {car_result.Engine}, {car_result.Doors} Door";
                         }
                         else
                         {
@@ -389,12 +469,12 @@ namespace ADS.Bot1.Dialogs
                         }
 
                         return card.ToAttachment();
-                    });
+                    }).ToList();
 
                     var CARouselActivity = Utilities.CreateCarousel(carAttachments);
 
                     //Supply the options here so the prompt code can line up out postback values to our list of VINs
-                    var carOptions = Utilities.CreateOptions(trimmedResults.Select(c => c.VIN), CARouselActivity as Activity);
+                    var carOptions = Utilities.CreateOptions(trimmedResults.Select(c => c.VIN), CARouselActivity as Activity, Style: ListStyle.None);
                     return await stepContext.PromptAsync(InventoryChoice, carOptions, cancellationToken: cancellationToken);
                 }
                 else

@@ -227,7 +227,7 @@ namespace ADS_Sync
                 Doors = car.Doors,
                 Used = car.Used,
                 URL = car?.Dealer_Vehicle?.Data?.FirstOrDefault()?.Vdp_Url ?? "",
-                Image_URL = car?.Images?.Data?.FirstOrDefault()?.Original_Url ?? ""
+                Image_URL = car?.Images?.Data?.FirstOrDefault(i => i.Order == 0)?.Original_Url ?? ""
             };
         }
     }
