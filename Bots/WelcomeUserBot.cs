@@ -36,7 +36,7 @@ namespace ADS.Bot1.Bots
         private readonly DialogSet dialogs;
 
         // Initializes a new instance of the "WelcomeUserBot" class.
-        public WelcomeUserBot(IBotServices services)
+        public WelcomeUserBot(ADSBotServices services)
         {
             dialogs = new DialogSet(services.DialogStateAccessor);
             //dialogs.Add(FinanceDialog.Instance);

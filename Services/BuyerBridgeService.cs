@@ -16,7 +16,7 @@ namespace ADS.Bot.V1.Services
         }
 
         //TODO: Make this properly injected
-        public static List<(string Make, int Count)> ListAvailableMakes(IBotServices botServices, TableQuery<DB_Car> existingQuery)
+        public static List<(string Make, int Count)> ListAvailableMakes(ADSBotServices botServices, TableQuery<DB_Car> existingQuery)
         {
             var makeQuery = existingQuery ?? botServices.CarStorage.CreateQuery<DB_Car>();
             makeQuery.SelectColumns = new string[] { "Make" };

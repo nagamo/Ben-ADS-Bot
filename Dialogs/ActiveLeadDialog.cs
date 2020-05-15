@@ -27,7 +27,7 @@ namespace ADS.Bot.V1.Dialogs
     {
 
         List<ICardFactory> CardFactories = new List<ICardFactory>();
-        public IBotServices Services { get; }
+        public ADSBotServices Services { get; }
 
 
 
@@ -41,7 +41,7 @@ namespace ADS.Bot.V1.Dialogs
             ICardFactory<FinancingDetails> financeFactory,
             ICardFactory<TradeInDetails> tradeinFactory,
             ICardFactory<VehicleProfileDetails> vehicleFactory,
-            IBotServices botServices) 
+            ADSBotServices botServices) 
             : base(nameof(ActiveLeadDialog))
         {
             Services = botServices;

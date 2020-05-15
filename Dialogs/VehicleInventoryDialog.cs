@@ -19,12 +19,12 @@ namespace ADS.Bot1.Dialogs
 {
     public class VehicleInventoryDialog : ComponentDialog
     {
-        private IBotServices Services { get; }
+        private ADSBotServices Services { get; }
 
         const string InventoryChoice = "INVENTORY";
 
 
-        public VehicleInventoryDialog(IBotServices services)
+        public VehicleInventoryDialog(ADSBotServices services)
             : base(nameof(VehicleInventoryDialog))
         {
             // This array defines how the Waterfall will execute.
