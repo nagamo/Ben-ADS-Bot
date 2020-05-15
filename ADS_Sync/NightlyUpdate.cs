@@ -166,6 +166,7 @@ namespace ADS_Sync
         public string Make { get; set; }
         public string Model { get; set; }
         public string Year { get; set; }
+        public string Color { get; set; }
         public string Display_Name { get; set; }
         public string Stock_Number { get; set; }
         public int Price { get; set; }
@@ -180,12 +181,42 @@ namespace ADS_Sync
 
         public static CarDetails FromBuyerBridge(BB_Dealership dealer, BB_Car car)
         {
+            //Cleanup color entries a bit
+            string cleanColor = "Unknown";
+            if (!string.IsNullOrEmpty(car.Exterior_Color))
+            {
+                string[] colors = new string[]
+                {
+                "Black", "White", "Red", "Green", "Blue",
+                "Silver", "Gray", "Grey", "Brown", "Orange",
+                "Steel", "Platinum", "Tan"
+                };
+
+                var matchingColor = colors.FirstOrDefault(c => car.Exterior_Color.Contains(c, StringComparison.OrdinalIgnoreCase));
+                if (matchingColor != null)
+                {
+                    cleanColor = matchingColor;
+                }
+                else
+                {
+                    switch (car.Exterior_Color)
+                    {
+                        case null: break;
+                        case "Bl": cleanColor = "Black"; break;
+                        case "Wh": cleanColor = "White"; break;
+                        case "Gy": cleanColor = "Gray"; break;
+                        case "Tn": cleanColor = "Tan"; break;
+                    }
+                }
+            }
+
             return new CarDetails()
             {
                 PartitionKey = dealer.ID,
                 RowKey = car.VIN,
                 Make = car.Make_Name_Raw,
                 Model = car.Model_Name_Raw,
+                Color = cleanColor,
                 Year = car.Year,
                 Display_Name = car.Display_Name,
                 Stock_Number = car.Stock_Number,
@@ -196,7 +227,7 @@ namespace ADS_Sync
                 Doors = car.Doors,
                 Used = car.Used,
                 URL = car?.Dealer_Vehicle?.Data?.FirstOrDefault()?.Vdp_Url ?? "",
-                Image_URL = car?.Images?.Data?.FirstOrDefault()?.Original_Url ?? ""
+                Image_URL = car?.Images?.Data?.FirstOrDefault(i => i.Order == 0)?.Original_Url ?? ""
             };
         }
     }

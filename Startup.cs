@@ -76,7 +76,7 @@ namespace ADS.Bot1
 
             // Create the bot services (LUIS, QnA) as a singleton.
             services.AddSingleton<ZohoBotService>();
-            services.AddSingleton<IBotServices, Services>();
+            services.AddSingleton<ADSBotServices>();
 
             services.AddSingleton<ICardFactory<BasicDetails>, JSONProfileCardFactory>();
             services.AddSingleton<ICardFactory<FinancingDetails>, JSONFinanceCardFactory>();

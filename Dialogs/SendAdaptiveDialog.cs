@@ -16,10 +16,10 @@ namespace ADS.Bot1.Dialogs
 {
     public class SendAdaptiveDialog<TFactory, TModel> : ComponentDialog where TFactory : ICardFactory<TModel>
     {
-        public IBotServices Services { get; }
+        public ADSBotServices Services { get; }
         private ICardFactory<TModel> CardFactory { get; set; }
 
-        public SendAdaptiveDialog(TFactory modelFactory, IBotServices services)
+        public SendAdaptiveDialog(TFactory modelFactory, ADSBotServices services)
             : base(nameof(TFactory))
         {
             // This array defines how the Waterfall will execute.

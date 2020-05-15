@@ -27,11 +27,11 @@ namespace ADS.Bot.V1.Bots
         private DialogManager DialogManager;
         //Hey there!
 
-        public IBotServices Services { get; }
+        public ADSBotServices Services { get; }
         public UserState User { get; }
 
         // Initializes a new instance of the "WelcomeUserBot" class.
-        public BenBot(IBotServices services, ActiveLeadDialog dialog, UserState user)
+        public BenBot(ADSBotServices services, ActiveLeadDialog dialog, UserState user)
         {
             Services = services;
             User = user;

@@ -12,9 +12,9 @@ namespace ADS.Bot.V1.Cards
 {
     public class JSONProfileCardFactory : JSONCardFactory<BasicDetails>
     {
-        public IBotServices Services { get; }
+        public ADSBotServices Services { get; }
 
-        public JSONProfileCardFactory(IBotServices services)
+        public JSONProfileCardFactory(ADSBotServices services)
             : base(nameof(JSONProfileCardFactory), Path.Combine(".", "Cards", "json", "profile-card.json"))
         {
             Services = services;

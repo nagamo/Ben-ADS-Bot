@@ -102,7 +102,7 @@ namespace ADS.Bot.V1.Services
                 $"Year: {tradein.Year}",
                 $"Mileage: {tradein.Mileage}",
                 $"Condition: {tradein.Condition}",
-                $"Amount Owed: {tradein.AmountOwed}",
+                $"Amount Owed: {tradein.AmountOwed:C2}",
             });
 
             note.Title = $"Trade-In Details {DateTime.Now:g}";
@@ -116,10 +116,20 @@ namespace ADS.Bot.V1.Services
         }
         private void PopulateInventoryNote(VehicleInventoryDetails inventory, ZCRMNote note)
         {
+            List<string> lines = new List<string>();
+
+            lines.Add($"Primary Concern: {inventory.PrimaryConcern}");
+            lines.Add($"Looking for");
+            lines.Add($"Make: {inventory.Make}");
+            lines.Add($"Model: {inventory.Model}");
+            lines.Add($"Color: {inventory.Color}");
+            lines.Add($"Min Price: {inventory.MinPrice:C2}");
+            lines.Add($"Max Price: {inventory.MaxPrice:C2}");
+
             string details = string.Join(Environment.NewLine, new string[]
             {
-                $"Primary Concern: {inventory.PrimaryConcern}",
-                $"Goal: {inventory.ConcernGoal}"
+                
+                $"Goal: {inventory.Make}"
             });
 
             note.Title = $"Inventory Inquiry {DateTime.Now:g}";

@@ -27,7 +27,7 @@ namespace ADS.Bot.V1.Dialogs
     {
 
         List<ICardFactory> CardFactories = new List<ICardFactory>();
-        public IBotServices Services { get; }
+        public ADSBotServices Services { get; }
 
 
 
@@ -41,7 +41,7 @@ namespace ADS.Bot.V1.Dialogs
             ICardFactory<FinancingDetails> financeFactory,
             ICardFactory<TradeInDetails> tradeinFactory,
             ICardFactory<VehicleProfileDetails> vehicleFactory,
-            IBotServices botServices) 
+            ADSBotServices botServices) 
             : base(nameof(ActiveLeadDialog))
         {
             Services = botServices;
@@ -363,7 +363,7 @@ namespace ADS.Bot.V1.Dialogs
         public async Task<DialogTurnResult> ProcessDefaultResponse(DialogContext context, object data, bool isBusy)
         {
             //Get Top QnA result
-            var results = await Services.LeadQualQnA.GetAnswersAsync(context.Context);
+            var results = await Services.LeadQualQnA.GetAnswersAsync(context.Context, Services.QnAOptions);
             var topResult = results.FirstOrDefault();
 
 

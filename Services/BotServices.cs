@@ -21,9 +21,9 @@ using ZCRMSDK.OAuth.Client;
 
 namespace ADS.Bot1
 {
-    public class Services : IBotServices
+    public class ADSBotServices
     {
-        public Services(IConfiguration configuration, ConversationState conversationState, UserState userState, ZohoBotService zohoService, CloudTableClient dataStorage)
+        public ADSBotServices(IConfiguration configuration, ConversationState conversationState, UserState userState, ZohoBotService zohoService, CloudTableClient dataStorage)
         {
             ConversationState = conversationState;
             Configuration = configuration;
@@ -36,12 +36,18 @@ namespace ADS.Bot1
             //Used by micrsoft dialog classes
             GenericUserProfileAccessor = UserState.CreateProperty<Dictionary<string, object>>(nameof(UserProfile));
 
-            LeadQualQnA = new QnAMaker(new QnAMakerEndpoint
-            {
-                KnowledgeBaseId = configuration["qna:QnAKnowledgebaseId"],
-                EndpointKey = configuration["qna:QnAEndpointKey"],
-                Host = configuration["qna:QnAEndpointHostName"]
-            });
+            QnAOptions = new QnAMakerOptions();
+
+            LeadQualQnA = new QnAMaker(
+                new QnAMakerEndpoint
+                {
+                    KnowledgeBaseId = configuration["qna:QnAKnowledgebaseId"],
+                    EndpointKey = configuration["qna:QnAEndpointKey"],
+                    Host = configuration["qna:QnAEndpointHostName"]
+                }, QnAOptions);
+
+            //Apparently the constructor overrides the properties with defaults?
+            QnAOptions.ScoreThreshold = 0;
 
             var luisApplication = new LuisApplication(
                 configuration["luis:id"],
@@ -62,6 +68,7 @@ namespace ADS.Bot1
 
         }
 
+        public QnAMakerOptions QnAOptions { get; private set; }
         public QnAMaker LeadQualQnA { get; private set; }
 
         public IStatePropertyAccessor<Dictionary<string, object>> GenericUserProfileAccessor { get; private set; }
@@ -90,18 +97,21 @@ namespace ADS.Bot1
         private ConversationState ConversationState { get; set; }
         private UserState UserState { get; set; }
 
-        public async Task<UserProfile> GetUserProfileAsync(ITurnContext turnContext, CancellationToken cancellationToken)
+        public async Task<UserProfile> GetUserProfileAsync(ITurnContext turnContext
+            , CancellationToken cancellationToken = default)
         {
             return await UserProfileAccessor.GetAsync(turnContext, () => new UserProfile(), cancellationToken);
         }
 
-        public async Task SaveUserProfileAsync(UserProfile profile, ITurnContext turnContext, CancellationToken cancellationToken)
+        public async Task SaveUserProfileAsync(UserProfile profile, ITurnContext turnContext
+            , CancellationToken cancellationToken = default)
         {
             //Update accessors with latest version
             await UserState.SaveChangesAsync(turnContext, cancellationToken: cancellationToken);
         }
 
-        public async Task SetUserProfileAsync(UserProfile profile, DialogContext dialogContext, CancellationToken cancellationToken)
+        public async Task SetUserProfileAsync(UserProfile profile, DialogContext dialogContext
+            , CancellationToken cancellationToken = default)
         {
             //Also update the dialog contexts state
             await UserProfileAccessor.SetAsync(dialogContext.Context, profile, cancellationToken);

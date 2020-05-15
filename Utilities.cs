@@ -18,12 +18,12 @@ namespace ADS.Bot.V1
     public class Utilities
     {
 
-        public static PromptOptions CreateOptions(IEnumerable<string> Options, string PromptText, string RetryText = null)
+        public static PromptOptions CreateOptions(IEnumerable<string> Options, string PromptText, string RetryText = null, ListStyle Style = ListStyle.SuggestedAction)
         {
-            return CreateOptions(Options.ToArray(), MessageFactory.Text(PromptText), MessageFactory.Text(RetryText));
+            return CreateOptions(Options.ToArray(), MessageFactory.Text(PromptText), MessageFactory.Text(RetryText), Style);
         }
 
-        public static PromptOptions CreateOptions(IEnumerable<string> Options, Activity Prompt, Activity Retry = null)
+        public static PromptOptions CreateOptions(IEnumerable<string> Options, Activity Prompt, Activity Retry = null, ListStyle Style = ListStyle.SuggestedAction)
         {
             var promptOpts = new PromptOptions();
 
@@ -34,8 +34,20 @@ namespace ADS.Bot.V1
 
             promptOpts.Prompt = Prompt;
             promptOpts.RetryPrompt = Retry;
+            promptOpts.Style = Style;
 
             return promptOpts;
+        }
+
+        public static PromptOptions GroupedOptions(IEnumerable<(string,int)> Groups, string PromptText, string RetryText = null)
+        {
+            var makeOptions = Groups.Select(mo => $"{mo.Item1} ({mo.Item2})").Take(10);
+            return CreateOptions(makeOptions, PromptText, RetryText);
+        }
+
+        public static string CleanGroupedOption(string GroupText)
+        {
+            return GroupText.Split(" (", 2).First();
         }
 
         public static string ReadChoiceWithManual(WaterfallStepContext stepContext)

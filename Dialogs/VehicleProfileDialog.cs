@@ -15,9 +15,9 @@ namespace ADS.Bot.V1.Dialogs
     {
         private IStatePropertyAccessor<UserProfile> _userProfileAccessor;
 
-        public IBotServices Services { get; }
+        public ADSBotServices Services { get; }
 
-        public VehicleProfileDialog(UserState userState, IBotServices services)
+        public VehicleProfileDialog(UserState userState, ADSBotServices services)
             : base(nameof(VehicleProfileDialog))
         {
             _userProfileAccessor = userState.CreateProperty<UserProfile>(nameof(UserProfile));
