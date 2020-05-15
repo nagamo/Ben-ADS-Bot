@@ -126,6 +126,7 @@ namespace ADS_Sync
             public string Make_Name_Raw { get; set; }
             public string Model_Name_Raw { get; set; }
             public string Year { get; set; }
+            public string Exterior_Color { get; set; }
             public bool Used { get; set; }
 
             public BB_DealerRecords Dealer_Vehicle { get; set; }
