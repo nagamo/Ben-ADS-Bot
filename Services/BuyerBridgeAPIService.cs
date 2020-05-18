@@ -51,7 +51,8 @@ namespace ADS.Bot.V1.Services
             if(response.StatusCode == HttpStatusCode.OK)
             {
                 //hooray!
-
+                var newID = response.Data.Value<string>("id");
+                profile.BB_CRM_ID = newID;
             }
             else
             {
