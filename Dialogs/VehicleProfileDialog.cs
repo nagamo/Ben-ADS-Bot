@@ -1,4 +1,5 @@
 ﻿using ADS.Bot.V1.Models;
+using ADS.Bot.V1.Services;
 using ADS.Bot1;
 using ADS.Bot1.Dialogs;
 using Microsoft.Bot.Builder;
@@ -297,9 +298,9 @@ namespace ADS.Bot.V1.Dialogs
                 $"Thanks {userData.Name}!"
             };
 
-            if (Services.Zoho.Connected)
+            if (Services.CRM.IsActive)
             {
-                Services.Zoho.WriteVehicleProfileNote(userData);
+                Services.CRM.WriteCRMDetails(CRMStage.VehicleProfileCompleted, userData);
             }
             else
             {

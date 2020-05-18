@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ADS.Bot.V1;
 using ADS.Bot.V1.Models;
+using ADS.Bot.V1.Services;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Dialogs.Choices;
@@ -64,7 +65,10 @@ namespace ADS.Bot1.Dialogs
             
             if(userData.Details == null)
             {
-                userData.Details = new BasicDetails();
+                userData.Details = new BasicDetails()
+                {
+                    UniqueID = stepContext.Context.Activity.From.Id
+                };
             }
 
             if (!string.IsNullOrWhiteSpace(stepContext.Context.Activity.From.Name))
@@ -116,7 +120,7 @@ namespace ADS.Bot1.Dialogs
 
         private async Task<bool> ValidateNameAsync(PromptValidatorContext<string> promptContext, CancellationToken cancellationToken)
         {
-            var nameMatch = Regex.Match(promptContext.Context.Activity.Text, Services.Configuration["name_regex"]);
+            var nameMatch = Regex.Match(promptContext.Context.Activity.Text, Services.Configuration["ads:name_regex"]);
 
             return nameMatch.Success;
         }
@@ -262,9 +266,9 @@ namespace ADS.Bot1.Dialogs
             //Save it back to our storage
             await Services.SetUserProfileAsync(userData, stepContext, cancellationToken);
 
-            if (Services.Zoho.Connected)
+            if (Services.CRM.IsActive)
             {
-                Services.Zoho.CreateUpdateLead(userData);
+                Services.CRM.WriteCRMDetails(CRMStage.BasicDetails, userData);
             }
 
             await stepContext.Context.SendActivityAsync($"You're the cat's pyjamas, {userData.Details.Name}!");

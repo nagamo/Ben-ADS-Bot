@@ -8,8 +8,6 @@ namespace ADS.Bot.V1.Models
 {
     public class DB_Car : TableEntity
     {
-        public string VIN => RowKey;
-
         public string Make { get; set; }
         public string Model { get; set; }
         public string Year { get; set; }
@@ -25,5 +23,12 @@ namespace ADS.Bot.V1.Models
         
         public string URL { get; set; }
         public string Image_URL { get; set; }
+
+        //This done as a function because TableQuery will not handle it properly
+        //if it's just an alias around RowKey property
+        public string VIN()
+        {
+            return RowKey;
+        }
     }
 }

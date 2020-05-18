@@ -14,7 +14,7 @@ using ZCRMSDK.OAuth.Client;
 
 namespace ADS.Bot.V1.Services
 {
-    public class ZohoBotService
+    public class ZohoAPIService
     {
         public bool Connected { get; private set; } = false;
 
@@ -23,7 +23,7 @@ namespace ADS.Bot.V1.Services
         private ZCRMModule LeadsModule { get; set; }
         public IConfiguration Configuration { get; }
 
-        public ZohoBotService(IConfiguration configuration)
+        public ZohoAPIService(IConfiguration configuration)
         {
             try
             {
