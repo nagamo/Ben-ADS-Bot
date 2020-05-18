@@ -414,10 +414,11 @@ namespace ADS.Bot.V1.Dialogs
                         Console.WriteLine($"Rejected low-confidence response to text '{context.Context.Activity.Text}' - [{topResult.Score}] {topResult.Source}:'{topResult.Answer}'");
                     }
 
-                    await context.Context.SendActivityAsync(MessageFactory.Text("I'm not quite sure what you meant..."));
-                    return new DialogTurnResult(DialogTurnStatus.Waiting);
                 }
             }
+
+            await context.Context.SendActivityAsync(MessageFactory.Text("I'm not quite sure what you meant..."));
+            return new DialogTurnResult(DialogTurnStatus.Waiting);
         }
 
         public async Task<DialogTurnResult> Test(DialogContext context, object something)

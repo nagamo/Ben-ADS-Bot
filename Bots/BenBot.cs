@@ -61,8 +61,12 @@ namespace ADS.Bot.V1.Bots
                             userProfile.Details = new Models.BasicDetails()
                             {
                                 Name = turnContext.Activity.From.Name,
-                                UniqueID = turnContext.Activity.From.Id
+                                UniqueID = turnContext.Activity.From.Id,
+#if DEBUG
+                                DealerID = Services.Configuration.GetValue<string>("bb:test_dealer")
+#endif
                             };
+
                             newGreeting = true;
                         }
                     }

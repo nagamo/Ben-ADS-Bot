@@ -46,21 +46,25 @@ namespace ADS.Bot.V1.Services
                 case CRMStage.New:
                     break;
                 case CRMStage.BasicDetails:
-                    ZohoService.CreateUpdateLead(profile);
+                    //ZohoService.CreateUpdateLead(profile);
                     break;
                 case CRMStage.FinancingCompleted:
+                    BBService.CreateUpdateLead(profile);
                     ZohoService.CreateUpdateLead(profile);
                     ZohoService.WriteFinancingNote(profile);
                     break;
                 case CRMStage.VehicleProfileCompleted:
+                    BBService.CreateUpdateLead(profile);
                     ZohoService.CreateUpdateLead(profile);
                     ZohoService.WriteVehicleProfileNote(profile);
                     break;
                 case CRMStage.ValueTradeInCompleted:
+                    BBService.CreateUpdateLead(profile);
                     ZohoService.CreateUpdateLead(profile);
                     ZohoService.WriteTradeInNote(profile);
                     break;
                 case CRMStage.VehicleInventoryCompleted:
+                    BBService.CreateUpdateLead(profile);
                     ZohoService.CreateUpdateLead(profile);
                     ZohoService.WriteInventoryNote(profile);
                     break;
