@@ -96,7 +96,7 @@ namespace ADS.Bot.V1.Bots
                 }
             }
 
-            if(bool.TryParse(Services.Configuration["debug_messages"], out var debug_msg) && debug_msg)
+            if(bool.TryParse(Services.Configuration["ads:debug_messages"], out var debug_msg) && debug_msg)
             {
                 await turnContext.SendActivityAsync(JsonConvert.SerializeObject(turnContext.Activity));
             }
@@ -106,7 +106,7 @@ namespace ADS.Bot.V1.Bots
 
         protected override async Task OnEventActivityAsync(ITurnContext<IEventActivity> turnContext, CancellationToken cancellationToken)
         {
-            if (bool.TryParse(Services.Configuration["debug_messages"], out var debug_msg) && debug_msg)
+            if (bool.TryParse(Services.Configuration["ads:debug_messages"], out var debug_msg) && debug_msg)
             {
                 await turnContext.SendActivityAsync(JsonConvert.SerializeObject(turnContext.Activity));
             }
@@ -115,7 +115,7 @@ namespace ADS.Bot.V1.Bots
         // This is the primary message handler
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {
-            if (bool.TryParse(Services.Configuration["debug_messages"], out var debug_msg) && debug_msg)
+            if (bool.TryParse(Services.Configuration["ads:debug_messages"], out var debug_msg) && debug_msg)
             {
                 await turnContext.SendActivityAsync(JsonConvert.SerializeObject(turnContext.Activity));
             }
