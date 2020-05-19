@@ -81,7 +81,11 @@ namespace ADS.Bot1.Dialogs
                 {
                     case "By Price":
 
-                        if (UserData.SimpleInventory.ConcernGoal == "Any Payment")
+                        if (UserData.SimpleInventory.ConcernGoal == "Any Price")
+                        {
+                            //TODO: Something
+                        }
+                        else
                         {
                             var priceRange = Utilities.ParsePrices(UserData.SimpleInventory.ConcernGoal);
 
@@ -103,20 +107,16 @@ namespace ADS.Bot1.Dialogs
                                 carQuery = null;
                             }
                         }
-                        else
-                        {
-                            carQuery = null;
-                        }
                         break;
                     case "By Payment":
                         if(UserData.SimpleInventory.ConcernGoal == "Any Payment")
                         {
-                            var payment = Utilities.ParsePrices(UserData.SimpleInventory.ConcernGoal);
-                            carQuery = carQuery.Where(c => c.Price <= Utilities.CalculatePayment(payment.MinPrice.Value));
+                            //TODO: Something
                         }
                         else
                         {
-                            carQuery = null;
+                            var payment = Utilities.ParsePrices(UserData.SimpleInventory.ConcernGoal);
+                            carQuery = carQuery.Where(c => c.Price <= Utilities.CalculatePayment(payment.MaxPrice.Value));
                         }
                         break;
                     case "By Vehicle Type":
@@ -205,7 +205,7 @@ namespace ADS.Bot1.Dialogs
             if (userData.SimpleInventory.SkipPrimaryConcern) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
 
-            var concernOptions = Utilities.CreateOptions(new string[] { "By Price", "By Payment", "By Vehicly Type" }, "How would you like to shop?");
+            var concernOptions = Utilities.CreateOptions(new string[] { "By Price", "By Payment", "By Vehicle Type" }, "How would you like to shop?");
             return await stepContext.PromptAsync(nameof(ChoicePrompt), concernOptions, cancellationToken);
         }
 
@@ -366,10 +366,23 @@ namespace ADS.Bot1.Dialogs
 
                 if (resultsCount > 0)
                 {
-                    var trimmedResults = results.Take(5);
+                    var trimmedResults = results.Take(25);
 
-                    await stepContext.Context.SendActivityAsync($"Here are the top {trimmedResults.Count()} cars I was able to find for you.");
-
+                    if (trimmedResults.Count() != resultsCount)
+                    {
+                        await stepContext.Context.SendActivityAsync($"Here are the top {trimmedResults.Count()} cars I was able to find for you.");
+                    }
+                    else
+                    {
+                        if (resultsCount == 1)
+                        {
+                            await stepContext.Context.SendActivityAsync($"This is the only car I've got matching all those options!");
+                        }
+                        else
+                        {
+                            await stepContext.Context.SendActivityAsync($"Take a look at these {resultsCount} cars and see what you think.");
+                        }
+                    }
 
                     var carAttachments = trimmedResults.Select((car_result) => {
                         var card = new HeroCard()
@@ -392,17 +405,16 @@ namespace ADS.Bot1.Dialogs
                             {
                                 new CardAction()
                                 {
-                                    Type = ActionTypes.OpenUrl,
-                                    Title = "See Details Online",
-                                    Value = car_result.URL
+                                    Type = ActionTypes.PostBack,
+                                    Title = "This is it!",
+                                    Text = $"I like #{car_result.VIN()}",
+                                    Value = car_result.VIN()
                                 },
                                 new CardAction()
                                 {
-                                    Type = ActionTypes.PostBack,
-                                    Title = "I like this one!",
-                                    DisplayText = $"I like #{car_result.VIN()}",
-                                    Text = $"I like #{car_result.VIN()}",
-                                    Value = car_result.VIN()
+                                    Type = ActionTypes.OpenUrl,
+                                    Title = "Take me to the website",
+                                    Value = car_result.URL
                                 }
                             }
                         };
@@ -419,10 +431,23 @@ namespace ADS.Bot1.Dialogs
                         return card.ToAttachment();
                     });
 
+                    //Append a final card just in case
+                    carAttachments = carAttachments.Append(new HeroCard()
+                    {
+                        Buttons = new List<CardAction>()
+                        {
+                            new CardAction(){
+                                Type = ActionTypes.PostBack,
+                                Title = "I don’t see it!",
+                                Value = "I don’t see it!"
+                            }
+                        }
+                    }.ToAttachment());
+
                     var CARouselActivity = Utilities.CreateCarousel(carAttachments);
 
-                    //Supply the options here so the prompt code can line up out postback values to our list of VINs
-                    var carOptions = Utilities.CreateOptions(trimmedResults.Select(c => c.VIN()), CARouselActivity as Activity);
+                    var availableOptions = trimmedResults.Select(c => c.VIN()).Append("I don't see it!");
+                    var carOptions = Utilities.CreateOptions(availableOptions, CARouselActivity as Activity, Style: ListStyle.None);
                     return await stepContext.PromptAsync(InventoryChoice, carOptions, cancellationToken: cancellationToken);
                 }
                 else
@@ -446,13 +471,19 @@ namespace ADS.Bot1.Dialogs
 
             if (stepContext.Result is FoundChoice vinChoice)
             {
-                var vehicle = DataService.GetCar(vinChoice.Value);
-
-                if (vehicle != null)
+                if(vinChoice.Value == "I don’t see it!")
                 {
-                    await stepContext.Context.SendActivityAsync($"I'm a {vehicle.Make} guy myself, good choice! I've marked down your interest for the VIN {vehicle.VIN()}.");
-                }
 
+                }
+                else
+                {
+                    var vehicle = DataService.GetCar(vinChoice.Value);
+
+                    if (vehicle != null)
+                    {
+                        await stepContext.Context.SendActivityAsync($"I'm a {vehicle.Make} guy myself, good choice! I've marked down your interest for the VIN {vehicle.VIN()}.");
+                    }
+                }
             }
             else
             {

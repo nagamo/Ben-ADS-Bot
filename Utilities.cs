@@ -77,6 +77,7 @@ namespace ADS.Bot.V1
                 var thousands = priceFilter.Value.Contains("k", StringComparison.OrdinalIgnoreCase);
                 if (Input.Contains("<")) { MaxPrice = int.Parse(priceFilter.Groups[2].Value) * (thousands ? 1000 : 1); }
                 else if (Input.Contains("+")) { MinPrice = int.Parse(priceFilter.Groups[2].Value) * (thousands ? 1000 : 1); }
+                else { MaxPrice = int.Parse(priceFilter.Groups[2].Value) * (thousands ? 1000 : 1); }
             }
             else if (enteredPrices.Count >= 2)
             {

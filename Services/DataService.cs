@@ -154,13 +154,19 @@ namespace ADS.Bot.V1.Services
 
         public IEnumerable<(string Payment, int Count)> ListAvailablePayments(TableQuery<DB_Car> existingQuery)
         {
-            return ListCarsGrouped("Price", c =>
+            var paymentGroups = ListCarsGrouped("Price", c =>
             {
                 if (c.Price <= Utilities.CalculatePayment(250)) return "$250";
                 else if (c.Price <= Utilities.CalculatePayment(400)) return "$400";
                 else if (c.Price <= Utilities.CalculatePayment(600)) return "$600";
                 return null; //These get ignored, the parent adds a show all option
-            }, existingQuery);
+            }, existingQuery).ToDictionary(g => g.Group);
+
+            int runningCount = 0;
+
+            if (paymentGroups.ContainsKey("$250")) { runningCount += paymentGroups["$250"].Count; yield return ("$250", runningCount); }
+            if (paymentGroups.ContainsKey("$400")) { runningCount += paymentGroups["$400"].Count; yield return ("$400", runningCount); }
+            if (paymentGroups.ContainsKey("$600")) { runningCount += paymentGroups["$600"].Count; yield return ("$600", runningCount); }
         }
     }
 }
