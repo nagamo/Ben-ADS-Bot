@@ -18,9 +18,9 @@ namespace ADS.Bot.V1.Services
         {
             Configuration = configuration;
             StorageClient = dataStorage;
-
-
         }
+
+
         private CloudTable CarStorage
         {
             get { return StorageClient.GetTableReference("Cars"); }
@@ -30,17 +30,25 @@ namespace ADS.Bot.V1.Services
             get { return StorageClient.GetTableReference("Dealerships"); }
         }
 
-        /*
+
+
         public TableQuery<DB_Dealer> CreateDealerQuery()
         {
-            return BotServices.DealerStorage.CreateQuery<DB_Dealer>();
+            return DealerStorage.CreateQuery<DB_Dealer>();
         }
-        */
-
+        
         public TableQuery<DB_Car> CreateCarQuery()
         {
             return CarStorage.CreateQuery<DB_Car>();
         }
+
+
+        public DB_Dealer GetDealerByFacebookPageID(string FacebookPageID)
+        {
+            var findQuery = CreateDealerQuery().Where(d => d.FB_PageIDs.Contains(FacebookPageID));
+            return DealerStorage.ExecuteQuery(findQuery as TableQuery<DB_Dealer>).FirstOrDefault();
+        }
+
 
         public DB_Car GetCar(string VIN)
         {
@@ -71,6 +79,7 @@ namespace ADS.Bot.V1.Services
 
             return groupedCars
                 .GroupBy(GroupFunc)
+                .Where(g => g.Key != null)
                 .Select(group => (Group: group.Key, Count: group.Count()))
                 .ToList();
         }
@@ -85,6 +94,11 @@ namespace ADS.Bot.V1.Services
             yield return ("Doesn't Matter", newUsed["New"].Count + newUsed["Used"].Count);
             yield return ("New", newUsed["New"].Count);
             yield return ("Used", newUsed["Used"].Count);
+        }
+        public IEnumerable<(string BodyType, int Count)> ListAvailableBodyTypes(TableQuery<DB_Car> existingQuery)
+        {
+            return ListCarsGrouped("Body", c => c.Body, existingQuery)
+                .OrderByDescending(group => group.Count);
         }
         public IEnumerable<(string Make, int Count)> ListAvailableMakes(TableQuery<DB_Car> existingQuery)
         {

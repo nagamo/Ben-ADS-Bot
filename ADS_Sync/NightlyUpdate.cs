@@ -38,7 +38,7 @@ namespace ADS_Sync
             var liveDealers = bbAPI.ListDealerships();
             log.LogInformation($"Got {liveDealers.Count()} Dealers from API");
 
-            var dealerRecords = liveDealers.Select(d => DealerDetails.FromBuyerBridge(d));
+            var dealerRecords = liveDealers.Select(d => DealerFromBB(d));
             var dealerSync = SyncTable<DealerDetails>(dealerRecords, Dealerships).ToList();
 
             foreach(var dealer in liveDealers)
@@ -65,7 +65,7 @@ namespace ADS_Sync
                 log.LogInformation($"Merging {apiCars.Count()} cars for dealer");
                 if(apiCars.Count() > 0)
                 {
-                    var carRecords = apiCars.Select(car => CarDetails.FromBuyerBridge(dealer, car));
+                    var carRecords = apiCars.Select(car => CarFromBB(dealer, car));
                     var carResults = SyncTable(carRecords, Cars).ToList();
                 }
 
@@ -122,25 +122,13 @@ namespace ADS_Sync
                 .AddEnvironmentVariables() // <- This is what actually gets you the application settings in Azure
                 .Build();
         }
-    }
 
-    public class DealerDetails : TableEntity
-    {
-        //ParitionKey is Empty
-        //RowKey is ID
-        public string Agency_ID { get; set; }
-        public string Name { get; set; }
-        public string Site_Provider_ID { get; set; }
-        public string Site_Provider { get; set; }
-        public string Address { get; set; }
-        public string City { get; set; }
-        public string State { get; set; }
-        public string Zip { get; set; }
-        public string Phone { get; set; }
-        public string Country_Code { get; set; }
-
-        public static DealerDetails FromBuyerBridge(BB_Dealership dealer)
+        private static DealerDetails DealerFromBB(BB_Dealership dealer)
         {
+            var pageIDs = "";
+            if (dealer.FBAnnotations?.Data != null)
+                pageIDs = string.Join("|", dealer.FBAnnotations.Data.Select(a => a.FBPageID));
+
             return new DealerDetails()
             {
                 PartitionKey = "",
@@ -154,32 +142,12 @@ namespace ADS_Sync
                 State = dealer.State,
                 Zip = dealer.Zip,
                 Phone = dealer.Phone,
-                Country_Code = dealer.Country_Code
+                Country_Code = dealer.Country_Code,
+                FB_PageIDs = pageIDs
             };
         }
-    }
 
-    public class CarDetails : TableEntity
-    {
-        //ParitionKey is DealerID
-        //RowKey is VIN
-        public string Make { get; set; }
-        public string Model { get; set; }
-        public string Year { get; set; }
-        public string Color { get; set; }
-        public string Display_Name { get; set; }
-        public string Stock_Number { get; set; }
-        public int Price { get; set; }
-        public int Mileage { get; set; }
-        public string Engine { get; set; }
-        public string Transmission { get; set; }
-        public string Doors { get; set; }
-        public bool Used { get; set; }
-
-        public string URL { get; set; }
-        public string Image_URL { get; set; }
-
-        public static CarDetails FromBuyerBridge(BB_Dealership dealer, BB_Car car)
+        private static CarDetails CarFromBB(BB_Dealership dealer, BB_Car car)
         {
             //Cleanup color entries a bit
             string cleanColor = "Unknown";
@@ -210,6 +178,8 @@ namespace ADS_Sync
                 }
             }
 
+            //TODO: Cleanup features here?
+
             return new CarDetails()
             {
                 PartitionKey = dealer.ID,
@@ -217,7 +187,9 @@ namespace ADS_Sync
                 Make = car.Make_Name_Raw,
                 Model = car.Model_Name_Raw,
                 Color = cleanColor,
+                Color_Raw = car.Exterior_Color,
                 Year = car.Year,
+                Body = car.Body_Name,
                 Display_Name = car.Display_Name,
                 Stock_Number = car.Stock_Number,
                 Price = car.Price ?? 0,
@@ -227,8 +199,11 @@ namespace ADS_Sync
                 Doors = car.Doors,
                 Used = car.Used,
                 URL = car?.Dealer_Vehicle?.Data?.FirstOrDefault()?.Vdp_Url ?? "",
-                Image_URL = car?.Images?.Data?.FirstOrDefault(i => i.Order == 0)?.Original_Url ?? ""
+                Image_URL = car?.Images?.Data?.FirstOrDefault(i => i.Order == 0)?.Original_Url ?? "",
+                Description = car.Description,
+                Features = car.Features
             };
         }
     }
+
 }
