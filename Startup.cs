@@ -23,6 +23,7 @@ using Microsoft.Azure.Cosmos.Table;
 using System;
 using System.Linq;
 using Microsoft.Extensions.Logging;
+using ADS.Bot.V1;
 
 namespace ADS.Bot1
 {
@@ -32,6 +33,8 @@ namespace ADS.Bot1
 
         public Startup(IConfiguration configuration)
         {
+            var test = Utilities.CalculatePayment(600);
+
             Configuration = configuration;
         }
 
@@ -93,7 +96,8 @@ namespace ADS.Bot1
             services.AddSingleton<VehicleProfileDialog>();
             services.AddSingleton<ValueTradeInDialog>();
             services.AddSingleton<FinanceDialog>();
-            services.AddSingleton<VehicleInventoryDialog>();
+            services.AddSingleton<SimpleInventoryDialog>();
+            //services.AddSingleton<VehicleInventoryDialog>();
 
             services.AddSingleton<ActiveLeadDialog>();
 

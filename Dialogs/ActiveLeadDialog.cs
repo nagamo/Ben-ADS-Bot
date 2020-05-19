@@ -36,7 +36,7 @@ namespace ADS.Bot.V1.Dialogs
             FinanceDialog financeDialog,
             VehicleProfileDialog vehicleProfileDialog,
             ValueTradeInDialog valueTradeInDialog,
-            VehicleInventoryDialog inventoryDialog,
+            SimpleInventoryDialog inventoryDialog,
             ICardFactory<BasicDetails> profileFactory,
             ICardFactory<FinancingDetails> financeFactory,
             ICardFactory<TradeInDetails> tradeinFactory,
@@ -163,35 +163,35 @@ namespace ADS.Bot.V1.Dialogs
                                     {
                                         Actions = new List<Dialog>()
                                         {
-                                            new BeginDialog(nameof(UserProfileDialog))
+                                            new BeginDialog(userProfileDialog.Id)
                                         }
                                     },
                                     new Case("financing")
                                     {
                                         Actions = new List<Dialog>()
                                         {
-                                            new BeginDialog(nameof(FinanceDialog))
+                                            new BeginDialog(financeDialog.Id)
                                         }
                                     },
                                     new Case("vehicle")
                                     {
                                         Actions = new List<Dialog>()
                                         {
-                                            new BeginDialog(nameof(VehicleProfileDialog))
+                                            new BeginDialog(vehicleProfileDialog.Id)
                                         }
                                     },
                                     new Case("tradein")
                                     {
                                         Actions = new List<Dialog>()
                                         {
-                                            new BeginDialog(nameof(ValueTradeInDialog))
+                                            new BeginDialog(valueTradeInDialog.Id)
                                         }
                                     },
                                     new Case("inventory")
                                     {
                                         Actions = new List<Dialog>()
                                         {
-                                            new BeginDialog(nameof(VehicleInventoryDialog))
+                                            new BeginDialog(inventoryDialog.Id)
                                         }
                                     },
                                 },

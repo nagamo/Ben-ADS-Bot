@@ -36,7 +36,7 @@ namespace ADS.Bot.V1.Services
         {
             return DealerStorage.CreateQuery<DB_Dealer>();
         }
-        
+
         public TableQuery<DB_Car> CreateCarQuery()
         {
             return CarStorage.CreateQuery<DB_Car>();
@@ -67,7 +67,7 @@ namespace ADS.Bot.V1.Services
         {
             var query = existingQuery ?? CreateCarQuery();
             query.SelectColumns = new string[] { "RowKey" };
-            var results = CarStorage.ExecuteQuery(query);
+            var results = CarStorage.ExecuteQuery(query).ToList();
             return results.Count();
         }
 
@@ -150,6 +150,17 @@ namespace ADS.Bot.V1.Services
             if (priceGroups.ContainsKey("$30k-40k")) { runningCount += priceGroups["$30k-40k"].Count; yield return ("< $40k", runningCount); }
             if (priceGroups.ContainsKey("$40k-50k")) { runningCount += priceGroups["$40k-50k"].Count; yield return ("< $50k", runningCount); }
             if (priceGroups.ContainsKey("$50k+")) yield return priceGroups["$50k+"];
+        }
+
+        public IEnumerable<(string Payment, int Count)> ListAvailablePayments(TableQuery<DB_Car> existingQuery)
+        {
+            return ListCarsGrouped("Price", c =>
+            {
+                if (c.Price <= Utilities.CalculatePayment(250)) return "$250";
+                else if (c.Price <= Utilities.CalculatePayment(400)) return "$400";
+                else if (c.Price <= Utilities.CalculatePayment(600)) return "$600";
+                return null; //These get ignored, the parent adds a show all option
+            }, existingQuery);
         }
     }
 }

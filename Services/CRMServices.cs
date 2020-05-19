@@ -27,8 +27,13 @@ namespace ADS.Bot.V1.Services
 
         private void CheckEnabled()
         {
-            if (Configuration.GetValue<bool>("ads:crm_enabled"))
+            if (Configuration.GetValue<bool?>("ads:crm_enabled") ?? true)
             {
+                if(!ZohoService.Error && !ZohoService.Connected)
+                {
+                    ZohoService.Connect();
+                }
+
                 if (ZohoService.Connected)
                 {
                     IsActive = true;
@@ -63,7 +68,7 @@ namespace ADS.Bot.V1.Services
                     ZohoService.CreateUpdateLead(profile);
                     ZohoService.WriteTradeInNote(profile);
                     break;
-                case CRMStage.VehicleInventoryCompleted:
+                case CRMStage.SimpleInventoryCompleted:
                     BBService.CreateUpdateLead(profile);
                     ZohoService.CreateUpdateLead(profile);
                     ZohoService.WriteInventoryNote(profile);
@@ -79,6 +84,6 @@ namespace ADS.Bot.V1.Services
         FinancingCompleted,
         VehicleProfileCompleted,
         ValueTradeInCompleted,
-        VehicleInventoryCompleted,
+        SimpleInventoryCompleted,
     }
 }

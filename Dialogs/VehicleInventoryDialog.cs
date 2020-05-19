@@ -541,7 +541,7 @@ namespace ADS.Bot1.Dialogs
                 {
                     if (appointmentChoice.Value == "Yes!")
                     {
-                        Services.CRM.WriteCRMDetails(CRMStage.VehicleInventoryCompleted, userData);
+                        Services.CRM.WriteCRMDetails(CRMStage.SimpleInventoryCompleted, userData);
 
                         await stepContext.Context.SendActivityAsync("Thanks! Someone will be in touch with you shortly.");
                         return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);

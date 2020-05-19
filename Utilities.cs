@@ -10,6 +10,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -39,15 +40,52 @@ namespace ADS.Bot.V1
             return promptOpts;
         }
 
-        public static PromptOptions GroupedOptions(IEnumerable<(string,int)> Groups, string PromptText, string RetryText = null)
+        public static PromptOptions GroupedOptions(IEnumerable<(string,int)> Groups, string PromptText, 
+            string RetryText = null, string ExtraPrepend = null, string ExtraAppend = null)
         {
             var makeOptions = Groups.Select(mo => $"{mo.Item1} ({mo.Item2})").Take(10);
+            if (ExtraPrepend != null)
+                makeOptions = makeOptions.Prepend(ExtraPrepend);
+            if (ExtraAppend != null)
+                makeOptions = makeOptions.Append(ExtraAppend);
             return CreateOptions(makeOptions, PromptText, RetryText);
         }
 
         public static string CleanGroupedOption(string GroupText)
         {
             return GroupText.Split(" (", 2).First();
+        }
+
+        public static int CalculatePayment(int MonthlyPayment)
+        {
+            double Rate = 0.0467;   //APR
+            double Term = 48;        //Months
+            double TermRate = (1.0 - Math.Pow(1 + (Rate / 12), -Term));
+            double FinalAmount = (TermRate * MonthlyPayment) / (Rate / 12);
+            return (int)FinalAmount;
+        }
+        public static (int? MinPrice, int? MaxPrice) ParsePrices(string Input)
+        {
+            var enteredPrices = Regex.Matches(Input, @"([<]*\$?[<]*(\d+)[kK\+]*)");
+
+            int? MaxPrice = null;
+            int? MinPrice = null;
+
+            if (enteredPrices.Count == 1)
+            {
+                var priceFilter = enteredPrices.First();
+                var thousands = priceFilter.Value.Contains("k", StringComparison.OrdinalIgnoreCase);
+                if (Input.Contains("<")) { MaxPrice = int.Parse(priceFilter.Groups[2].Value) * (thousands ? 1000 : 1); }
+                else if (Input.Contains("+")) { MinPrice = int.Parse(priceFilter.Groups[2].Value) * (thousands ? 1000 : 1); }
+            }
+            else if (enteredPrices.Count >= 2)
+            {
+                //Bit ugly, but it works :)
+                MinPrice = int.Parse(enteredPrices[0].Groups[2].Value) * (enteredPrices[0].Value.Contains("k", StringComparison.OrdinalIgnoreCase) ? 1000 : 1);
+                MaxPrice = int.Parse(enteredPrices[1].Groups[2].Value) * (enteredPrices[1].Value.Contains("k", StringComparison.OrdinalIgnoreCase) ? 1000 : 1);
+            }
+
+            return (MinPrice, MaxPrice);
         }
 
         public static string ReadChoiceWithManual(WaterfallStepContext stepContext)
