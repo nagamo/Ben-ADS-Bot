@@ -20,13 +20,14 @@ namespace ADS.Bot1.Dialogs
     public class VehicleInventoryDialog : ComponentDialog
     {
         private ADSBotServices Services { get; }
+        private DataService Data_Service { get; }
 
         const string InventoryChoice = "INVENTORY";
 
         const string CurrentFieldName = "CurrentField";
 
 
-        public VehicleInventoryDialog(ADSBotServices services)
+        public VehicleInventoryDialog(ADSBotServices services, DataService storageDB)
             : base(nameof(VehicleInventoryDialog))
         {
             // This array defines how the Waterfall will execute.
@@ -72,6 +73,7 @@ namespace ADS.Bot1.Dialogs
             // The initial child Dialog to run.
             InitialDialogId = nameof(WaterfallDialog);
             Services = services;
+            Data_Service = storageDB;
         }
 
         private TableQuery<DB_Car> BuildQuery(UserProfile UserData)
@@ -79,7 +81,7 @@ namespace ADS.Bot1.Dialogs
             if(UserData.Inventory.PrimaryConcern == "Nothing Specific")
                 return null;
 
-            IQueryable<DB_Car> carQuery = Services.CarStorage.CreateQuery<DB_Car>();
+            IQueryable<DB_Car> carQuery = Data_Service.CreateCarQuery();
 
             switch (UserData.Inventory.NewUsed)
             {
@@ -123,8 +125,8 @@ namespace ADS.Bot1.Dialogs
         private async Task<DialogTurnResult> PreInitializeStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             //Select as little data as possible
-            var foundCars = Services.CarStorage.ExecuteQuery(new TableQuery<DB_Car>() {SelectColumns = new string[] { "RowKey" } });
-            await stepContext.Context.SendActivityAsync($"I'm glad you asked aobut my inventory. I just so happen to have {foundCars.Count():n0} cars available!");
+            var foundCarCount = Data_Service.CountCars();
+            await stepContext.Context.SendActivityAsync($"I'm glad you asked aobut my inventory. I just so happen to have {foundCarCount:n0} cars available!");
 
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
             if (userData?.Inventory != null)
@@ -182,7 +184,7 @@ namespace ADS.Bot1.Dialogs
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
             if (!string.IsNullOrEmpty(userData.Inventory.NewUsed)) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
-            var newUsedCounts = BuyerBridgeService.ListAvailableNewUsed(Services, null);
+            var newUsedCounts = Data_Service.ListAvailableNewUsed(null);
 
             if(newUsedCounts.Count() == 0)
             {
@@ -210,11 +212,11 @@ namespace ADS.Bot1.Dialogs
 
                 if(newUsedQuery != null)
                 {
-                    var foundCars = Services.CarStorage.ExecuteQuery(newUsedQuery).ToList();
+                    var newUsedCount = Data_Service.CountCars(newUsedQuery);
 
                     if (userData.Inventory.NewUsed != "Doesn't Matter")
                     {
-                        await stepContext.Context.SendActivityAsync($"I've got {foundCars.Count()} {userData.Inventory.NewUsed?.ToLower()} cars.");
+                        await stepContext.Context.SendActivityAsync($"All right, let's narrow down on those {newUsedCount} {userData.Inventory.NewUsed?.ToLower()} cars.");
                     }
                 }
             }
@@ -302,23 +304,23 @@ namespace ADS.Bot1.Dialogs
             switch (stepContext.Values[CurrentFieldName])
             {
                 case "Max Price":
-                    goalOptions = Utilities.GroupedOptions(BuyerBridgeService.ListAvailablePriceMaxes(Services, BuildQuery(userData)),
+                    goalOptions = Utilities.GroupedOptions(Data_Service.ListAvailablePriceMaxes(BuildQuery(userData)),
                         "What is your upper limit on a car?");
                     break;
                 case "Price Range":
-                    goalOptions = Utilities.GroupedOptions(BuyerBridgeService.ListAvailablePriceRanges(Services, BuildQuery(userData)),
+                    goalOptions = Utilities.GroupedOptions(Data_Service.ListAvailablePriceRanges(BuildQuery(userData)),
                         "What price range are you looking at?");
                     break;
                 case nameof(VehicleInventoryDetails.Make):
-                    goalOptions = Utilities.GroupedOptions(BuyerBridgeService.ListAvailableMakes(Services, BuildQuery(userData)),
+                    goalOptions = Utilities.GroupedOptions(Data_Service.ListAvailableMakes(BuildQuery(userData)),
                         "What make are you in store for?");
                     break;
                 case nameof(VehicleInventoryDetails.Model):
-                    goalOptions = Utilities.GroupedOptions(BuyerBridgeService.ListAvailableModels(Services, BuildQuery(userData)),
+                    goalOptions = Utilities.GroupedOptions(Data_Service.ListAvailableModels(BuildQuery(userData)),
                         $"What kind of {userData.Inventory.Make} are you looking for?");
                     break;
                 case nameof(VehicleInventoryDetails.Color):
-                    goalOptions = Utilities.GroupedOptions(BuyerBridgeService.ListAvailableColors(Services, BuildQuery(userData)),
+                    goalOptions = Utilities.GroupedOptions(Data_Service.ListAvailableColors(BuildQuery(userData)),
                         "What is your color preference?");
                     break;
                 case "Nothing Specific":
@@ -394,7 +396,7 @@ namespace ADS.Bot1.Dialogs
 
             if (carQuery != null)
             {
-                var results = Services.CarStorage.ExecuteQuery<DB_Car>(carQuery).ToList();
+                var results = Data_Service.GetCars(carQuery);
                 var resultsCount = results.Count();
 
                 if (resultsCount > 0)
@@ -441,9 +443,9 @@ namespace ADS.Bot1.Dialogs
                                 {
                                     Type = ActionTypes.PostBack,
                                     Title = "I like this one!",
-                                    DisplayText = $"I like #{car_result.VIN}",
-                                    Text = $"I like #{car_result.VIN}",
-                                    Value = car_result.VIN
+                                    DisplayText = $"I like #{car_result.VIN()}",
+                                    Text = $"I like #{car_result.VIN()}",
+                                    Value = car_result.VIN()
                                 }
                             }
                         };
@@ -480,7 +482,7 @@ namespace ADS.Bot1.Dialogs
                     var CARouselActivity = Utilities.CreateCarousel(carAttachments);
 
                     //Supply the options here so the prompt code can line up out postback values to our list of VINs
-                    var carOptions = Utilities.CreateOptions(trimmedResults.Select(c => c.VIN), CARouselActivity as Activity, Style: ListStyle.None);
+                    var carOptions = Utilities.CreateOptions(trimmedResults.Select(c => c.VIN()), CARouselActivity as Activity, Style: ListStyle.None);
                     return await stepContext.PromptAsync(InventoryChoice, carOptions, cancellationToken: cancellationToken);
                 }
                 else
@@ -504,11 +506,11 @@ namespace ADS.Bot1.Dialogs
 
             if (stepContext.Result is FoundChoice vinChoice)
             {
-                var vehicle = Services.CarStorage.ExecuteQuery(Services.CarStorage.CreateQuery<DB_Car>().Where(c => c.RowKey == vinChoice.Value) as TableQuery<DB_Car>).FirstOrDefault();
+                var vehicle = Data_Service.GetCar(vinChoice.Value);
 
                 if (vehicle != null)
                 {
-                    await stepContext.Context.SendActivityAsync($"I'm a {vehicle.Make} guy myself, good choice! I've marked down your interest for the VIN {vehicle.VIN}.");
+                    await stepContext.Context.SendActivityAsync($"I'm a {vehicle.Make} guy myself, good choice! I've marked down your interest for the VIN {vehicle.RowKey}.");
                 }
 
             }
@@ -518,7 +520,7 @@ namespace ADS.Bot1.Dialogs
             }
 
 
-            if (Services.Zoho.Connected)
+            if (Services.CRM.IsActive)
             {
                 var appointmentOptions = Utilities.CreateOptions(new string[] { "Yes!", "No" }, "Would you like a call from the GM to further narrow down on a vehicle?");
                 return await stepContext.PromptAsync(nameof(ChoicePrompt), appointmentOptions, cancellationToken);
@@ -533,14 +535,13 @@ namespace ADS.Bot1.Dialogs
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
 
-            if (Services.Zoho.Connected)
+            if (Services.CRM.IsActive)
             {
                 if (stepContext.Result is FoundChoice appointmentChoice)
                 {
                     if (appointmentChoice.Value == "Yes!")
                     {
-                        Services.Zoho.CreateUpdateLead(userData);
-                        Services.Zoho.WriteInventoryNote(userData);
+                        Services.CRM.WriteCRMDetails(CRMStage.SimpleInventoryCompleted, userData);
 
                         await stepContext.Context.SendActivityAsync("Thanks! Someone will be in touch with you shortly.");
                         return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);

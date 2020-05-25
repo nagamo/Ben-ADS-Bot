@@ -41,7 +41,10 @@ namespace ADS.Bot1
                     }
                 }
 
-                if (bool.TryParse(configuration["debug_messages"], out var msg_debug) && msg_debug)
+                var debug_messages = bool.TryParse(configuration["crm:debug_messages"], out var msg_debug) && msg_debug;
+                var debug_errors = bool.TryParse(configuration["crm:debug_errors"], out var err_debug) && err_debug;
+
+                if (debug_messages || debug_errors)
                 {
                     //if (turnContext.Activity.ChannelId == "emulator")
                     if(exception is Microsoft.Bot.Schema.ErrorResponseException erex)

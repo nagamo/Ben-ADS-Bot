@@ -23,13 +23,14 @@ namespace ADS.Bot1
 {
     public class ADSBotServices
     {
-        public ADSBotServices(IConfiguration configuration, ConversationState conversationState, UserState userState, ZohoBotService zohoService, CloudTableClient dataStorage)
+        public ADSBotServices(IConfiguration configuration, ConversationState conversationState, 
+            UserState userState, CRMService crmService, DataService dataService)
         {
             ConversationState = conversationState;
             Configuration = configuration;
-            StorageClient = dataStorage;
+            DataService = dataService;
             UserState = userState;
-            Zoho = zohoService;
+            CRM = crmService;
 
             UserProfileAccessor = UserState.CreateProperty<UserProfile>(nameof(UserProfile));
             DialogStateAccessor = ConversationState.CreateProperty<DialogState>(nameof(DialogState));
@@ -78,21 +79,13 @@ namespace ADS.Bot1
         public IConfiguration Configuration { get; }
 
 
-        public CloudTableClient StorageClient { get; private set; }
+        public CRMService CRM { get; }
+        public DataService DataService { get; }
 
-        public CloudTable CarStorage
-        {
-            get { return StorageClient.GetTableReference("Cars"); }
-        }
-        public CloudTable DealerStorage
-        {
-            get { return StorageClient.GetTableReference("Dealerships"); }
-        }
 
 
 
         public LuisRecognizer LuisRecognizer { get; private set; }
-        public ZohoBotService Zoho { get; private set; }
 
         private ConversationState ConversationState { get; set; }
         private UserState UserState { get; set; }

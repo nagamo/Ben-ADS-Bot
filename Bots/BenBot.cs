@@ -60,8 +60,13 @@ namespace ADS.Bot.V1.Bots
                         {
                             userProfile.Details = new Models.BasicDetails()
                             {
-                                Name = turnContext.Activity.From.Name
+                                Name = turnContext.Activity.From.Name,
+                                UniqueID = turnContext.Activity.From.Id,
+#if DEBUG
+                                DealerID = Services.Configuration.GetValue<string>("bb:test_dealer")
+#endif
                             };
+
                             newGreeting = true;
                         }
                     }
@@ -91,7 +96,7 @@ namespace ADS.Bot.V1.Bots
                 }
             }
 
-            if(bool.TryParse(Services.Configuration["debug_messages"], out var debug_msg) && debug_msg)
+            if(bool.TryParse(Services.Configuration["ads:debug_messages"], out var debug_msg) && debug_msg)
             {
                 await turnContext.SendActivityAsync(JsonConvert.SerializeObject(turnContext.Activity));
             }
@@ -101,7 +106,7 @@ namespace ADS.Bot.V1.Bots
 
         protected override async Task OnEventActivityAsync(ITurnContext<IEventActivity> turnContext, CancellationToken cancellationToken)
         {
-            if (bool.TryParse(Services.Configuration["debug_messages"], out var debug_msg) && debug_msg)
+            if (bool.TryParse(Services.Configuration["ads:debug_messages"], out var debug_msg) && debug_msg)
             {
                 await turnContext.SendActivityAsync(JsonConvert.SerializeObject(turnContext.Activity));
             }
@@ -110,14 +115,19 @@ namespace ADS.Bot.V1.Bots
         // This is the primary message handler
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {
-            if (bool.TryParse(Services.Configuration["debug_messages"], out var debug_msg) && debug_msg)
+            if (bool.TryParse(Services.Configuration["ads:debug_messages"], out var debug_msg) && debug_msg)
             {
                 await turnContext.SendActivityAsync(JsonConvert.SerializeObject(turnContext.Activity));
             }
 
             //Get the latest version
             var userProfile = await Services.GetUserProfileAsync(turnContext, cancellationToken);
-            
+
+            if (userProfile.Details != null)
+            {
+                userProfile.Details.UniqueID = turnContext.Activity.Recipient.Id;
+            }
+
             //Let the manager handle passing our message to the one-and-only dialog
             var dialogResult = await DialogManager.OnTurnAsync(turnContext, cancellationToken);
             await Services.SaveUserProfileAsync(userProfile, turnContext, cancellationToken);

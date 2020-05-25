@@ -14,31 +14,39 @@ using ZCRMSDK.OAuth.Client;
 
 namespace ADS.Bot.V1.Services
 {
-    public class ZohoBotService
+    public class ZohoAPIService
     {
         public bool Connected { get; private set; } = false;
+        public bool Error { get; private set; } = false;
 
         public ZCRMRestClient ZohoCRMClient { get; private set; }
 
         private ZCRMModule LeadsModule { get; set; }
         public IConfiguration Configuration { get; }
 
-        public ZohoBotService(IConfiguration configuration)
+        public ZohoAPIService(IConfiguration configuration)
+        {
+            Configuration = configuration;
+        }
+
+        public bool Connect()
         {
             try
             {
                 ZCRMRestClient.Initialize(new Dictionary<string, string>
                 {
-                    { "client_id", configuration["zoho:client_id"] },
-                    { "client_secret", configuration["zoho:client_secret"] },
-                    { "redirect_uri", configuration["zoho:redirect_uri"] },
-                    { "currentUserEmail", configuration["zoho:email"] },
+                    { "client_id", Configuration["zoho:client_id"] },
+                    { "client_secret", Configuration["zoho:client_secret"] },
+                    { "redirect_uri", Configuration["zoho:redirect_uri"] },
+                    { "currentUserEmail", Configuration["zoho:email"] },
                     { "persistence_handler_class","ZCRMSDK.OAuth.ClientApp.ZohoOAuthInMemoryPersistence, ZCRMSDK"} ,
                 });
                 ZohoOAuthClient.Initialize();
 
                 var authClient = ZohoOAuthClient.GetInstance();
-                var tokens = authClient.GenerateAccessTokenFromRefreshToken(configuration["zoho:refresh_token"], configuration["zoho:email"]);
+                var tokens = authClient.GenerateAccessTokenFromRefreshToken(
+                    Configuration["zoho:refresh_token"], 
+                    Configuration["zoho:email"]);
 
                 ZohoCRMClient = ZCRMRestClient.GetInstance();
 
@@ -48,9 +56,10 @@ namespace ADS.Bot.V1.Services
             catch (ZCRMException ex)
             {
                 Console.WriteLine("Unable to initialize CRM Connection");
+                Error = true;
             }
 
-            Configuration = configuration;
+            return Connected;
         }
 
         private void PopulateCRMLead(UserProfile profile, ZCRMRecord record)

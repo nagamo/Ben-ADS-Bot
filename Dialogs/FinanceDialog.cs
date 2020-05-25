@@ -1,5 +1,6 @@
 ﻿using ADS.Bot.V1;
 using ADS.Bot.V1.Models;
+using ADS.Bot.V1.Services;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Dialogs.Choices;
@@ -205,7 +206,7 @@ namespace ADS.Bot1.Dialogs
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
 
-            if (Services.Zoho.Connected)
+            if (Services.CRM.IsActive)
             {
                 var appointmentOptions = Utilities.CreateOptions(new string[] { "Yes!", "No" }, "Would you like to confirm an appointment?");
                 return await stepContext.PromptAsync(nameof(ChoicePrompt), appointmentOptions, cancellationToken);
@@ -220,14 +221,13 @@ namespace ADS.Bot1.Dialogs
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
 
-            if (Services.Zoho.Connected)
+            if (Services.CRM.IsActive)
             {
                 if (stepContext.Result is FoundChoice appointmentChoice)
                 {
                     if (appointmentChoice.Value == "Yes!")
                     {
-                        Services.Zoho.CreateUpdateLead(userData);
-                        Services.Zoho.WriteFinancingNote(userData);
+                        Services.CRM.WriteCRMDetails(CRMStage.FinancingCompleted, userData);
 
                         await stepContext.Context.SendActivityAsync("Thanks! Someone will be in touch with you shortly.");
                         return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);

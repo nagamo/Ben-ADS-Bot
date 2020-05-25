@@ -63,23 +63,7 @@ namespace ADS.Bot.V1.Models
 
         public void ParsePrices(string Input)
         {
-            var enteredPrices = Regex.Matches(Input, @"([<]*\$?[<]*(\d+)[kK\+]*)");
-
-            MaxPrice = MinPrice = null;
-
-            if (enteredPrices.Count == 1)
-            {
-                var priceFilter = enteredPrices.First();
-                var thousands = priceFilter.Value.Contains("k", StringComparison.OrdinalIgnoreCase);
-                if (Input.Contains("<")) { MaxPrice = int.Parse(priceFilter.Groups[2].Value) * (thousands ? 1000 : 1); }
-                else if (Input.Contains("+")) { MinPrice = int.Parse(priceFilter.Groups[2].Value) * (thousands ? 1000 : 1); }
-            }
-            else if (enteredPrices.Count >= 2)
-            {
-                //Bit ugly, but it works :)
-                MinPrice = int.Parse(enteredPrices[0].Groups[2].Value) * (enteredPrices[0].Value.Contains("k", StringComparison.OrdinalIgnoreCase) ? 1000 : 1);
-                MaxPrice = int.Parse(enteredPrices[1].Groups[2].Value) * (enteredPrices[1].Value.Contains("k", StringComparison.OrdinalIgnoreCase) ? 1000 : 1);
-            }
+            (MinPrice, MaxPrice) = Utilities.ParsePrices(Input);
         }
 
         public string PrimaryConcern { get; set; }

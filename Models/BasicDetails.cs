@@ -19,6 +19,12 @@ namespace ADS.Bot.V1.Models
         }
 
 
+        //These are used for CRM
+        public string UniqueID { get; set; }
+        public string DealerID { get; set; }
+
+
+
         public string Name { get; set; }
         public string Phone { get; set; }
         public string Email { get; set; }

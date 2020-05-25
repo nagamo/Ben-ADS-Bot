@@ -36,7 +36,7 @@ namespace ADS.Bot.V1.Dialogs
             FinanceDialog financeDialog,
             VehicleProfileDialog vehicleProfileDialog,
             ValueTradeInDialog valueTradeInDialog,
-            VehicleInventoryDialog inventoryDialog,
+            SimpleInventoryDialog inventoryDialog,
             ICardFactory<BasicDetails> profileFactory,
             ICardFactory<FinancingDetails> financeFactory,
             ICardFactory<TradeInDetails> tradeinFactory,
@@ -163,35 +163,35 @@ namespace ADS.Bot.V1.Dialogs
                                     {
                                         Actions = new List<Dialog>()
                                         {
-                                            new BeginDialog(nameof(UserProfileDialog))
+                                            new BeginDialog(userProfileDialog.Id)
                                         }
                                     },
                                     new Case("financing")
                                     {
                                         Actions = new List<Dialog>()
                                         {
-                                            new BeginDialog(nameof(FinanceDialog))
+                                            new BeginDialog(financeDialog.Id)
                                         }
                                     },
                                     new Case("vehicle")
                                     {
                                         Actions = new List<Dialog>()
                                         {
-                                            new BeginDialog(nameof(VehicleProfileDialog))
+                                            new BeginDialog(vehicleProfileDialog.Id)
                                         }
                                     },
                                     new Case("tradein")
                                     {
                                         Actions = new List<Dialog>()
                                         {
-                                            new BeginDialog(nameof(ValueTradeInDialog))
+                                            new BeginDialog(valueTradeInDialog.Id)
                                         }
                                     },
                                     new Case("inventory")
                                     {
                                         Actions = new List<Dialog>()
                                         {
-                                            new BeginDialog(nameof(VehicleInventoryDialog))
+                                            new BeginDialog(inventoryDialog.Id)
                                         }
                                     },
                                 },
@@ -414,10 +414,11 @@ namespace ADS.Bot.V1.Dialogs
                         Console.WriteLine($"Rejected low-confidence response to text '{context.Context.Activity.Text}' - [{topResult.Score}] {topResult.Source}:'{topResult.Answer}'");
                     }
 
-                    await context.Context.SendActivityAsync(MessageFactory.Text("I'm not quite sure what you meant..."));
-                    return new DialogTurnResult(DialogTurnStatus.Waiting);
                 }
             }
+
+            await context.Context.SendActivityAsync(MessageFactory.Text("I'm not quite sure what you meant..."));
+            return new DialogTurnResult(DialogTurnStatus.Waiting);
         }
 
         public async Task<DialogTurnResult> Test(DialogContext context, object something)

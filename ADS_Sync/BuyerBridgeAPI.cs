@@ -15,6 +15,9 @@ namespace ADS_Sync
 
         IRestClient apiClient;
 
+        const string ListDealerParams = "with_relationships=dealers.dealer_onboarding,dealers.facebook_page_annotations&with_relationship_counts=dealers.vehicles";
+        const string ListInventoryParams = "with_fields=vehicles.description,vehicles.features&with_relationships=vehicles.dealer_vehicle,vehicles.images,vehicles.location";
+
         public BuyerBridgeAPI(ILogger Logger, IConfiguration Configuration)
         {
             logger = Logger;
@@ -73,11 +76,11 @@ namespace ADS_Sync
 
         public IEnumerable<BB_Dealership> ListDealerships()
         {
-            return QueryAllRecords<BB_Dealership>("dealers");
+            return QueryAllRecords<BB_Dealership>($"dealers?{ListDealerParams}");
         }
         public IEnumerable<BB_Car> ListInventory(string DealerID, int PageLimit = -1)
         {
-            return QueryAllRecords<BB_Car>($"dealers/{DealerID}/inventory?with_relationships=vehicles.dealer_vehicle,vehicles.images", PageLimit);
+            return QueryAllRecords<BB_Car>($"dealers/{DealerID}/inventory?{ListInventoryParams}", PageLimit);
         }
 
         public class BB_Response<T>
@@ -110,11 +113,30 @@ namespace ADS_Sync
             public string Zip { get; set; }
             public string Phone { get; set; }
             public string Country_Code { get; set; }
+            [JsonProperty("facebook_page_annotations")]
+            public BB_FBPageAnnotation FBAnnotations;
+        }
+
+        public class BB_FBPageAnnotation
+        {
+            [JsonProperty("data")]
+            public List<BB_FBPageAnnotationEntry> Data { get; set; }
+        }
+
+        public class BB_FBPageAnnotationEntry
+        {
+            [JsonProperty("dealer_id")]
+            public string DealerID { get; set; }
+            [JsonProperty("facebook_page_id")]
+            public string FBPageID { get; set; }
+            [JsonProperty("id")]
+            public string ID { get; set; }
         }
 
         public class BB_Car
         {
             public int ID { get; set; }
+            public string Body_Name { get; set; }
             public string Display_Name { get; set; }
             public string Stock_Number { get; set; }
             public string VIN { get; set; }
@@ -128,6 +150,8 @@ namespace ADS_Sync
             public string Year { get; set; }
             public string Exterior_Color { get; set; }
             public bool Used { get; set; }
+            public string Features { get; set; }
+            public string Description { get; set; }
 
             public BB_DealerRecords Dealer_Vehicle { get; set; }
             public BB_Images Images { get; set; }
