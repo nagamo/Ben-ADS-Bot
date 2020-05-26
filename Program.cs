@@ -20,6 +20,15 @@ namespace ADS.Bot1
         {
             return Host
                 .CreateDefaultBuilder(args)
+                .ConfigureLogging((logging) =>
+                {
+                    logging.AddDebug();
+                    logging.AddConsole();
+#if RELEASE
+                        logging.AddApplicationInsights();
+                        logging.AddFilter<ApplicationInsightsLoggerProvider>("", LogLevel.Information);
+#endif
+                })
                 .ConfigureAppConfiguration((hostingContext, config) =>
                 {
                     config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
@@ -29,15 +38,6 @@ namespace ADS.Bot1
                 })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    webBuilder.ConfigureLogging((logging) =>
-                    {
-                        logging.AddDebug();
-                        logging.AddConsole();
-#if RELEASE
-                        logging.AddApplicationInsights();
-                        logging.AddFilter<ApplicationInsightsLoggerProvider>("", LogLevel.Information);
-#endif
-                    });
                     webBuilder.UseStartup<Startup>();
                 });
         }

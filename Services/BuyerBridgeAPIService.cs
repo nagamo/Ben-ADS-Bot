@@ -28,8 +28,6 @@ namespace ADS.Bot.V1.Services
                 .AddDefaultHeader("Accept", "application/json");
 
             apiClient.Timeout = -1;
-
-            apiClient.Proxy = new WebProxy("127.0.0.1", 8888);
         }
 
         public void CreateUpdateLead(UserProfile profile)

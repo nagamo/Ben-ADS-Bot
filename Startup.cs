@@ -1,7 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License.
-
-using ADS.Bot.V1.Bots;
+﻿using ADS.Bot.V1.Bots;
 using ADS.Bot.V1.Cards;
 using ADS.Bot.V1.Dialogs;
 using ADS.Bot1.Bots;
@@ -14,7 +11,6 @@ using Microsoft.Bot.Builder.Integration.AspNet.Core;
 using Microsoft.Extensions.DependencyInjection;
 using System.Configuration;
 using Microsoft.Bot.Connector;
-using Microsoft.Bot.Builder.Azure;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
 using ADS.Bot.V1.Models;
@@ -24,6 +20,9 @@ using System;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using ADS.Bot.V1;
+using System.Data.Common;
+using Microsoft.Bot.Builder.Azure;
+using AzureBlobStorage = ADS.Bot.V1.Services.AzureBlobStorage;
 
 namespace ADS.Bot1
 {
@@ -46,11 +45,17 @@ namespace ADS.Bot1
             // Create the Bot Framework Adapter with error handling enabled.
             services.AddSingleton<IBotFrameworkHttpAdapter, AdapterWithErrorHandler>();
 
+#if DEBUG
+            string environment = "dev";
+#else
+            string environment = "prod";
+#endif
+
             // Create the storage we'll be using for User and Conversation state. (Memory is great for testing purposes.)
             var dbConnectionString = Configuration.GetConnectionString("UserData");
-            if(dbConnectionString != null)
+            if (dbConnectionString != null)
             {
-                //services.AddSingleton<IStorage>(new AzureBlobStorage(dbConnectionString, "bottest"));
+                services.AddSingleton<IStorage>(new AzureBlobStorage(dbConnectionString, environment));
             }
             else
             {
@@ -58,24 +63,19 @@ namespace ADS.Bot1
             }
 
             var vinDBConnectionString = Configuration.GetConnectionString("VinSolutionsDB");
-            if (vinDBConnectionString != null)
-            {
-                try
-                {
-                    CloudStorageAccount account = CloudStorageAccount.Parse(vinDBConnectionString);
-                    services.AddSingleton(account.CreateCloudTableClient());
-                }
-                catch (Exception ex)
-                {
-                    services.AddSingleton((CloudTableClient)null);
-                }
-            }
-
-
+            CloudStorageAccount account = CloudStorageAccount.Parse(vinDBConnectionString);
+            services.AddSingleton(account.CreateCloudTableClient());
 
             // Create the User and Conversation State
             services.AddSingleton<UserState>();
             services.AddSingleton<ConversationState>();
+
+            //Alternatively Conversation state can be assigned to memory only to save space/load
+            /*
+            var memoryProvider = new MemoryStorage();
+            services.AddSingleton<ConversationState>(new ConversationState(memoryProvider));
+            */
+
 
             services.AddSingleton<DataService>();
 
