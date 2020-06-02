@@ -41,8 +41,8 @@ namespace ADS.Bot1
                     }
                 }
 
-                var debug_messages = bool.TryParse(configuration["crm:debug_messages"], out var msg_debug) && msg_debug;
-                var debug_errors = bool.TryParse(configuration["crm:debug_errors"], out var err_debug) && err_debug;
+                var debug_messages = bool.TryParse(configuration["ads:debug_messages"], out var msg_debug) && msg_debug;
+                var debug_errors = bool.TryParse(configuration["ads:debug_errors"], out var err_debug) && err_debug;
 
                 if (debug_messages || debug_errors)
                 {

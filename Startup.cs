@@ -32,8 +32,6 @@ namespace ADS.Bot1
 
         public Startup(IConfiguration configuration)
         {
-            var test = Utilities.CalculatePayment(600);
-
             Configuration = configuration;
         }
 
@@ -45,11 +43,8 @@ namespace ADS.Bot1
             // Create the Bot Framework Adapter with error handling enabled.
             services.AddSingleton<IBotFrameworkHttpAdapter, AdapterWithErrorHandler>();
 
-#if DEBUG
-            string environment = "dev";
-#else
-            string environment = "prod";
-#endif
+            //Fallback to dev unless otherwise specified
+            string environment = Configuration["ads:environment"] ?? "dev";
 
             // Create the storage we'll be using for User and Conversation state. (Memory is great for testing purposes.)
             var dbConnectionString = Configuration.GetConnectionString("UserData");

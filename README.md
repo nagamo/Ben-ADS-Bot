@@ -1,48 +1,64 @@
-﻿This Bot is intended to provide Lead Qualification for automotive dealers that are doikng digital advertising on Facebook Messenger. The primary goals are:
+﻿# ADS Bot - Standard
 
-1. Provide an entertaining, freewheeling and witty conversation.
-2. Be able to provide answers to a wide-ranging array of car-purchasing questions - everything from handling poor credit to getting the most for their trade-in.
-3. Pull sufficient data from them to consider them "qualified".
+### Azure Infrastructure
+Each ADS bot on azure (dev, prod) consists of the following resources.
+ - Web App Bot
+ - App Service (Runs the Bot)
+ - Application Insights (logging & error reporting)
 
-Definition of Qualified:
+With the following resources being shared across both Dev and Prod environments.
 
-Use Case 1: No need for financing and no trade-in
-            Minimum data:
-			* Name and either phone number or email (phone number preferred)
-			* A stated car (or type of car) of interest. In other words, they need to assert their intention to buy something
-			* A stated timeframe in the near future for taking action. In other words, they need to assert their intention to buy (or at least look) within a week or two
+ - App Service Plan - The actual "computer"/billable resource running everything.
+ - Azure Function - Sync (Nightly @ Midnight)
+ - Storage Account
+   - Stores BB Sync Information
+   - Stores User/Converstaion Data (Dev/Prod isolated)
+ - LUIS Resource & Application
+ - QnA Maker Resource & Application
 
 
-Use Case 2: Needs financing, but not trading in a vehicle
-			Minimum data:
-			* Same as Use Case 1, PLUS:
-										** Credit Score (just what they state it to be)
-										** If credit score < 700, then also:
-											*** Monthly income
-											*** Status of home ownership
+### Deployment Process
+Deployment of the bot is automated, just push to either `development` or `master` to deploy to either Development or Production instance respectively. The latest version will automatically be downloaded, compiled, and pushed up to Azure via Github actions.
 
-Use Case 3: Needs financing and is planning on trading in a vehicle
-			Minimum data:
-			* Same as Use Case 1 and 2, PLUS:
-										** Make, Model and Year of vehicle
-										** Mileage
-										** Condition
-										** Amount Owed
+Deployment of the Nightly Sync Azure Function is done via Visual Studio.
+1. Download the Publish Profile from the relevant Azure Function (only one exists currently.)
+2. Import the Publish Profile into Visual Studio from the Publish page.
+3. `Publish` function project in Visual Studio.
+4. Select imported profile.
 
-Architecture:
-	1. Load an Activity Handler (or perhaps a dialog) and state a welcome message, along with three selections:
-		* Identify a car (inventory)
-		* Pursue financing
-		* Value a trade-in
-	2. ALWAYS allow free text
-	3. Whether they makle a selection or type something, respond with "Hey, happy to do that but can I get your name and phone number in case we get disconnected"
-	4. All utterances get passed through LUIS. If it gets reduced to a probablity greater than .75 that the utterance is one of those three intents,
-	   or they select one of the choices, then after they're presented with prompts for name and phone, commence the appropriate dialog.
-	5. Every utterance gets checked for cancellation - any of 'quit','cancel','stop', 'bye', etc. If they're in a dialog, drop out to the next object on the stack.
-	6. Track which dialogs and which data items have been fulfilled. If they utter a dialog intent, check whether they've been there before, then check to see if 
-	   they still need to fill in required data. If there is still information outstanding, enter the appropriate place in the dialog. If all the data has been provided,
-	   pass the utterance on to QnA.
-	7. If the utterance doesn't map to an intent, pass it on to QnA.
-	8. The incoming channel is Facebook Messenger. I do not have knowledge yet of the data payload being provided. May include name and car they've clicked on.
-	9. All users get passed to Zoho CRM via API, qualified or not.
-	10. Qualified users get passed to a specific dealer's CRM via API. This will need to be picked up from a configuration file.
+
+### Data Storage
+The bot uses a Storage Account to store everything.
+
+ - BuyerBridge data is stored in the Table section, as a Cars and Dealers table.
+ - User and Conversation data is stored in the BLOB section as many flat JSON files.
+
+
+### Configuration
+
+The bot uses many configuration sections, most are related to connections to external services.
+
+These settings can be entered individually in Azure configuration pages for the Web App Bot itself, or by defining them in the appsettings.json file for fixed values.
+
+These are the recognized config variables currently.
+
+Setting Name | Description | Valid Values
+--- | --- | --- |
+ads:crm_enabled | Controls if creating CRM leads is enabled or not. Used for dev. | True/False
+ads:debug_messages | Used to debug payloads and messages. | True/False
+ads:debug_errors | Sends error traces in the chat itself, useful for debugging issues. | True/False
+ads:name_regex | Controls the regex used to validate manualy-entered names. | Any RegEx Expressions
+ads:environment | Controls the blob storage container name for user and conversation storage | prod-standard or dev-standard
+bb:base | URL for BuyersBridge API | URL
+bb:token | Token for BuyersBridge API | Auth Token
+luis:id | ID for LUIS App | GUID
+luis:endpoint | Endpoint for LUIS App | URL
+luis:endpointKey | Key for LUIS App | Endpoint Key
+qna:QnAKnowledgebaseId | KB ID for QnA App | GUID
+qna:QnAEndpointKey | Key for QnA App | GUID
+qna:QnAEndpointHostName | Hostname of QnA App | URL
+zoho:email | Email zoho leads are created under | Email
+zoho:client_id | Client ID of registered zoho credentials | OAuth ClientID
+zoho:client_secret | Client Secret of registered zoho credentials | OAuth Client Secret
+zoho:redirect_url | Redirect URL for OAuth flow. Fixed value | http://www.zoho.com/subscriptions
+zoho:refresh_token | Refresh Token of Registered zoho credentials | OAuth Refresh Token
