@@ -20,6 +20,9 @@ namespace ADS.Bot.V1
         public const string Event_Interest = "interest";
 
 
+        public const string DEALER_CONTAINER = "dealer";
+        public const string DEALER_CONFIG_PATH = "config.json";
+
 
         public const string INTEREST_Financing = "Explore Financing";
         public const string INTEREST_Identify = "Identify a Vehicle";

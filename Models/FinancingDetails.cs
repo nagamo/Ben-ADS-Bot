@@ -13,14 +13,7 @@ namespace ADS.Bot.V1.Models
         {
             get
             {
-                return GoodCredit ? 
-                    (!string.IsNullOrEmpty(CreditScore))
-                    : (
-                        !string.IsNullOrEmpty(CreditScore) &&
-                        !string.IsNullOrEmpty(Income) &&
-                        !string.IsNullOrEmpty(HomeOwnership) &&
-                        !string.IsNullOrEmpty(Employment)
-                    );
+                return CreditEntered && EmploymentEntered && IncomeEntered && HomeEntered;
             }
         }
 
@@ -32,7 +25,7 @@ namespace ADS.Bot.V1.Models
         public string HomeOwnership { get; set; }
 
         [JsonIgnore]
-        public bool SkipCreditScore
+        public bool CreditEntered
         {
             get
             {
@@ -41,53 +34,53 @@ namespace ADS.Bot.V1.Models
         }
 
         //This one is actually probably worth writing out for other uses, so no [JsonIgnore]
-        public bool GoodCredit
+        public int CreditValue
         {
             get
             {
-                if (string.IsNullOrEmpty(CreditScore)) return false;
+                if (string.IsNullOrEmpty(CreditScore)) return 0;
 
                 //Handle arbitrary user input
                 if (int.TryParse(CreditScore, out var score))
-                    return score >= 700;
+                    return score;
 
                 //Match the first occurence of a 3-digit sequence
                 var searchMatch = Regex.Match(CreditScore, @"(\d{3})");
                 if(searchMatch.Success && searchMatch.Groups.Count == 2)
                 {
-                    return int.Parse(searchMatch.Groups[1].Value) >= 700;
+                    return int.Parse(searchMatch.Groups[1].Value);
                 }
 
                 //TODO: Should refer directly to the list of credit options
                 //This should be handled by the 
-                else return CreditScore == "700+";
+                else return 0;
             }
         }
 
         [JsonIgnore]
-        public bool SkipEmployment
+        public bool EmploymentEntered
         {
             get
             {
-                return !string.IsNullOrEmpty(Employment) || GoodCredit;
+                return !string.IsNullOrEmpty(Employment);
             }
         }
 
         [JsonIgnore]
-        public bool SkipIncome
+        public bool IncomeEntered
         {
             get
             {
-                return !string.IsNullOrEmpty(Employment) || GoodCredit;
+                return !string.IsNullOrEmpty(Income);
             }
         }
 
         [JsonIgnore]
-        public bool SkipHome
+        public bool HomeEntered
         {
             get
             {
-                return !string.IsNullOrEmpty(Employment) || GoodCredit;
+                return !string.IsNullOrEmpty(HomeOwnership);
             }
         }
     }

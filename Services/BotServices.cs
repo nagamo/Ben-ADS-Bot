@@ -24,11 +24,12 @@ namespace ADS.Bot1
     public class ADSBotServices
     {
         public ADSBotServices(IConfiguration configuration, ConversationState conversationState, 
-            UserState userState, CRMService crmService, DataService dataService)
+            UserState userState, CRMService crmService, DataService dataService, DealerConfigService dealerConfig)
         {
             ConversationState = conversationState;
             Configuration = configuration;
             DataService = dataService;
+            DealerConfig = dealerConfig;
             UserState = userState;
             CRM = crmService;
 
@@ -81,7 +82,7 @@ namespace ADS.Bot1
 
         public CRMService CRM { get; }
         public DataService DataService { get; }
-
+        public DealerConfigService DealerConfig { get; }
 
 
 

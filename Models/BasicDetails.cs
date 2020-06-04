@@ -30,6 +30,7 @@ namespace ADS.Bot.V1.Models
         public string Email { get; set; }
         
         public string Timeframe { get; set; }
+        public bool RequestContact { get; set; } = false;
     }
 
 }

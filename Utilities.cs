@@ -1,5 +1,7 @@
 ﻿using AdaptiveCards;
 using ADS.Bot.V1.Cards;
+using ADS.Bot.V1.Models;
+using ADS.Bot1;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Builder.Dialogs.Adaptive.Actions;
@@ -41,14 +43,19 @@ namespace ADS.Bot.V1
         }
 
         public static PromptOptions GroupedOptions(IEnumerable<(string,int)> Groups, string PromptText, 
-            string RetryText = null, string ExtraPrepend = null, string ExtraAppend = null)
+            string RetryText = null, string ExtraPrepend = null, string ExtraAppend = null, bool ShowCount = true)
         {
-            var makeOptions = Groups.Select(mo => $"{mo.Item1} ({mo.Item2})").Take(10);
+            var makeOptions = Groups.Select(mo => (ShowCount ? $"{mo.Item1} ({mo.Item2})" : $"{mo.Item1}")).Take(10);
             if (ExtraPrepend != null)
                 makeOptions = makeOptions.Prepend(ExtraPrepend);
             if (ExtraAppend != null)
                 makeOptions = makeOptions.Append(ExtraAppend);
             return CreateOptions(makeOptions, PromptText, RetryText);
+        }
+
+        internal static async Task<bool> AllChoiceValidator(PromptValidatorContext<FoundChoice> promptContext, CancellationToken cancellationToken)
+        {
+            return true;
         }
 
         public static string CleanGroupedOption(string GroupText)
@@ -167,6 +174,29 @@ namespace ADS.Bot.V1
         public static IMessageActivity CreateCarousel(IEnumerable<Attachment> attachments)
         {
             return MessageFactory.Carousel(attachments);
+        }
+
+        public static async Task<bool> ShouldSkipAsync(ADSBotServices Services, UserProfile Profile, string QuestionPath = "", bool AlreadyFilled = false)
+        {
+            var askQuestion = await Services.DealerConfig.GetAskQuestionAsync(Profile, QuestionPath);
+
+            return !askQuestion || AlreadyFilled;
+        }
+
+        public static async Task<bool> ShouldSkipAsync(ADSBotServices Services, ITurnContext TurnContext, string QuestionPath = "", Func<UserProfile, bool> AlreadyFilled = null, CancellationToken cancellationToken = default)
+        {
+            var userData = await Services.GetUserProfileAsync(TurnContext, cancellationToken);
+            return await ShouldSkipAsync(Services, userData, QuestionPath, AlreadyFilled?.Invoke(userData) ?? false);
+        }
+
+        public static bool ShouldSkip(ITurnContext TurnContext)
+        {
+            if (CheckEvent(TurnContext) == Constants.Event_Reject)
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 }

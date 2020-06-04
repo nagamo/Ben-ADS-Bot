@@ -80,12 +80,7 @@ namespace ADS.Bot.V1.Services
         }
         private void PopulateFinancingNote(FinancingDetails financing, ZCRMNote note)
         {
-            var lines = financing.GoodCredit ?
-                new string[]
-                {
-                    $"Credit Score: {financing.CreditScore}"
-                } :
-                new string[]
+            var lines = new string[]
                 {
                     $"Credit Score: {financing.CreditScore}",
                     $"Income: {financing.Income}",

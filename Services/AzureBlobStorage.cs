@@ -216,7 +216,7 @@ namespace ADS.Bot.V1.Services
             }
         }
 
-        private static string GetBlobName(string key)
+        public static string GetBlobName(string key)
         {
             if (string.IsNullOrEmpty(key))
             {

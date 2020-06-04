@@ -15,13 +15,14 @@ namespace ADS.Bot1.Dialogs
 {
     public class FinanceDialog : ComponentDialog
     {
-        public ADSBotServices Services { get; }
+        private ADSBotServices Services { get; }
+        private WaterfallStep[] WaterfallSteps { get; }
 
         public FinanceDialog(ADSBotServices services)
             : base(nameof(FinanceDialog))
         {
             // This array defines how the Waterfall will execute.
-            var waterfallSteps = new WaterfallStep[]
+            WaterfallSteps = new WaterfallStep[]
             {
                 PreInitializeStep,
                 InitializeStep,
@@ -43,17 +44,15 @@ namespace ADS.Bot1.Dialogs
             };
 
             // Add named dialogs to the DialogSet. These names are saved in the dialog state.
-            AddDialog(new WaterfallDialog(nameof(WaterfallDialog), waterfallSteps));
+            AddDialog(new WaterfallDialog(nameof(WaterfallDialog), WaterfallSteps));
             AddDialog(new TextPrompt(nameof(TextPrompt)));
-            AddDialog(new ChoicePrompt(nameof(ChoicePrompt)));
+            AddDialog(new ChoicePrompt(nameof(ChoicePrompt), Utilities.AllChoiceValidator));
             AddDialog(new ConfirmPrompt(nameof(ConfirmPrompt)));
 
             // The initial child Dialog to run.
             InitialDialogId = nameof(WaterfallDialog);
             Services = services;
         }
-
-
 
         private async Task<DialogTurnResult> PreInitializeStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
@@ -109,9 +108,8 @@ namespace ADS.Bot1.Dialogs
 
         private async Task<DialogTurnResult> CreditScoreStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            if (userData.Financing.SkipCreditScore) return await stepContext.NextAsync(cancellationToken: cancellationToken);
-
+            if(await Utilities.ShouldSkipAsync(Services, stepContext.Context, "finance.credit", ud => ud.Financing.CreditEntered, cancellationToken))
+                return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
             var creditOptions = Utilities.CreateOptions(new string[] { "<500", "500-600", "600-700", "700+" }, "Hate to ask this, " +
                 "but you know it's inevitable, right? Can you please take a swag at your credit score for me?");
@@ -121,13 +119,27 @@ namespace ADS.Bot1.Dialogs
         private async Task<DialogTurnResult> ValidateCreditScoreStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            if (stepContext.Result != null)
+
+            if (Utilities.ShouldSkip(stepContext.Context))
+            {
+                return await stepContext.NextAsync();
+            }
+            else if (stepContext.Result != null)
                 userData.Financing.CreditScore = Utilities.ReadChoiceWithManual(stepContext);
 
-            if (userData.Financing.GoodCredit)
+            if(await Services.DealerConfig.GetAsync<bool>(userData, "credit_skip", false))
             {
-                await stepContext.Context.SendActivityAsync("Wow! Nice score, saved you a bunch of questions too!");
+                var goodCreditLimit = await Services.DealerConfig.GetAsync<int>(userData, "credit_skip_value", 0);
+
+                if (userData.Financing.CreditValue != 0 && userData.Financing.CreditValue >= goodCreditLimit)
+                {
+                    await stepContext.Context.SendActivityAsync("Wow! Nice score, saved you a bunch of questions too!");
+                    //Bit of a hack to skip all the questions
+                    //this is third-from-last because NextAsync advances
+                    stepContext.ActiveDialog.State["stepIndex"] = WaterfallSteps.Length - 3;
+                }
             }
+
 
             return await stepContext.NextAsync();
         }
@@ -136,9 +148,8 @@ namespace ADS.Bot1.Dialogs
 
         private async Task<DialogTurnResult> IncomeStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            if (userData.Financing.SkipIncome) return await stepContext.NextAsync(cancellationToken: cancellationToken);
-
+            if (await Utilities.ShouldSkipAsync(Services, stepContext.Context, "finance.income", ud => ud.Financing.IncomeEntered, cancellationToken))
+                return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
             var incomeOptions = Utilities.CreateOptions(new string[] { "$1K-$2K per month", "$2K-$4K per month", "$4k - $8K per month", "$8K - $10K per month", "> $10K per month" }, 
                                                         "OK, no fibbing now. Can you provide some sense of your gross monthly income? We promise " +
@@ -149,7 +160,10 @@ namespace ADS.Bot1.Dialogs
         private async Task<DialogTurnResult> ValidateIncomeStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            if (stepContext.Result != null)
+
+            if (Utilities.ShouldSkip(stepContext.Context))
+                return await stepContext.NextAsync();
+            else if (stepContext.Result != null)
                 userData.Financing.Income = Utilities.ReadChoiceWithManual(stepContext);
 
             return await stepContext.NextAsync();
@@ -159,10 +173,8 @@ namespace ADS.Bot1.Dialogs
 
         private async Task<DialogTurnResult> HomeOwnershipStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            if (userData.Financing.SkipHome) return await stepContext.NextAsync(cancellationToken: cancellationToken);
-
-
+            if (await Utilities.ShouldSkipAsync(Services, stepContext.Context, "finance.home", ud => ud.Financing.HomeEntered, cancellationToken))
+                return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
             var ownershipOptions = Utilities.CreateOptions(new string[] { "Own", "Rent", "Other" }, "Whew! Almost done! How about a little home-ownership information?");
             return await stepContext.PromptAsync(nameof(ChoicePrompt), ownershipOptions, cancellationToken);
@@ -171,7 +183,10 @@ namespace ADS.Bot1.Dialogs
         private async Task<DialogTurnResult> ValidateHomeOwnershipStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            if (stepContext.Result != null)
+            
+            if (Utilities.ShouldSkip(stepContext.Context))
+                return await stepContext.NextAsync();
+            else if (stepContext.Result != null)
                 userData.Financing.HomeOwnership = Utilities.ReadChoiceWithManual(stepContext);
 
             return await stepContext.NextAsync();
@@ -181,10 +196,8 @@ namespace ADS.Bot1.Dialogs
 
         private async Task<DialogTurnResult> EmploymentStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            if (userData.Financing.SkipEmployment) return await stepContext.NextAsync(cancellationToken: cancellationToken);
-
-
+            if (await Utilities.ShouldSkipAsync(Services, stepContext.Context, "finance.employment", ud => ud.Financing.EmploymentEntered, cancellationToken))
+                return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
             var ownershipOptions = Utilities.CreateOptions(new string[] { "I'm Unemployed", "Less than a year", "1 - 5 years", "More than five years" }, 
                                                            "Last Question! (And you thought we'd never get here!). How long have you been in your current job?");
@@ -194,7 +207,10 @@ namespace ADS.Bot1.Dialogs
         private async Task<DialogTurnResult> ValidateEmploymentStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            if (stepContext.Result != null)
+            
+            if (Utilities.ShouldSkip(stepContext.Context))
+                return await stepContext.NextAsync();
+            else if (stepContext.Result != null)
                 userData.Financing.Employment = Utilities.ReadChoiceWithManual(stepContext);
 
             return await stepContext.NextAsync();

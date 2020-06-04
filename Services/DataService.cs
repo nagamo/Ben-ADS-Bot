@@ -45,8 +45,10 @@ namespace ADS.Bot.V1.Services
 
         public DB_Dealer GetDealerByFacebookPageID(string FacebookPageID)
         {
-            var findQuery = CreateDealerQuery().Where(d => d.FB_PageIDs.Contains(FacebookPageID));
-            return DealerStorage.ExecuteQuery(findQuery as TableQuery<DB_Dealer>).FirstOrDefault();
+            //Can't do a .Contains with linq syntax
+            return DealerStorage.ExecuteQuery(CreateDealerQuery())
+                .ToList()
+                .FirstOrDefault(d => d.FB_PageIDs?.Contains(FacebookPageID) ?? false);
         }
 
 

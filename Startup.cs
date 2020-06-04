@@ -59,6 +59,7 @@ namespace ADS.Bot1
 
             var vinDBConnectionString = Configuration.GetConnectionString("VinSolutionsDB");
             CloudStorageAccount account = CloudStorageAccount.Parse(vinDBConnectionString);
+            services.AddSingleton(account);
             services.AddSingleton(account.CreateCloudTableClient());
 
             // Create the User and Conversation State
@@ -76,6 +77,7 @@ namespace ADS.Bot1
 
             // Create the bot services (LUIS, QnA) as a singleton.
             services.AddSingleton<BuyerBridgeAPIService>();
+            services.AddSingleton<DealerConfigService>();
             services.AddSingleton<ZohoAPIService>();
             services.AddSingleton<ADSBotServices>();
             services.AddSingleton<CRMService>();

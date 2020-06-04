@@ -228,20 +228,21 @@ namespace ADS.Bot1.Dialogs
             PromptOptions goalOptions = null;
 
             var currentQuery = BuildQuery(userData);
+            var dealerShowCount = await Services.DealerConfig.GetAsync<bool>(userData, "show_count", true);
 
             switch (userData.SimpleInventory.PrimaryConcern)
             {
                 case "By Price":
                     goalOptions = Utilities.GroupedOptions(DataService.ListAvailablePriceRanges(currentQuery),
-                        "Sure thing! Name your price range", ExtraAppend: "Any Price");
+                        "Sure thing! Name your price range", ExtraAppend: "Any Price", ShowCount: dealerShowCount);
                     break;
                 case "By Payment":
                     goalOptions = Utilities.GroupedOptions(DataService.ListAvailablePayments(currentQuery),
-                        "Sure thing! Name your payment", ExtraAppend: "Any Payment");
+                        "Sure thing! Name your payment", ExtraAppend: "Any Payment", ShowCount: dealerShowCount);
                     break;
                 case "By Vehicle Type":
                     goalOptions = Utilities.GroupedOptions(DataService.ListAvailableBodyTypes(currentQuery),
-                        "Great! What vehicle type are you interested in?");
+                        "Great! What vehicle type are you interested in?", ShowCount: dealerShowCount);
                     break;
             }
 
@@ -477,8 +478,9 @@ namespace ADS.Bot1.Dialogs
                 }
                 else
                 {
-                    var vehicle = DataService.GetCar(vinChoice.Value);
+                    userData.SimpleInventory.VIN = vinChoice.Value;
 
+                    var vehicle = DataService.GetCar(vinChoice.Value);
                     if (vehicle != null)
                     {
                         await stepContext.Context.SendActivityAsync($"I'm a {vehicle.Make} guy myself, good choice! I've marked down your interest for the VIN {vehicle.VIN()}.");
@@ -510,17 +512,19 @@ namespace ADS.Bot1.Dialogs
             {
                 if (stepContext.Result is FoundChoice appointmentChoice)
                 {
-                    if (appointmentChoice.Value == "Yes!")
-                    {
-                        Services.CRM.WriteCRMDetails(CRMStage.SimpleInventoryCompleted, userData);
-
-                        await stepContext.Context.SendActivityAsync("Thanks! Someone will be in touch with you shortly.");
-                        return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
-                    }
+                    userData.Details.RequestContact = (appointmentChoice.Value == "Yes!");
                 }
 
-                await stepContext.Context.SendActivityAsync("Thanks for filling that out, I'll remember your details in case you want to come back and make an appointment later.");
-                return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
+
+                if (userData.Details.RequestContact)
+                {
+                    Services.CRM.WriteCRMDetails(CRMStage.SimpleInventoryCompleted, userData);
+                    await stepContext.Context.SendActivityAsync("Thanks! Someone will be in touch with you shortly.");
+                }
+                else
+                {
+                    await stepContext.Context.SendActivityAsync("Thanks for filling that out, I'll remember your details in case you want to come back and make an appointment later.");
+                }
             }
 
             return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);

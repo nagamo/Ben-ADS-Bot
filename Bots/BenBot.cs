@@ -1,4 +1,5 @@
 ﻿using ADS.Bot.V1.Dialogs;
+using ADS.Bot.V1.Models;
 using ADS.Bot1;
 using ADS.Bot1.Dialogs;
 using ADS_Sync;
@@ -11,6 +12,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -126,6 +128,27 @@ namespace ADS.Bot.V1.Bots
             if (userProfile.Details != null)
             {
                 userProfile.Details.UniqueID = turnContext.Activity.Recipient.Id;
+
+                var pageID = turnContext.Activity.ChannelId;
+                var dealerData = Services.DataService.GetDealerByFacebookPageID(pageID);
+
+                if(dealerData != null)
+                {
+                    userProfile.Details.DealerID = dealerData.RowKey;
+                }
+
+                if (!string.IsNullOrEmpty(userProfile.Details.DealerID))
+                {
+                    await Services.DealerConfig.RefreshDealerAsync(userProfile.Details.DealerID);
+                }
+                else
+                { 
+                }
+            }
+
+            if (CheckForFacebookMarketplace(turnContext, userProfile))
+            {
+                
             }
 
             //Let the manager handle passing our message to the one-and-only dialog
@@ -142,6 +165,41 @@ namespace ADS.Bot.V1.Bots
                     }
                     break;
             }
+        }
+
+        protected bool CheckForFacebookMarketplace(ITurnContext<IMessageActivity> turnContext, UserProfile userProfile)
+        {
+            var messageText = turnContext.Activity.Text;
+
+            /* Example:
+             * 
+             *  https://www.facebook.com/marketplace/item/2904343352947650/?ref=messaging_thread&link_ref=BuyerBridge
+
+                VIN: WDYPF4CC2B5509284
+
+                Is this still available?
+             * 
+             */
+            var matchRegex = Services.Configuration["ads:fb_message_regex"];
+            var matchTest = Regex.Match(messageText, matchRegex);
+
+            if (matchTest.Success)
+            {
+                var fbURL = matchTest.Groups[1].Value;
+                var vin = matchTest.Groups[4].Value;
+                var query = matchTest.Groups[5].Value;
+
+                userProfile.SimpleInventory = new SimpleInventoryDetails()
+                {
+                    VIN = vin
+                };
+
+                turnContext.Activity.Text = query;
+
+                return true;
+            }
+
+            return false;
         }
     }
 }

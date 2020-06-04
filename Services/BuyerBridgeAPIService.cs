@@ -35,11 +35,11 @@ namespace ADS.Bot.V1.Services
             if (string.IsNullOrEmpty(profile.Details.DealerID))
                 throw new ArgumentNullException("UserProfile.Details.DealerID cannot be empty");
 
-            var lead = BB_Lead.CreateFromProfile(profile);
+            var bb_lead = BB_Lead.CreateFromProfile(profile);
 
             var createUpdateQuery = new RestRequest("stored_leads", Method.MERGE, DataFormat.Json);
 
-            var bodyJSON = JsonConvert.SerializeObject(lead);
+            var bodyJSON = JsonConvert.SerializeObject(bb_lead);
 
             createUpdateQuery.AddParameter("application/json", bodyJSON, ParameterType.RequestBody);
 
@@ -116,12 +116,7 @@ namespace ADS.Bot.V1.Services
             {
                 bbLead.Data.Field_Data = new List<BB_Field>();
 
-                var lines = profile.Financing.GoodCredit ?
-                    new string[]
-                    {
-                        $"Credit Score: {profile.Financing.CreditScore}"
-                    } :
-                    new string[]
+                var lines = new string[]
                     {
                         $"Credit Score: {profile.Financing.CreditScore}",
                         $"Income: {profile.Financing.Income}",
