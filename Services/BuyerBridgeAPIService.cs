@@ -16,6 +16,7 @@ namespace ADS.Bot.V1.Services
     public class BuyerBridgeAPIService
     {
         public IConfiguration Configuration { get; }
+        internal CRMService RootCRM { get; set; }
 
         private IRestClient apiClient;
 
@@ -35,7 +36,7 @@ namespace ADS.Bot.V1.Services
             if (string.IsNullOrEmpty(profile.Details.DealerID))
                 throw new ArgumentNullException("UserProfile.Details.DealerID cannot be empty");
 
-            var bb_lead = BB_Lead.CreateFromProfile(profile);
+            var bb_lead = BB_Lead.CreateFromProfile(profile, RootCRM.Services);
 
             var createUpdateQuery = new RestRequest("stored_leads", Method.MERGE, DataFormat.Json);
 
@@ -99,7 +100,7 @@ namespace ADS.Bot.V1.Services
         [JsonProperty("data")]
         public BB_AdditionalDetails Data { get; set; }
 
-        public static BB_Lead CreateFromProfile(UserProfile profile)
+        public static async Task<BB_Lead> CreateFromProfile(UserProfile profile, ADSBotServices services)
         {
             var bbLead = new BB_Lead()
             {
@@ -112,7 +113,7 @@ namespace ADS.Bot.V1.Services
                 Data = new BB_AdditionalDetails()
             };
 
-            if (profile.Financing?.IsCompleted ?? false)
+            if (await profile.Financing?.IsValidForSubmit(profile, services))
             {
                 bbLead.Data.Field_Data = new List<BB_Field>();
 

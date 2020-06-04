@@ -1,4 +1,5 @@
 ﻿using ADS.Bot.V1.Models;
+using ADS.Bot1;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
@@ -9,6 +10,8 @@ namespace ADS.Bot.V1.Services
 {
     public class CRMService
     {
+        internal ADSBotServices Services { get; set; }
+
         public CRMService(IConfiguration configuration, 
             ZohoAPIService zohoService, BuyerBridgeAPIService bbService)
         {
@@ -16,6 +19,8 @@ namespace ADS.Bot.V1.Services
             ZohoService = zohoService;
             BBService = bbService;
             IsActive = false;
+
+            BBService.RootCRM = this;
 
             CheckEnabled();
         }

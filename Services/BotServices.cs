@@ -33,6 +33,8 @@ namespace ADS.Bot1
             UserState = userState;
             CRM = crmService;
 
+            CRM.Services = this;
+
             UserProfileAccessor = UserState.CreateProperty<UserProfile>(nameof(UserProfile));
             DialogStateAccessor = ConversationState.CreateProperty<DialogState>(nameof(DialogState));
             //Used by micrsoft dialog classes

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ADS.Bot1;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
@@ -82,6 +83,15 @@ namespace ADS.Bot.V1.Models
             {
                 return !string.IsNullOrEmpty(HomeOwnership);
             }
+        }
+
+        public async Task<bool> IsValidForSubmit(UserProfile Profile, ADSBotServices Services)
+        {
+            return 
+                await Services.DealerConfig.IsValidResponseAsync(Profile, Profile.Financing.CreditScore, "finance.credit") &&
+                await Services.DealerConfig.IsValidResponseAsync(Profile, Profile.Financing.Employment, "finance.employment") &&
+                await Services.DealerConfig.IsValidResponseAsync(Profile, Profile.Financing.Income, "finance.income") &&
+                await Services.DealerConfig.IsValidResponseAsync(Profile, Profile.Financing.HomeOwnership, "finance.home");
         }
     }
 }
