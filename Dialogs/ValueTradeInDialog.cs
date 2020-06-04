@@ -26,14 +26,8 @@ namespace ADS.Bot.V1.Dialogs
                 PreInitializeStep,
                 InitializeStep,
 
-                MakeStep,
-                ValidateMakeStep,
-
-                ModelStep,
-                ValidateModelStep,
-
-                YearStep,
-                ValidateYearStep,
+                VehicleStep,
+                ValidateVehicleStep,
 
                 ConditionStep,
                 ValidateConditionStep,
@@ -110,67 +104,24 @@ namespace ADS.Bot.V1.Dialogs
 
 
 
-
-
-        private async Task<DialogTurnResult> MakeStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        private async Task<DialogTurnResult> VehicleStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            if (userData.TradeDetails.SkipMake) return await stepContext.NextAsync(cancellationToken: cancellationToken);
+            if (userData.TradeDetails.SkipVehicle) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
 
-            var makeOptions = Utilities.CreateOptions(new string[] { "Chevrolet", "Toyota", "Honda" }, "What is the make of your trade-in?");
-            return await stepContext.PromptAsync(nameof(ChoicePrompt), makeOptions, cancellationToken);
+            var options = new PromptOptions()
+            {
+                Prompt = MessageFactory.Text("Give a brief description of your trade-in vehicle. (eg: 2014 Chevy Cruze, 1995 Honda Civic)")
+            };
+            return await stepContext.PromptAsync(nameof(TextPrompt), options, cancellationToken: cancellationToken);
         }
-
-        private async Task<DialogTurnResult> ValidateMakeStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        
+        private async Task<DialogTurnResult> ValidateVehicleStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
             if (stepContext.Result != null)
-                userData.TradeDetails.Make = Utilities.ReadChoiceWithManual(stepContext);
-
-            return await stepContext.NextAsync();
-        }
-
-
-
-        private async Task<DialogTurnResult> ModelStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
-        {
-            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            if (userData.TradeDetails.SkipModel) return await stepContext.NextAsync(cancellationToken: cancellationToken);
-
-
-
-            var modelOptions = Utilities.CreateOptions(new string[] { "Tacoma", "Tundra", "RAV4" }, "And the Model?");
-            return await stepContext.PromptAsync(nameof(ChoicePrompt), modelOptions, cancellationToken);
-        }
-
-        private async Task<DialogTurnResult> ValidateModelStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
-        {
-            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            if (stepContext.Result != null)
-                userData.TradeDetails.Model = Utilities.ReadChoiceWithManual(stepContext);
-
-            return await stepContext.NextAsync();
-        }
-
-
-
-        private async Task<DialogTurnResult> YearStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
-        {
-            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            if (userData.TradeDetails.SkipYear) return await stepContext.NextAsync(cancellationToken: cancellationToken);
-
-
-
-            var yearOptions = Utilities.CreateOptions(new string[] { "2019", "2018", "2017", "2016", "2015", "2014", "2013", "2012" }, "What year vehicle is it?");
-            return await stepContext.PromptAsync(nameof(ChoicePrompt), yearOptions, cancellationToken);
-        }
-
-        private async Task<DialogTurnResult> ValidateYearStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
-        {
-            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            if (stepContext.Result != null)
-                userData.TradeDetails.Year = Utilities.ReadChoiceWithManual(stepContext);
+                userData.TradeDetails.Vehicle = Utilities.ReadChoiceWithManual(stepContext);
 
             return await stepContext.NextAsync();
         }
@@ -227,7 +178,7 @@ namespace ADS.Bot.V1.Dialogs
 
             if (Services.CRM.IsActive)
             {
-                var appointmentOptions = Utilities.CreateOptions(new string[] { "Yes!", "No" }, "Would you like to confirm an appointment for a quick appraisal?");
+                var appointmentOptions = Utilities.CreateOptions(new string[] { "Yes!", "No" }, "Would you like our appraiser to contact you for a quick valuation of your trade?");
                 return await stepContext.PromptAsync(nameof(ChoicePrompt), appointmentOptions, cancellationToken);
             }
             else
@@ -244,20 +195,24 @@ namespace ADS.Bot.V1.Dialogs
             {
                 if(stepContext.Result is FoundChoice appointmentChoice)
                 {
-                    if(appointmentChoice.Value == "Yes!")
-                    {
-                        Services.CRM.WriteCRMDetails(CRMStage.ValueTradeInCompleted, userData);
-
-                        await stepContext.Context.SendActivityAsync("Thanks! Someone will be in touch with you shortly.");
-                        return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
-                    }
+                    userData.Details.RequestContact = appointmentChoice.Value == "Yes!";
                 }
 
-                await stepContext.Context.SendActivityAsync("Thanks for filling that out, I'll remember your details in case you want to come back and make an appointment later.");
-                return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
+                Services.CRM.WriteCRMDetails(CRMStage.ValueTradeInCompleted, userData);
+
+                if (userData.Details.RequestContact)
+                {
+                    await stepContext.Context.SendActivityAsync("Thanks! Someone will be in touch with you shortly.");
+                }
+                else {
+                    await stepContext.Context.SendActivityAsync("Thanks for filling that out, I'll remember your details in case you want to come back and make an appointment later.");
+                }
+            }
+            else
+            {
+                await stepContext.Context.SendActivityAsync("Thanks for filling that out!");
             }
 
-            await stepContext.Context.SendActivityAsync("Thanks for filling that out!");
             return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
         }
     }

@@ -12,9 +12,7 @@ namespace ADS.Bot.V1.Models
             get
             {
                 return
-                    !string.IsNullOrEmpty(Make) &&
-                    !string.IsNullOrEmpty(Model) &&
-                    !string.IsNullOrEmpty(Year) &&
+                    !string.IsNullOrEmpty(Vehicle) &&
                     !string.IsNullOrEmpty(Condition) &&
                     !string.IsNullOrEmpty(AmountOwed);
             }
@@ -22,9 +20,7 @@ namespace ADS.Bot.V1.Models
 
         public long? ADS_CRM_ID { get; set; } = null;
 
-        public string Make { get; set; }
-        public string Model { get; set; }
-        public string Year { get; set; }
+        public string Vehicle { get; set; }
         public string Mileage { get; set; }
         public string Condition { get; set; }
         public string AmountOwed { get; set; }
@@ -32,13 +28,7 @@ namespace ADS.Bot.V1.Models
 
 
         [JsonIgnore]
-        public bool SkipMake { get { return !string.IsNullOrEmpty(Make); } }
-
-        [JsonIgnore]
-        public bool SkipModel { get { return !string.IsNullOrEmpty(Model); } }
-
-        [JsonIgnore]
-        public bool SkipYear { get { return !string.IsNullOrEmpty(Year); } }
+        public bool SkipVehicle { get { return !string.IsNullOrEmpty(Vehicle); } }
 
         [JsonIgnore]
         public bool SkipMileage { get { return !string.IsNullOrEmpty(Mileage); } }

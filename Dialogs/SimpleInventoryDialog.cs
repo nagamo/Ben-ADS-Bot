@@ -495,7 +495,7 @@ namespace ADS.Bot1.Dialogs
 
             if (Services.CRM.IsActive)
             {
-                var appointmentOptions = Utilities.CreateOptions(new string[] { "Yes!", "No" }, "Would you like a call from the GM to further narrow down on a vehicle?");
+                var appointmentOptions = Utilities.CreateOptions(new string[] { "Yes!", "No" }, "Would you like a salesman to contact you?");
                 return await stepContext.PromptAsync(nameof(ChoicePrompt), appointmentOptions, cancellationToken);
             }
             else
@@ -515,10 +515,10 @@ namespace ADS.Bot1.Dialogs
                     userData.Details.RequestContact = (appointmentChoice.Value == "Yes!");
                 }
 
+                Services.CRM.WriteCRMDetails(CRMStage.SimpleInventoryCompleted, userData);
 
                 if (userData.Details.RequestContact)
                 {
-                    Services.CRM.WriteCRMDetails(CRMStage.SimpleInventoryCompleted, userData);
                     await stepContext.Context.SendActivityAsync("Thanks! Someone will be in touch with you shortly.");
                 }
                 else

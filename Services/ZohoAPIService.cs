@@ -101,9 +101,7 @@ namespace ADS.Bot.V1.Services
         {
             string details = string.Join(Environment.NewLine, new string[]
             {
-                $"Make: {tradein.Make}",
-                $"Model: {tradein.Model}",
-                $"Year: {tradein.Year}",
+                $"Vehicle: {tradein.Vehicle}",
                 $"Mileage: {tradein.Mileage}",
                 $"Condition: {tradein.Condition}",
                 $"Amount Owed: {tradein.AmountOwed:C2}",

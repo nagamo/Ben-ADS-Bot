@@ -154,9 +154,8 @@ namespace ADS.Bot.V1.Services
 
                 bbLead.Data.TradeIn_Vehicle = new BB_VehicleDetails()
                 {
-                    Make = tradein.Make,
-                    Model = tradein.Model,
-                    Year = tradein.Year,
+                    //TODO: Need to expand vehicle details into make/model/year
+                    Make = tradein.Vehicle,
                     Condition = tradein.Condition
                 };
 

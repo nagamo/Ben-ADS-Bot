@@ -61,14 +61,14 @@ namespace ADS.Bot1.Dialogs
             {
                 if (userData.Financing.IsCompleted)
                 {
-                    var resetOptions = Utilities.CreateOptions(new string[] { "Reset", "Use Previous" }, 
+                    var resetOptions = Utilities.CreateOptions(new string[] { "Reset", "Use Previous" },
                         "Look's like I've already got financing details for you.\r\nWould you to fill those details out again?",
                         "Not sure what you meant, try again?");
                     return await stepContext.PromptAsync(nameof(ChoicePrompt), resetOptions, cancellationToken);
                 }
                 else
                 {
-                    var resetOptions = Utilities.CreateOptions(new string[] { "Reset", "Resume" }, 
+                    var resetOptions = Utilities.CreateOptions(new string[] { "Reset", "Resume" },
                         "Look's like you have some details filled in already.\r\nDo you want to pick up where you left off, or fill things out again?",
                         "Not sure what you meant, try again?");
                     return await stepContext.PromptAsync(nameof(ChoicePrompt), resetOptions, cancellationToken);
@@ -84,8 +84,8 @@ namespace ADS.Bot1.Dialogs
         private async Task<DialogTurnResult> InitializeStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            
-            if(stepContext.Result is FoundChoice choice)
+
+            if (stepContext.Result is FoundChoice choice)
             {
                 //User was prompted about reseting/continuing
                 switch (choice.Value)
@@ -94,7 +94,7 @@ namespace ADS.Bot1.Dialogs
                         userData.Financing = new FinancingDetails();
                         break;
                     case "Resume":
-                        //Don't need to do anything, each sub-dialog will skip
+                    //Don't need to do anything, each sub-dialog will skip
                     case "Use Previous":
                         //Let this ripple through all stages, will go to end if everything is already there.
                         break;
@@ -108,7 +108,7 @@ namespace ADS.Bot1.Dialogs
 
         private async Task<DialogTurnResult> CreditScoreStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            if(await Utilities.ShouldSkipAsync(Services, stepContext.Context, "finance.credit", ud => ud.Financing.CreditEntered, cancellationToken))
+            if (await Utilities.ShouldSkipAsync(Services, stepContext.Context, "finance.credit", ud => ud.Financing.CreditEntered, cancellationToken))
                 return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
             var creditOptions = Utilities.CreateOptions(new string[] { "<500", "500-600", "600-700", "700+" }, "Hate to ask this, " +
@@ -127,7 +127,7 @@ namespace ADS.Bot1.Dialogs
             else if (stepContext.Result != null)
                 userData.Financing.CreditScore = Utilities.ReadChoiceWithManual(stepContext);
 
-            if(await Services.DealerConfig.GetAsync<bool>(userData, "credit_skip", false))
+            if (await Services.DealerConfig.GetAsync<bool>(userData, "credit_skip", false))
             {
                 var goodCreditLimit = await Services.DealerConfig.GetAsync<int>(userData, "credit_skip_value", 0);
 
@@ -151,7 +151,7 @@ namespace ADS.Bot1.Dialogs
             if (await Utilities.ShouldSkipAsync(Services, stepContext.Context, "finance.income", ud => ud.Financing.IncomeEntered, cancellationToken))
                 return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
-            var incomeOptions = Utilities.CreateOptions(new string[] { "$1K-$2K per month", "$2K-$4K per month", "$4k - $8K per month", "$8K - $10K per month", "> $10K per month" }, 
+            var incomeOptions = Utilities.CreateOptions(new string[] { "$1K-$2K per month", "$2K-$4K per month", "$4k - $8K per month", "$8K - $10K per month", "> $10K per month" },
                                                         "OK, no fibbing now. Can you provide some sense of your gross monthly income? We promise " +
                                                         "not to say anything to the IRS!");
             return await stepContext.PromptAsync(nameof(ChoicePrompt), incomeOptions, cancellationToken);
@@ -183,7 +183,7 @@ namespace ADS.Bot1.Dialogs
         private async Task<DialogTurnResult> ValidateHomeOwnershipStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            
+
             if (Utilities.ShouldSkip(stepContext.Context))
                 return await stepContext.NextAsync();
             else if (stepContext.Result != null)
@@ -199,7 +199,7 @@ namespace ADS.Bot1.Dialogs
             if (await Utilities.ShouldSkipAsync(Services, stepContext.Context, "finance.employment", ud => ud.Financing.EmploymentEntered, cancellationToken))
                 return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
-            var ownershipOptions = Utilities.CreateOptions(new string[] { "I'm Unemployed", "Less than a year", "1 - 5 years", "More than five years" }, 
+            var ownershipOptions = Utilities.CreateOptions(new string[] { "I'm Unemployed", "Less than a year", "1 - 5 years", "More than five years" },
                                                            "Last Question! (And you thought we'd never get here!). How long have you been in your current job?");
             return await stepContext.PromptAsync(nameof(ChoicePrompt), ownershipOptions, cancellationToken);
         }
@@ -207,7 +207,7 @@ namespace ADS.Bot1.Dialogs
         private async Task<DialogTurnResult> ValidateEmploymentStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
-            
+
             if (Utilities.ShouldSkip(stepContext.Context))
                 return await stepContext.NextAsync();
             else if (stepContext.Result != null)
@@ -224,7 +224,7 @@ namespace ADS.Bot1.Dialogs
 
             if (Services.CRM.IsActive)
             {
-                var appointmentOptions = Utilities.CreateOptions(new string[] { "Yes!", "No" }, "Would you like to confirm an appointment?");
+                var appointmentOptions = Utilities.CreateOptions(new string[] { "Yes!", "No" }, "Would you like our finance specialist to contact you?");
                 return await stepContext.PromptAsync(nameof(ChoicePrompt), appointmentOptions, cancellationToken);
             }
             else
@@ -241,20 +241,25 @@ namespace ADS.Bot1.Dialogs
             {
                 if (stepContext.Result is FoundChoice appointmentChoice)
                 {
-                    if (appointmentChoice.Value == "Yes!")
-                    {
-                        Services.CRM.WriteCRMDetails(CRMStage.FinancingCompleted, userData);
-
-                        await stepContext.Context.SendActivityAsync("Thanks! Someone will be in touch with you shortly.");
-                        return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
-                    }
+                    userData.Details.RequestContact = appointmentChoice.Value == "Yes!";
                 }
 
-                await stepContext.Context.SendActivityAsync("Thanks for filling that out, I'll remember your details in case you want to come back and make an appointment later.");
-                return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
+                Services.CRM.WriteCRMDetails(CRMStage.FinancingCompleted, userData);
+
+                if (userData.Details.RequestContact)
+                {
+                    await stepContext.Context.SendActivityAsync("Thanks! Someone will be in touch with you shortly.");
+                }
+                else
+                {
+                    await stepContext.Context.SendActivityAsync("Thanks for filling that out, I'll remember your details in case you want to come back and make an appointment later.");
+                }
+            }
+            else
+            {
+                await stepContext.Context.SendActivityAsync("Thanks for filling that out!");
             }
 
-            await stepContext.Context.SendActivityAsync("Thanks for filling that out!");
             return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
         }
     }
