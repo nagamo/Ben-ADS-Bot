@@ -64,9 +64,6 @@ namespace ADS.Bot.V1.Bots
                             {
                                 Name = turnContext.Activity.From.Name,
                                 UniqueID = turnContext.Activity.From.Id,
-#if DEBUG
-                                DealerID = Services.Configuration.GetValue<string>("bb:test_dealer")
-#endif
                             };
 
                             newGreeting = true;
@@ -148,7 +145,15 @@ namespace ADS.Bot.V1.Bots
 
             if (CheckForFacebookMarketplace(turnContext, userProfile))
             {
-                
+
+            }
+            else
+            {
+                //If we don't have a user-assigned dealer ID and we have a test one in config file, use that
+                if (userProfile.Details.DealerID == null && Services.Configuration.GetValue<string>("bb:test_dealer") != null)
+                {
+                    userProfile.Details.DealerID = Services.Configuration.GetValue<string>("bb:test_dealer");
+                }
             }
 
             //Let the manager handle passing our message to the one-and-only dialog

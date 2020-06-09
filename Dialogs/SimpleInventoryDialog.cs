@@ -277,10 +277,11 @@ namespace ADS.Bot1.Dialogs
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
             if (userData.SimpleInventory.SkipMake) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
+            var dealerShowCount = await Services.DealerConfig.GetAsync<bool>(userData, "show_count", true);
 
             var concernOptions = Utilities.GroupedOptions(DataService.ListAvailableMakes(BuildQuery(userData)), 
                 "Here’s what we have",
-                ExtraAppend: "I don't see it!");
+                ExtraAppend: "I don't see it!", ShowCount: dealerShowCount);
             return await stepContext.PromptAsync(nameof(ChoicePrompt), concernOptions, cancellationToken);
         }
 

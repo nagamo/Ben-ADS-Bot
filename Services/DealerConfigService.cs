@@ -32,6 +32,11 @@ namespace ADS.Bot.V1.Services
         {
             var dealerID = Profile.Details.DealerID;
 
+            if (string.IsNullOrEmpty(dealerID))
+            {
+                return FallbackValue;
+            }
+
             if (!DealerConfig.ContainsKey(dealerID) || DealerConfig[dealerID] != null)
             {
                 await RefreshDealerAsync(dealerID);
