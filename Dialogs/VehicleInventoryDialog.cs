@@ -134,7 +134,7 @@ namespace ADS.Bot1.Dialogs
                 if (userData.Inventory.IsCompleted)
                 {
                     var resetOptions = Utilities.CreateOptions(new string[] { "Reset", "Use Previous" },
-                        "Look's like I've already got trade-in details for you.\r\nWould you to fill those details out again?",
+                        "Look's like I've already got inventory details for you.\r\nWould you to fill those details out again?",
                         "Not sure what you meant, try again?");
                     return await stepContext.PromptAsync(nameof(ChoicePrompt), resetOptions, cancellationToken);
                 }

@@ -138,21 +138,15 @@ namespace ADS.Bot.V1.Bots
                 {
                     await Services.DealerConfig.RefreshDealerAsync(userProfile.Details.DealerID);
                 }
-                else
-                { 
-                }
-            }
-
-            if (CheckForFacebookMarketplace(turnContext, userProfile))
-            {
-
-            }
-            else
-            {
-                //If we don't have a user-assigned dealer ID and we have a test one in config file, use that
-                if (userProfile.Details.DealerID == null && Services.Configuration.GetValue<string>("bb:test_dealer") != null)
+                else if (Services.Configuration.GetValue<string>("bb:test_dealer") != null)
                 {
+                    //If we don't have a user-assigned dealer ID and we have a test one in config file, use that
                     userProfile.Details.DealerID = Services.Configuration.GetValue<string>("bb:test_dealer");
+                }
+
+                if (CheckForFacebookMarketplace(turnContext, userProfile))
+                {
+
                 }
             }
 
@@ -186,6 +180,8 @@ namespace ADS.Bot.V1.Bots
              * 
              */
             var matchRegex = Services.Configuration["ads:fb_message_regex"];
+            if (string.IsNullOrEmpty(matchRegex)) return false;
+
             var matchTest = Regex.Match(messageText, matchRegex);
 
             if (matchTest.Success)
