@@ -281,7 +281,7 @@ namespace ADS.Bot1.Dialogs
 
             var concernOptions = Utilities.GroupedOptions(DataService.ListAvailableMakes(BuildQuery(userData)), 
                 "Here’s what we have",
-                ExtraAppend: "I don't see it!", ShowCount: dealerShowCount);
+                ExtraAppend: Constants.MSG_DONT_SEE_IT, ShowCount: dealerShowCount);
             return await stepContext.PromptAsync(nameof(ChoicePrompt), concernOptions, cancellationToken);
         }
 
@@ -290,7 +290,7 @@ namespace ADS.Bot1.Dialogs
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
             if (stepContext.Result is FoundChoice makeChoice)
             {
-                if (makeChoice.Value == "I don't see it!")
+                if (makeChoice.Value == Constants.MSG_DONT_SEE_IT)
                 {
                     //Something...
                 }
@@ -311,7 +311,7 @@ namespace ADS.Bot1.Dialogs
 
             var concernOptions = Utilities.GroupedOptions(DataService.ListAvailableModels(BuildQuery(userData)),
                 "Here’s what we have",
-                ExtraAppend: "I don't see it!", ShowCount: dealerShowCount);
+                ExtraAppend: Constants.MSG_DONT_SEE_IT, ShowCount: dealerShowCount);
             return await stepContext.PromptAsync(nameof(ChoicePrompt), concernOptions, cancellationToken);
         }
 
@@ -320,7 +320,7 @@ namespace ADS.Bot1.Dialogs
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
             if (stepContext.Result is FoundChoice modelChoice)
             {
-                if (modelChoice.Value == "I don't see it!")
+                if (modelChoice.Value == Constants.MSG_DONT_SEE_IT)
                 {
                     //Something...
                 }
@@ -412,15 +412,21 @@ namespace ADS.Bot1.Dialogs
                                     Title = "This is it!",
                                     Text = $"I like #{car_result.VIN()}",
                                     Value = car_result.VIN()
-                                },
+                                }
+                            }
+                        };
+
+                        //Don't always have an image.
+                        if (!string.IsNullOrEmpty(car_result.URL))
+                        {
+                            card.Buttons.Add(
                                 new CardAction()
                                 {
                                     Type = ActionTypes.OpenUrl,
                                     Title = "Take me to the website",
                                     Value = car_result.URL
-                                }
-                            }
-                        };
+                                });
+                        }
 
                         if (car_result.Used)
                         {
@@ -441,15 +447,15 @@ namespace ADS.Bot1.Dialogs
                         {
                             new CardAction(){
                                 Type = ActionTypes.PostBack,
-                                Title = "I don’t see it!",
-                                Value = "I don’t see it!"
+                                Title = Constants.MSG_DONT_SEE_IT,
+                                Value = Constants.MSG_DONT_SEE_IT
                             }
                         }
                     }.ToAttachment());
 
                     var CARouselActivity = Utilities.CreateCarousel(carAttachments);
 
-                    var availableOptions = trimmedResults.Select(c => c.VIN()).Append("I don't see it!");
+                    var availableOptions = trimmedResults.Select(c => c.VIN()).Append(Constants.MSG_DONT_SEE_IT);
                     var carOptions = Utilities.CreateOptions(availableOptions, CARouselActivity as Activity, Style: ListStyle.None);
                     return await stepContext.PromptAsync(InventoryChoice, carOptions, cancellationToken: cancellationToken);
                 }
@@ -474,9 +480,9 @@ namespace ADS.Bot1.Dialogs
 
             if (stepContext.Result is FoundChoice vinChoice)
             {
-                if(vinChoice.Value == "I don’t see it!")
+                if(vinChoice.Value == Constants.MSG_DONT_SEE_IT)
                 {
-
+                    await stepContext.Context.SendActivityAsync($"No worries! One of our salesmen would be happy to get in touch with you to help narrow down on a vehi.");
                 }
                 else
                 {

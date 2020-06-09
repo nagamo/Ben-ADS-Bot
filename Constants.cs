@@ -24,6 +24,8 @@ namespace ADS.Bot.V1
         public const string DEALER_CONFIG_PATH = "config.json";
 
 
+        public const string MSG_DONT_SEE_IT = "I don’t see it!";
+
         public const string INTEREST_Financing = "Explore Financing";
         public const string INTEREST_Identify = "Identify a Vehicle";
         public const string INTEREST_TradeIn = "Value a Trade-In";
