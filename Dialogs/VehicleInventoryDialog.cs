@@ -126,7 +126,7 @@ namespace ADS.Bot1.Dialogs
         {
             //Select as little data as possible
             var foundCarCount = Data_Service.CountCars();
-            await stepContext.Context.SendActivityAsync($"I'm glad you asked aobut my inventory. I just so happen to have {foundCarCount:n0} cars available!");
+            await stepContext.Context.SendActivityAsync($"I'm glad you asked about my inventory. I just so happen to have {foundCarCount:n0} cars available!");
 
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
             if (userData?.Inventory != null)

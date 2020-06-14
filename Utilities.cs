@@ -23,7 +23,7 @@ namespace ADS.Bot.V1
 
         public static PromptOptions CreateOptions(IEnumerable<string> Options, string PromptText, string RetryText = null, ListStyle Style = ListStyle.SuggestedAction)
         {
-            return CreateOptions(Options.ToArray(), MessageFactory.Text(PromptText), MessageFactory.Text(RetryText), Style);
+            return CreateOptions(Options.Where(o => !string.IsNullOrEmpty(o)).ToArray(), MessageFactory.Text(PromptText), MessageFactory.Text(RetryText), Style);
         }
 
         public static PromptOptions CreateOptions(IEnumerable<string> Options, Activity Prompt, Activity Retry = null, ListStyle Style = ListStyle.SuggestedAction)

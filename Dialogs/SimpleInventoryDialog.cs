@@ -165,7 +165,7 @@ namespace ADS.Bot1.Dialogs
 
                 //Select as little data as possible
                 var foundCars = DataService.CountCars(BuildQuery(userData));
-                await stepContext.Context.SendActivityAsync($"I'm glad you asked aobut my inventory. I just so happen to have {foundCars:n0} cars available!");
+                await stepContext.Context.SendActivityAsync($"I'm glad you asked about my inventory. I just so happen to have {foundCars:n0} cars available!");
 
                 return await stepContext.NextAsync(cancellationToken: cancellationToken);
             }
@@ -364,7 +364,7 @@ namespace ADS.Bot1.Dialogs
                 else if (resultsCount >= 1)
                 {
                     //1-10
-                    await stepContext.Context.SendActivityAsync($"I found {resultsCount:n0} cars that match that {userData.SimpleInventory.PrimaryConcern.ToLower()}\r\nI know its not a lot, but we've got plenty of other vehilcles available!");
+                    await stepContext.Context.SendActivityAsync($"I found {resultsCount:n0} cars that match that {userData.SimpleInventory.PrimaryConcern.ToLower()}\r\nI know its not a lot, but we've got plenty of other vehicles available!");
                 }
 
                 if (resultsCount > 0)
@@ -423,7 +423,7 @@ namespace ADS.Bot1.Dialogs
                                 new CardAction()
                                 {
                                     Type = ActionTypes.OpenUrl,
-                                    Title = "Take me to the website",
+                                    Title = "Full details",
                                     Value = car_result.URL
                                 });
                         }
@@ -443,6 +443,8 @@ namespace ADS.Bot1.Dialogs
                     //Append a final card just in case
                     carAttachments = carAttachments.Append(new HeroCard()
                     {
+                        Title = "Not here.",
+                        Text = "If you can't quite find what you are looking for here, one of our salesman would love to get in touch to follow up.",
                         Buttons = new List<CardAction>()
                         {
                             new CardAction(){
@@ -482,7 +484,7 @@ namespace ADS.Bot1.Dialogs
             {
                 if(vinChoice.Value == Constants.MSG_DONT_SEE_IT)
                 {
-                    await stepContext.Context.SendActivityAsync($"No worries! One of our salesmen would be happy to get in touch with you to help narrow down on a vehi.");
+                    await stepContext.Context.SendActivityAsync($"No worries! One of our salesmen would be happy to get in touch with you to help narrow down on a vehicle.");
                 }
                 else
                 {
