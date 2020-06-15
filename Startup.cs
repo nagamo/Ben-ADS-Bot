@@ -64,13 +64,13 @@ namespace ADS.Bot1
 
             // Create the User and Conversation State
             services.AddSingleton<UserState>();
-            services.AddSingleton<ConversationState>();
+            //services.AddSingleton<ConversationState>();
 
             //Alternatively Conversation state can be assigned to memory only to save space/load
-            /*
+            
             var memoryProvider = new MemoryStorage();
             services.AddSingleton<ConversationState>(new ConversationState(memoryProvider));
-            */
+            
 
 
             services.AddSingleton<DataService>();
