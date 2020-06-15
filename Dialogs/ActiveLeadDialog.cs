@@ -393,6 +393,12 @@ namespace ADS.Bot.V1.Dialogs
                 //We always send the response from QnA
                 await context.Context.SendActivityAsync(MessageFactory.Text(topResult.Answer));
 
+                //If we aren't in a dialog, just always re-prompt the user with help dialog.
+                if (!isBusy)
+                {
+                    await context.EmitEventAsync(Constants.Event_Help);
+                }
+
                 //and since the user has asked for a specific intent, we don't wait for further input. Call
                 //the turn complete
                 return new DialogTurnResult(DialogTurnStatus.Complete);
