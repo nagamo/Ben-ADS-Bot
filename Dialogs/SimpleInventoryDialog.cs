@@ -493,6 +493,11 @@ namespace ADS.Bot1.Dialogs
                     var vehicle = DataService.GetCar(vinChoice.Value);
                     if (vehicle != null)
                     {
+                        userData.SimpleInventory.Make = vehicle.Make;
+                        userData.SimpleInventory.Model = vehicle.Model;
+                        userData.SimpleInventory.Year = vehicle.Year;
+                        userData.SimpleInventory.Used = vehicle.Used;
+
                         await stepContext.Context.SendActivityAsync($"I'm a {vehicle.Make} guy myself, good choice! I've marked down your interest for the VIN {vehicle.VIN()}.");
                     }
                 }

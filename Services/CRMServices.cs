@@ -59,24 +59,23 @@ namespace ADS.Bot.V1.Services
                     //ZohoService.CreateUpdateLead(profile);
                     break;
                 case CRMStage.FinancingCompleted:
-                    BBService.CreateUpdateLead(profile);
                     ZohoService.CreateUpdateLead(profile);
                     ZohoService.WriteFinancingNote(profile);
                     break;
                 case CRMStage.VehicleProfileCompleted:
-                    BBService.CreateUpdateLead(profile);
                     ZohoService.CreateUpdateLead(profile);
                     ZohoService.WriteVehicleProfileNote(profile);
                     break;
                 case CRMStage.ValueTradeInCompleted:
-                    BBService.CreateUpdateLead(profile);
                     ZohoService.CreateUpdateLead(profile);
                     ZohoService.WriteTradeInNote(profile);
                     break;
                 case CRMStage.SimpleInventoryCompleted:
-                    BBService.CreateUpdateLead(profile);
                     ZohoService.CreateUpdateLead(profile);
                     ZohoService.WriteInventoryNote(profile);
+                    break;
+                case CRMStage.Fnalize:
+                    BBService.CreateUpdateLead(profile);
                     break;
             }
         }
@@ -90,5 +89,6 @@ namespace ADS.Bot.V1.Services
         VehicleProfileCompleted,
         ValueTradeInCompleted,
         SimpleInventoryCompleted,
+        Fnalize
     }
 }

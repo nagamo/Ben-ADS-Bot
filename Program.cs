@@ -24,6 +24,7 @@ namespace ADS.Bot1
                 {
                     logging.AddDebug();
                     logging.AddConsole();
+
 #if RELEASE
                         logging.AddApplicationInsights();
                         logging.AddFilter<ApplicationInsightsLoggerProvider>("", LogLevel.Information);

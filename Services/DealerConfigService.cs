@@ -28,6 +28,11 @@ namespace ADS.Bot.V1.Services
         CloudStorageAccount StorageAccount { get; }
         public IConfiguration Configuration { get; }
 
+        public T Get<T>(UserProfile Profile, string ConfigPath, T FallbackValue = default)
+        {
+            return GetAsync<T>(Profile, ConfigPath, FallbackValue).Result;
+        }
+
         public async Task<T> GetAsync<T>(UserProfile Profile, string ConfigPath, T FallbackValue = default)
         {
             var dealerID = Profile.Details.DealerID;

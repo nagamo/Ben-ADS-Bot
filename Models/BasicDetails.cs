@@ -31,6 +31,7 @@ namespace ADS.Bot.V1.Models
         
         public string Timeframe { get; set; }
         public bool RequestContact { get; set; } = false;
+        public bool New { get; set; }
     }
 
 }

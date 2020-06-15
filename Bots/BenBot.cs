@@ -1,5 +1,6 @@
 ﻿using ADS.Bot.V1.Dialogs;
 using ADS.Bot.V1.Models;
+using ADS.Bot.V1.Services;
 using ADS.Bot1;
 using ADS.Bot1.Dialogs;
 using ADS_Sync;
@@ -31,18 +32,60 @@ namespace ADS.Bot.V1.Bots
 
         public ADSBotServices Services { get; }
         public UserState User { get; }
+        public CRMCommitService CRMCommit { get; }
+
+
 
         // Initializes a new instance of the "WelcomeUserBot" class.
-        public BenBot(ADSBotServices services, ActiveLeadDialog dialog, UserState user)
+        public BenBot(ADSBotServices services, ActiveLeadDialog dialog, UserState user, CRMCommitService crmCommit)
         {
             Services = services;
             User = user;
+            CRMCommit = crmCommit;
             DialogManager = new DialogManager(dialog)
             {
                 UserState = user
             };
         }
 
+        //Handle first-time user state, before the update is delegate to any other methods.
+        protected override async Task OnConversationUpdateActivityAsync(ITurnContext<IConversationUpdateActivity> turnContext, CancellationToken cancellationToken)
+        {
+            var userProfile = await Services.GetUserProfileAsync(turnContext, cancellationToken);
+            if (userProfile.Details == null)
+            {
+                if (!string.IsNullOrWhiteSpace(turnContext.Activity.From.Name))// && turnContext.Activity.From.Name != "User")
+                {
+                    userProfile.Details = new Models.BasicDetails()
+                    {
+                        Name = turnContext.Activity.From.Name,
+                        UniqueID = turnContext.Activity.From.Id,
+                        New = true
+                    };
+                }
+
+                var pageID = turnContext.Activity.ChannelId;
+                var dealerData = Services.DataService.GetDealerByFacebookPageID(pageID);
+
+                if (dealerData != null)
+                {
+                    userProfile.Details.DealerID = dealerData.RowKey;
+                }
+
+                if (!string.IsNullOrEmpty(userProfile.Details.DealerID))
+                {
+                    await Services.DealerConfig.RefreshDealerAsync(userProfile.Details.DealerID);
+                }
+                else if (Services.Configuration.GetValue<string>("bb:test_dealer") != null)
+                {
+                    //If we don't have a user-assigned dealer ID and we have a test one in config file, use that
+                    userProfile.Details.DealerID = Services.Configuration.GetValue<string>("bb:test_dealer");
+                }
+            }
+            CRMCommit.UpdateUserResponseTimeout(OnUserConversationExpired, userProfile, turnContext, cancellationToken);
+
+            await base.OnConversationUpdateActivityAsync(turnContext, cancellationToken);
+        }
 
         // This is called when a user is added to the conversation. This occurs BEFORE they've typed something in, so it's a good way to
         //initiate the conversation from the bot's perspective
@@ -54,38 +97,19 @@ namespace ADS.Bot.V1.Bots
             {
                 if (member.Id != turnContext.Activity.Recipient.Id)
                 {
-                    bool newGreeting = false;
-                    //Handle having a users name from the conversation metadata already.
-                    if(userProfile.Details == null)
-                    {
-                        if(!string.IsNullOrWhiteSpace(turnContext.Activity.From.Name))// && turnContext.Activity.From.Name != "User")
-                        {
-                            userProfile.Details = new Models.BasicDetails()
-                            {
-                                Name = turnContext.Activity.From.Name,
-                                UniqueID = turnContext.Activity.From.Id,
-                            };
-
-                            newGreeting = true;
-                        }
-                    }
-
                     //Print a personalized hello when we have their information already
                     //And even more "friendly" when we have already converted them as a lead before
                     if(userProfile.ADS_CRM_ID.HasValue)
                     {
                         await turnContext.SendActivityAsync(string.Format(WelcomeReturn, userProfile.FirstName), cancellationToken: cancellationToken);
                     }
-                    else if(userProfile.Details != null)
+                    else if(userProfile.Details.New)
                     {
-                        if (newGreeting)
-                        {
-                            await turnContext.SendActivityAsync(string.Format(WelcomeMeeting, userProfile.FirstName), cancellationToken: cancellationToken);
-                        }
-                        else
-                        {
-                            await turnContext.SendActivityAsync(string.Format(WelcomePersonal, userProfile.FirstName), cancellationToken: cancellationToken);
-                        }
+                        await turnContext.SendActivityAsync(string.Format(WelcomeMeeting, userProfile.FirstName), cancellationToken: cancellationToken);
+                    }
+                    else if(userProfile.FirstName != null)
+                    {
+                        await turnContext.SendActivityAsync(string.Format(WelcomePersonal, userProfile.FirstName), cancellationToken: cancellationToken);
                     }
                     else
                     {
@@ -103,6 +127,7 @@ namespace ADS.Bot.V1.Bots
             await Services.UserProfileAccessor.SetAsync(turnContext, userProfile, cancellationToken);
         }
 
+        //Just for debug right now
         protected override async Task OnEventActivityAsync(ITurnContext<IEventActivity> turnContext, CancellationToken cancellationToken)
         {
             if (bool.TryParse(Services.Configuration["ads:debug_messages"], out var debug_msg) && debug_msg)
@@ -111,7 +136,15 @@ namespace ADS.Bot.V1.Bots
             }
         }
 
-        // This is the primary message handler
+        //Happens after user hasn't responded in a duration configured by the dealer
+        protected async Task OnUserConversationExpired(ITurnContext turnContext)
+        {
+            var userProfile = await Services.GetUserProfileAsync(turnContext);
+
+            Services.CRM.WriteCRMDetails(CRMStage.Fnalize, userProfile);
+        }
+
+        //Handles incomming messages from users.
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {
             if (bool.TryParse(Services.Configuration["ads:debug_messages"], out var debug_msg) && debug_msg)
@@ -122,32 +155,13 @@ namespace ADS.Bot.V1.Bots
             //Get the latest version
             var userProfile = await Services.GetUserProfileAsync(turnContext, cancellationToken);
 
-            if (userProfile.Details != null)
+
+
+            if (CheckForFacebookMarketplace(turnContext, userProfile))
             {
-                userProfile.Details.UniqueID = turnContext.Activity.Recipient.Id;
-
-                var pageID = turnContext.Activity.ChannelId;
-                var dealerData = Services.DataService.GetDealerByFacebookPageID(pageID);
-
-                if(dealerData != null)
-                {
-                    userProfile.Details.DealerID = dealerData.RowKey;
-                }
-
-                if (!string.IsNullOrEmpty(userProfile.Details.DealerID))
-                {
-                    await Services.DealerConfig.RefreshDealerAsync(userProfile.Details.DealerID);
-                }
-                else if (Services.Configuration.GetValue<string>("bb:test_dealer") != null)
-                {
-                    //If we don't have a user-assigned dealer ID and we have a test one in config file, use that
-                    userProfile.Details.DealerID = Services.Configuration.GetValue<string>("bb:test_dealer");
-                }
-
-                if (CheckForFacebookMarketplace(turnContext, userProfile))
-                {
-
-                }
+                //Technically don't need to do anything explicitly.
+                //Function modifies incomming message, which should go to LUIS
+                //VIN is also stored which is used later.
             }
 
             //Let the manager handle passing our message to the one-and-only dialog
@@ -172,7 +186,7 @@ namespace ADS.Bot.V1.Bots
 
             /* Example:
              * 
-             *  https://www.facebook.com/marketplace/item/2904343352947650/?ref=messaging_thread&link_ref=BuyerBridge
+                https://www.facebook.com/marketplace/item/2904343352947650/?ref=messaging_thread&link_ref=BuyerBridge
 
                 VIN: WDYPF4CC2B5509284
 

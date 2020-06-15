@@ -16,13 +16,15 @@ namespace ADS.Bot.V1.Services
     public class BuyerBridgeAPIService
     {
         public IConfiguration Configuration { get; }
+        public DealerConfigService DealerConfig { get; }
         internal CRMService RootCRM { get; set; }
 
         private IRestClient apiClient;
 
-        public BuyerBridgeAPIService(IConfiguration configuration)
+        public BuyerBridgeAPIService(IConfiguration configuration, DealerConfigService dealerConfig)
         {
             Configuration = configuration;
+            DealerConfig = dealerConfig;
 
             apiClient = new RestClient(Configuration["bb:base"])
                 .AddDefaultHeader("Authorization", $"Bearer {Configuration["bb:token"]}")
@@ -36,7 +38,23 @@ namespace ADS.Bot.V1.Services
             if (string.IsNullOrEmpty(profile.Details.DealerID))
                 throw new ArgumentNullException("UserProfile.Details.DealerID cannot be empty");
 
-            var bb_lead = BB_Lead.CreateFromProfile(profile, RootCRM.Services);
+            bool allowResubmit = DealerConfig.Get<bool>(profile, "repeat_lead", false);
+
+            string userUniqueID = profile.Details.UniqueID;
+
+            if (!string.IsNullOrEmpty(profile.BB_CRM_ID))
+            {
+                if (allowResubmit)
+                {
+                    userUniqueID = $"{userUniqueID}_{DateTime.Now:s}";
+                }
+                else
+                {
+                    return;
+                }
+            }
+
+            var bb_lead = BB_Lead.CreateFromProfile(profile, userUniqueID, RootCRM.Services);
 
             var createUpdateQuery = new RestRequest("stored_leads", Method.MERGE, DataFormat.Json);
 
@@ -100,39 +118,69 @@ namespace ADS.Bot.V1.Services
         [JsonProperty("data")]
         public BB_AdditionalDetails Data { get; set; }
 
-        public static async Task<BB_Lead> CreateFromProfile(UserProfile profile, ADSBotServices services)
+        public static async Task<BB_Lead> CreateFromProfile(UserProfile profile, string CustomUniqueID, ADSBotServices services)
         {
             var bbLead = new BB_Lead()
             {
                 Dealer_ID = profile.Details.DealerID,
                 Lead_Platform = "API",
-                Remote_ID = profile.Details.UniqueID,
+                Remote_ID = CustomUniqueID,
                 Name = profile.Details.Name,
                 Email = profile.Details.Email,
                 Phone = profile.Details.Phone,
                 Data = new BB_AdditionalDetails()
+                {
+                    Field_Data = new List<BB_Field>()
+                }
             };
 
-            if (await profile.Financing?.IsValidForSubmit(profile, services))
-            {
-                bbLead.Data.Field_Data = new List<BB_Field>();
 
-                var lines = new string[]
-                    {
+            if(profile.Financing != null)
+            {
+                if (await profile.Financing.IsValidForSubmit(profile, services))
+                {
+                    var lines = new string[]
+                        {
                         $"Credit Score: {profile.Financing.CreditScore}",
                         $"Income: {profile.Financing.Income}",
                         $"Home Ownership: {profile.Financing.HomeOwnership}",
                         $"Employment History: {profile.Financing.Employment}",
-                    };
+                        };
 
-                bbLead.Data.Field_Data.Add(new BB_Field()
-                {
-                    Name = "Financing",
-                    Values = new List<string>(lines)
-                });
+                    bbLead.Data.Field_Data.Add(new BB_Field()
+                    {
+                        Name = "Financing",
+                        Values = new List<string>(lines)
+                    });
+                }
             }
 
-            if (profile.Inventory?.IsCompleted ?? false)
+            if (profile.SimpleInventory?.IsCompleted ?? false)
+            {
+                var inventory = profile.SimpleInventory;
+
+                bbLead.Data.Purchase_Vehicle = new BB_PurchaseDetails()
+                {
+                    Make = inventory.Make,
+                    Model = inventory.Model,
+                    Year = inventory.Year,
+                    Used = inventory.Used,
+                    Condition = inventory.Used ? "Used" : "New",
+                };
+
+                if (!string.IsNullOrEmpty(inventory.VIN))
+                {
+                    bbLead.Data.Field_Data.Add(new BB_Field()
+                    {
+                        Name = "VIN",
+                        Values = new List<string>()
+                        {
+                            inventory.VIN
+                        }
+                    });
+                }
+            }
+            else if (profile.Inventory?.IsCompleted ?? false)
             {
                 var inventory = profile.Inventory;
 
@@ -147,6 +195,7 @@ namespace ADS.Bot.V1.Services
                     Condition = used ? "Used" : "New",
                 };
             }
+
 
             if (profile.TradeDetails?.IsCompleted ?? false)
             {

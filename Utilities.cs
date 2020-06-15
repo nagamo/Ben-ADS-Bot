@@ -198,5 +198,15 @@ namespace ADS.Bot.V1
 
             return false;
         }
+
+        public static async Task DelayTask(Action action, TimeSpan delay, CancellationToken cancellationToken)
+        {
+            await Task.Run(async () =>
+            {
+                await Task.Delay(delay, cancellationToken);
+                if (!cancellationToken.IsCancellationRequested)
+                    action();
+            });
+        }
     }
 }

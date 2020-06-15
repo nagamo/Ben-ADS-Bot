@@ -75,6 +75,9 @@ namespace ADS.Bot1
 
             services.AddSingleton<DataService>();
 
+            services.AddSingleton<CRMCommitService>();
+            services.AddHostedService<BackgroundServiceStarter<CRMCommitService>>();
+
             // Create the bot services (LUIS, QnA) as a singleton.
             services.AddSingleton<BuyerBridgeAPIService>();
             services.AddSingleton<DealerConfigService>();
