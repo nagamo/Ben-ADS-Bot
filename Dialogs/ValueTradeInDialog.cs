@@ -29,11 +29,15 @@ namespace ADS.Bot.V1.Dialogs
                 VehicleStep,
                 ValidateVehicleStep,
 
+                MileageStep,
+                ValidateMileageStep,
+
                 ConditionStep,
                 ValidateConditionStep,
 
                 AmountOwedStep,
-                ValidateAmountOwedStep,
+                ValidateAmountOwedStepA,
+                ValidateAmountOwedStepB,
 
                 ConfirmAppointmentStep,
                 FinalizeStep
@@ -128,6 +132,30 @@ namespace ADS.Bot.V1.Dialogs
 
 
 
+        private async Task<DialogTurnResult> MileageStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        {
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
+            if (userData.TradeDetails.SkipMileage) return await stepContext.NextAsync(cancellationToken: cancellationToken);
+
+
+            var options = new PromptOptions()
+            {
+                Prompt = MessageFactory.Text("How many miles does it have? (eg: 120,000, 50,000)")
+            };
+            return await stepContext.PromptAsync(nameof(TextPrompt), options, cancellationToken: cancellationToken);
+        }
+
+        private async Task<DialogTurnResult> ValidateMileageStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        {
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
+            if (stepContext.Result != null)
+                userData.TradeDetails.Mileage = Utilities.ReadChoiceWithManual(stepContext);
+
+            return await stepContext.NextAsync();
+        }
+
+
+
         private async Task<DialogTurnResult> ConditionStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
@@ -157,11 +185,31 @@ namespace ADS.Bot.V1.Dialogs
 
 
 
-            var owedOptions = Utilities.CreateOptions(new string[] { "It's paid off!", "< $1000", "$1k-5k", "$5k+" }, "How much do you still owe?");
+            var owedOptions = Utilities.CreateOptions(new string[] { "Yes", "No" }, "Do you have a payoff?");
             return await stepContext.PromptAsync(nameof(ChoicePrompt), owedOptions, cancellationToken);
         }
 
-        private async Task<DialogTurnResult> ValidateAmountOwedStep(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        private async Task<DialogTurnResult> ValidateAmountOwedStepA(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        {
+            var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
+
+
+            if (stepContext.Result is FoundChoice choice)
+            {
+                if(choice.Value == "Yes")
+                {
+                    userData.TradeDetails.AmountOwed = "Paid off";
+                }
+                else
+                {
+                    return await stepContext.PromptAsync(nameof(TextPrompt), 
+                        Utilities.CreateOptions(new string[] { }, "How much do you owe?"));
+                }
+            }
+            
+            return await stepContext.NextAsync();
+        }
+        private async Task<DialogTurnResult> ValidateAmountOwedStepB(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var userData = await Services.GetUserProfileAsync(stepContext.Context, cancellationToken);
             if (stepContext.Result != null)

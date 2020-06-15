@@ -13,8 +13,8 @@ namespace ADS.Bot.V1.Models
                     (
                         !string.IsNullOrEmpty(Phone) ||
                         !string.IsNullOrEmpty(Email)
-                    ) &&
-                    !string.IsNullOrEmpty(Timeframe);
+                    );
+                    //&& !string.IsNullOrEmpty(Timeframe);
             }
         }
 

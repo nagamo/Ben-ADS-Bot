@@ -45,7 +45,7 @@ namespace ADS.Bot.V1
         public static PromptOptions GroupedOptions(IEnumerable<(string,int)> Groups, string PromptText, 
             string RetryText = null, string ExtraPrepend = null, string ExtraAppend = null, bool ShowCount = true)
         {
-            var makeOptions = Groups.Select(mo => (ShowCount ? $"{mo.Item1} ({mo.Item2})" : $"{mo.Item1}")).Take(10);
+            var makeOptions = Groups.Select(mo => ((ShowCount && mo.Item2 > 0) ? $"{mo.Item1} ({mo.Item2})" : $"{mo.Item1}")).Take(10);
             if (ExtraPrepend != null)
                 makeOptions = makeOptions.Prepend(ExtraPrepend);
             if (ExtraAppend != null)

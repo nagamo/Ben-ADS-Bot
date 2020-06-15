@@ -40,8 +40,8 @@ namespace ADS.Bot1.Dialogs
                 ContactStepAsync,
                 ContactConfirmStepAsync,
 
-                TimeframeStepAsync,
-                TimeframeConfirmStepAsync,
+                //TimeframeStepAsync,
+                //TimeframeConfirmStepAsync,
 
                 FinalizeStepAsync
             };
@@ -155,13 +155,14 @@ namespace ADS.Bot1.Dialogs
 
             string line = "";
 
+            //Ask based on previously filled out information.
             if (userData.Details.Phone != null)
             {
-                line = "Can I get your email just in case we need to get in touch?";
+                line = "What is your email in case we need to get in touch?";
             }
             else if (userData.Details.Email != null)
             {
-                line = "Can I get your cell number in case one of our representatives needs to give you a call?";
+                line = "What’s your cell number in case one of our representatives needs to give you a call?";
             }
             else
             {
@@ -270,9 +271,6 @@ namespace ADS.Bot1.Dialogs
             {
                 Services.CRM.WriteCRMDetails(CRMStage.BasicDetails, userData);
             }
-
-            await stepContext.Context.SendActivityAsync($"You're the cat's pyjamas, {userData.Details.Name}!");
-            await stepContext.Context.SendActivityAsync("And now, without further ado - onto your destination!");
 
             return await stepContext.EndDialogAsync(null, cancellationToken);
         }

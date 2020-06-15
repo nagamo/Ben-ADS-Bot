@@ -166,8 +166,8 @@ namespace ADS.Bot1.Dialogs
                 userData.SimpleInventory = new SimpleInventoryDetails();
 
                 //Select as little data as possible
-                var foundCars = DataService.CountCars(BuildQuery(userData));
-                await stepContext.Context.SendActivityAsync($"I'm glad you asked about my inventory. I just so happen to have {foundCars:n0} cars available!");
+                //var foundCars = DataService.CountCars(BuildQuery(userData));
+                //await stepContext.Context.SendActivityAsync($"I'm glad you asked about my inventory. I just so happen to have {foundCars:n0} cars available!");
 
                 return await stepContext.NextAsync(cancellationToken: cancellationToken);
             }
@@ -207,7 +207,7 @@ namespace ADS.Bot1.Dialogs
             if (userData.SimpleInventory.SkipPrimaryConcern) return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
 
-            var concernOptions = Utilities.CreateOptions(new string[] { "By Price", "By Payment", "By Vehicle Type" }, "How would you like to shop?");
+            var concernOptions = Utilities.CreateOptions(new string[] { "By Price", "By Payment", "By Vehicle Type" }, "Easy peasy. How would you like to shop?");
             return await stepContext.PromptAsync(nameof(ChoicePrompt), concernOptions, cancellationToken);
         }
 
@@ -243,7 +243,10 @@ namespace ADS.Bot1.Dialogs
                         "Sure thing! Name your payment", ExtraAppend: "Any Payment", ShowCount: dealerShowCount);
                     break;
                 case "By Vehicle Type":
-                    goalOptions = Utilities.GroupedOptions(DataService.ListAvailableBodyTypes(currentQuery),
+                    var options = DataService.ListAvailableBodyTypes(currentQuery)
+                        .Union(new (string,int)[] { ("Car",0), ("Truck",0), ("SUV",0) });
+
+                    goalOptions = Utilities.GroupedOptions(options,
                         "Great! What vehicle type are you interested in?", ShowCount: dealerShowCount);
                     break;
             }
@@ -486,7 +489,7 @@ namespace ADS.Bot1.Dialogs
             {
                 if(vinChoice.Value == Constants.MSG_DONT_SEE_IT)
                 {
-                    await stepContext.Context.SendActivityAsync($"No worries! One of our salesmen would be happy to get in touch with you to help narrow down on a vehicle.");
+                    await stepContext.Context.SendActivityAsync($"No worries! Our manager would be happy to get in touch with you to help narrow down on a vehicle.");
                 }
                 else
                 {
@@ -512,7 +515,7 @@ namespace ADS.Bot1.Dialogs
 
             if (Services.CRM.IsActive)
             {
-                var appointmentOptions = Utilities.CreateOptions(new string[] { "Yes!", "No" }, "Would you like a salesman to contact you?");
+                var appointmentOptions = Utilities.CreateOptions(new string[] { "Yes!", "No" }, "Would you like my manager to contact you?");
                 return await stepContext.PromptAsync(nameof(ChoicePrompt), appointmentOptions, cancellationToken);
             }
             else

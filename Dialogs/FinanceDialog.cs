@@ -151,9 +151,8 @@ namespace ADS.Bot1.Dialogs
             if (await Utilities.ShouldSkipAsync(Services, stepContext.Context, "finance.income", ud => ud.Financing.IncomeEntered, cancellationToken))
                 return await stepContext.NextAsync(cancellationToken: cancellationToken);
 
-            var incomeOptions = Utilities.CreateOptions(new string[] { "$1K-$2K per month", "$2K-$4K per month", "$4k - $8K per month", "$8K - $10K per month", "> $10K per month" },
-                                                        "OK, no fibbing now. Can you provide some sense of your gross monthly income? We promise " +
-                                                        "not to say anything to the IRS!");
+            var incomeOptions = Utilities.CreateOptions(new string[] { "<$2K", "$2K-$4K per month", "$4k-$10K per month", "> $10K per month" },
+                                                        "What’s your monthly income before  taxes?");
             return await stepContext.PromptAsync(nameof(ChoicePrompt), incomeOptions, cancellationToken);
         }
 
@@ -224,7 +223,7 @@ namespace ADS.Bot1.Dialogs
 
             if (Services.CRM.IsActive)
             {
-                var appointmentOptions = Utilities.CreateOptions(new string[] { "Yes!", "No" }, "Would you like our finance specialist to contact you?");
+                var appointmentOptions = Utilities.CreateOptions(new string[] { "Yes!", "No" }, "See, wasn’t that easy! Would you like our finance specialist to contact you?");
                 return await stepContext.PromptAsync(nameof(ChoicePrompt), appointmentOptions, cancellationToken);
             }
             else

@@ -60,14 +60,11 @@ namespace ADS.Bot.V1.Dialogs
                                 Property = "conversation.seen_help",
                                 Value = "true"
                             },
-                            new ChoiceInput()
+                            new CodeAction(SendHelp),
+                            new SetProperty()
                             {
-                                Prompt = new ActivityTemplate("I want to provide you with the best service possible! " +
-                                                              "Just select one of the easy-click options below, or " +
-                                                              "type a request directly into the text box."),
-                                AlwaysPrompt = true,
                                 Property = "conversation.interest",
-                                Choices = new ChoiceSet(Constants.HelpOptions.Select(o => new Choice(o)).ToList())
+                                Value = "turn.activity.text"
                             },
                             new IfCondition()
                             {
@@ -277,6 +274,8 @@ namespace ADS.Bot.V1.Dialogs
             AddDialog(vehicleProfileDialog);
             AddDialog(valueTradeInDialog);
             AddDialog(inventoryDialog);
+
+            AddDialog(new ChoicePrompt(nameof(ChoicePrompt)));
         }
 
         public async Task<DialogTurnResult> DispalyHelp(DialogContext context, object data)
@@ -365,7 +364,8 @@ namespace ADS.Bot.V1.Dialogs
             if(context.Context.Activity.Text == null)
             {
                 //This is set null when we want to ignore LUIS.
-                return new DialogTurnResult(DialogTurnStatus.Complete);
+                //Waiting because its sent as a prompt.
+                return new DialogTurnResult(DialogTurnStatus.Waiting);
             }
 
             //Get Top QnA result
@@ -433,31 +433,18 @@ namespace ADS.Bot.V1.Dialogs
         }
 
 
+        public async Task<DialogTurnResult> SendHelp(DialogContext context, object something)
+        {
+            var helpOptions = Utilities.CreateOptions(Constants.HelpOptions, (string)null, null, ListStyle.SuggestedAction);
+
+            return await context.PromptAsync(nameof(ChoicePrompt), helpOptions);
+        }
+
+
         private async Task SendInterest(DialogContext Context, string InterestName)
         {
             Context.GetState().SetValue("conversation.interest", InterestName);
             await Context.EmitEventAsync(Constants.Event_Interest);
-        }
-
-        public List<Dialog> VerifyProfile(string DialogID)
-        {
-            return new List<Dialog>()
-            {
-                new IfCondition()
-                {
-                    Condition = "user.UserProfile.IsRegistered",
-                    Actions = new List<Dialog>()
-                    {
-                        new SendActivity("Sure! I'd love to help finance you. Let me ask you a few questions about that.")
-                    },
-                    ElseActions = new List<Dialog>()
-                    {
-                        new SendActivity("Sure! I'd love to help you with that, but I need to collect a few details first."),
-                        new BeginDialog(nameof(UserProfileDialog)),
-                    }
-                },
-                new BeginDialog(DialogID)
-            };
         }
     }
 }
