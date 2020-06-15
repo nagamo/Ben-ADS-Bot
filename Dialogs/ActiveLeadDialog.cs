@@ -317,10 +317,6 @@ namespace ADS.Bot.V1.Dialogs
                     return await ProcessDefaultResponse(context, data, isBusy);
                 }
             }
-            else
-            {
-                await context.Context.SendActivityAsync("We must be in Kansas, Dorothy, 'cause there ain't no QnA!");
-            }
 
             //You can change status to alter the behaviour post-completion
             return new DialogTurnResult(DialogTurnStatus.Waiting, null);
@@ -373,9 +369,8 @@ namespace ADS.Bot.V1.Dialogs
             var topResult = results.FirstOrDefault();
 
 
-            if (topResult != null && topResult.Score > 0.5)
+            if (topResult != null && topResult.Score > 0.75)
             {
-
                 //Convert Metadata tags to dictionary for comparison
                 var resultTags = topResult.Metadata.ToDictionary(m => m.Name.ToLower(), m => m.Value);
                 if(resultTags.ContainsKey("event"))
