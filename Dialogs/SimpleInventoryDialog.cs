@@ -75,6 +75,8 @@ namespace ADS.Bot1.Dialogs
 
             IQueryable<DB_Car> carQuery = DataService.CreateCarQuery();
 
+            carQuery = carQuery.Where(c => c.PartitionKey == UserData.Details.DealerID);
+
             if (!string.IsNullOrEmpty(UserData.SimpleInventory.ConcernGoal))
             {
                 switch (UserData.SimpleInventory.PrimaryConcern)

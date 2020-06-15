@@ -21,14 +21,12 @@ namespace ADS.Bot.V1.Bots
 {
     public class BenBot : ActivityHandler
     {
-        // General messages sent to the user.
         private const string WelcomeSimple = "Hey there! I'm Chad. Welcome!";
         private const string WelcomeMeeting = "Hey there {0}! My name is, Chad, It's nice to meet you. Let's get started!";
         private const string WelcomePersonal = "Hey {0}! It's me, Chad. Let's get started!";
         private const string WelcomeReturn = "Welcome back {0}! Wasn't sure when we would talk again. What can I help you with today?";
 
         private DialogManager DialogManager;
-        //Hey there!
 
         public ADSBotServices Services { get; }
         public UserState User { get; }
@@ -36,7 +34,6 @@ namespace ADS.Bot.V1.Bots
 
 
 
-        // Initializes a new instance of the "WelcomeUserBot" class.
         public BenBot(ADSBotServices services, ActiveLeadDialog dialog, UserState user, CRMCommitService crmCommit)
         {
             Services = services;
@@ -159,15 +156,43 @@ namespace ADS.Bot.V1.Bots
 
             if (CheckForFacebookMarketplace(turnContext, userProfile))
             {
-                //Technically don't need to do anything explicitly.
                 //Function modifies incomming message, which should go to LUIS
                 //VIN is also stored which is used later.
+
+                if (turnContext.Activity.Text.Contains(Constants.FB_STILL_AVAILABLE))
+                {
+                    DB_Car matchingVehicle = null;
+
+                    try
+                    {
+                        matchingVehicle = Services.DataService.GetCar(userProfile.SimpleInventory.VIN);
+                    }
+                    catch { }
+
+                    if(matchingVehicle!= null)
+                    {
+                        userProfile.SimpleInventory.Make = matchingVehicle.Make;
+                        userProfile.SimpleInventory.Model = matchingVehicle.Model;
+                        userProfile.SimpleInventory.Year = matchingVehicle.Year;
+                        userProfile.SimpleInventory.Used = matchingVehicle.Used;
+
+                        await turnContext.SendActivityAsync("Good news! Looks like that vehicle is still in stock.");
+                    }
+                    else
+                    {
+                        await turnContext.SendActivityAsync("I don't see that vehicle in my inventory right now, but one of salesmen would be happy to set the record straight.");
+                    }
+                }
+
+                //Set it null so LUIS doesn' interpret the text.
+                turnContext.Activity.Text = null;
             }
 
             //Let the manager handle passing our message to the one-and-only dialog
             var dialogResult = await DialogManager.OnTurnAsync(turnContext, cancellationToken);
             await Services.SaveUserProfileAsync(userProfile, turnContext, cancellationToken);
 
+            //This doesn't really happen, plus we have timeouts.
             switch (dialogResult.TurnResult.Status)
             {
                 case DialogTurnStatus.Complete:
@@ -180,6 +205,7 @@ namespace ADS.Bot.V1.Bots
             }
         }
 
+        //Handle parsing of facebook messages
         protected bool CheckForFacebookMarketplace(ITurnContext<IMessageActivity> turnContext, UserProfile userProfile)
         {
             var messageText = turnContext.Activity.Text;
@@ -209,6 +235,7 @@ namespace ADS.Bot.V1.Bots
                     VIN = vin
                 };
 
+                //Overwrite the activity text, so it's only the last line(s)
                 turnContext.Activity.Text = query;
 
                 return true;

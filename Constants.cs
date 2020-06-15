@@ -57,5 +57,10 @@ namespace ADS.Bot.V1
             {"Utilities_Reject", 0.9f },
             {"ValueTrade", 0.8f },
         };
+
+        public static string FB_STILL_AVAILABLE = "Is this still available?";
+        public static string FB_SCHEDULE_VIDEO = "Can I schedule a time to see this over Messenger video call?";
+        public static string FB_VEHICLE_HISTORY = "What's the vehicle's history?";
+        public static string FB_PREVIOUS_OWNERS= "How many people owned this previously?";
     }
 }

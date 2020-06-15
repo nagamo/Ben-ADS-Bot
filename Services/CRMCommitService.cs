@@ -60,7 +60,7 @@ namespace ADS.Bot.V1.Services
 
             var newCancel = new CancellationTokenSource();
 
-            var timeout = TimeSpan.FromSeconds(BotServices.DealerConfig.Get<int>(userProfile, "conversation_timeout", 10));
+            var timeout = TimeSpan.FromSeconds(BotServices.DealerConfig.Get<int>(userProfile, "conversation_timeout", 600));
 
             UserTimeouts[userProfile.Details.UniqueID] = new UserMessageState()
             {

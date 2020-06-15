@@ -362,6 +362,12 @@ namespace ADS.Bot.V1.Dialogs
 
         public async Task<DialogTurnResult> ProcessDefaultResponse(DialogContext context, object data, bool isBusy)
         {
+            if(context.Context.Activity.Text == null)
+            {
+                //This is set null when we want to ignore LUIS.
+                return new DialogTurnResult(DialogTurnStatus.Complete);
+            }
+
             //Get Top QnA result
             var results = await Services.LeadQualQnA.GetAnswersAsync(context.Context, Services.QnAOptions);
             var topResult = results.FirstOrDefault();
