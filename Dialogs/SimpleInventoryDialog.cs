@@ -75,7 +75,10 @@ namespace ADS.Bot1.Dialogs
 
             IQueryable<DB_Car> carQuery = DataService.CreateCarQuery();
 
-            carQuery = carQuery.Where(c => c.PartitionKey == UserData.Details.DealerID);
+            if(!string.IsNullOrEmpty(UserData.Details.DealerID))
+            {
+                carQuery = carQuery.Where(c => c.PartitionKey == UserData.Details.DealerID);
+            }
 
             if (!string.IsNullOrEmpty(UserData.SimpleInventory.ConcernGoal))
             {
@@ -232,23 +235,31 @@ namespace ADS.Bot1.Dialogs
             var currentQuery = BuildQuery(userData);
             var dealerShowCount = await Services.DealerConfig.GetAsync<bool>(userData, "show_count", true);
 
-            switch (userData.SimpleInventory.PrimaryConcern)
+            try
             {
-                case "By Price":
-                    goalOptions = Utilities.GroupedOptions(DataService.ListAvailablePriceRanges(currentQuery),
-                        "Sure thing! Name your price range", ExtraAppend: "Any Price", ShowCount: dealerShowCount);
-                    break;
-                case "By Payment":
-                    goalOptions = Utilities.GroupedOptions(DataService.ListAvailablePayments(currentQuery),
-                        "Sure thing! Name your payment", ExtraAppend: "Any Payment", ShowCount: dealerShowCount);
-                    break;
-                case "By Vehicle Type":
-                    var options = DataService.ListAvailableBodyTypes(currentQuery)
-                        .Union(new (string,int)[] { ("Car",0), ("Truck",0), ("SUV",0) });
+                switch (userData.SimpleInventory.PrimaryConcern)
+                {
+                    case "By Price":
+                        goalOptions = Utilities.GroupedOptions(DataService.ListAvailablePriceRanges(currentQuery),
+                            "Sure thing! Name your price range", ExtraAppend: "Any Price", ShowCount: dealerShowCount);
+                        break;
+                    case "By Payment":
+                        goalOptions = Utilities.GroupedOptions(DataService.ListAvailablePayments(currentQuery),
+                            "Sure thing! Name your payment", ExtraAppend: "Any Payment", ShowCount: dealerShowCount);
+                        break;
+                    case "By Vehicle Type":
+                        var options = DataService.ListAvailableBodyTypes(currentQuery)
+                            .ToList()
+                            .Union(new (string, int)[] { ("Car", 0), ("Truck", 0), ("SUV", 0) });
 
-                    goalOptions = Utilities.GroupedOptions(options,
-                        "Great! What vehicle type are you interested in?", ShowCount: dealerShowCount);
-                    break;
+                        goalOptions = Utilities.GroupedOptions(options,
+                            "Great! What vehicle type are you interested in?", ShowCount: dealerShowCount);
+                        break;
+                }
+            }
+            catch(StorageException ex)
+            {
+                await stepContext.Context.SendActivityAsync(JsonConvert.SerializeObject(ex,new JsonSerializerSettings() { ReferenceLoopHandling=ReferenceLoopHandling.Ignore }));
             }
 
             if (goalOptions != null)

@@ -61,6 +61,12 @@ namespace ADS.Bot.V1.Bots
                     };
                 }
 
+
+            }
+
+            //Handle user coming from facebook page, set their DealerID
+            if (string.IsNullOrEmpty(userProfile.Details.DealerID))
+            {
                 var pageID = turnContext.Activity.ChannelId;
                 var dealerData = Services.DataService.GetDealerByFacebookPageID(pageID);
 
@@ -68,17 +74,19 @@ namespace ADS.Bot.V1.Bots
                 {
                     userProfile.Details.DealerID = dealerData.RowKey;
                 }
-
-                if (!string.IsNullOrEmpty(userProfile.Details.DealerID))
-                {
-                    await Services.DealerConfig.RefreshDealerAsync(userProfile.Details.DealerID);
-                }
-                else if (Services.Configuration.GetValue<string>("bb:test_dealer") != null)
-                {
-                    //If we don't have a user-assigned dealer ID and we have a test one in config file, use that
-                    userProfile.Details.DealerID = Services.Configuration.GetValue<string>("bb:test_dealer");
-                }
             }
+
+            if (!string.IsNullOrEmpty(userProfile.Details.DealerID))
+            {
+                await Services.DealerConfig.RefreshDealerAsync(userProfile.Details.DealerID);
+            }
+            else if (Services.Configuration.GetValue<string>("bb:test_dealer") != null)
+            {
+                //If we don't have a user-assigned dealer ID and we have a test one in config file, use that
+                userProfile.Details.DealerID = Services.Configuration.GetValue<string>("bb:test_dealer");
+            }
+
+
             CRMCommit.UpdateUserResponseTimeout(OnUserConversationExpired, userProfile, turnContext, cancellationToken);
 
             await base.OnConversationUpdateActivityAsync(turnContext, cancellationToken);
@@ -138,7 +146,10 @@ namespace ADS.Bot.V1.Bots
         {
             var userProfile = await Services.GetUserProfileAsync(turnContext);
 
-            Services.CRM.WriteCRMDetails(CRMStage.Fnalize, userProfile);
+            if (Services.CRM.IsActive)
+            {
+                Services.CRM.WriteCRMDetails(CRMStage.Fnalize, userProfile);
+            }
         }
 
         //Handles incomming messages from users.
