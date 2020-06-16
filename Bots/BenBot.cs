@@ -60,8 +60,15 @@ namespace ADS.Bot.V1.Bots
                         New = true
                     };
                 }
-
-
+                else
+                {
+                    userProfile.Details = new Models.BasicDetails()
+                    {
+                        Name = "Chat User",
+                        UniqueID = turnContext.Activity.From.Id,
+                        New = true
+                    };
+                }
             }
 
             //Handle user coming from facebook page, set their DealerID
