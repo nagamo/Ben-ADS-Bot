@@ -122,6 +122,8 @@ namespace ADS.Bot.V1.Services
                         }
 
                         BBService.CreateUpdateLead(profile, userUniqueID);
+
+                        Services.AI_Event("BB_Submit_Success", profile);
                     }
                     catch (Exception ex)
                     {
