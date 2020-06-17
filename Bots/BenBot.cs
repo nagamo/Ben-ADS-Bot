@@ -21,8 +21,8 @@ namespace ADS.Bot.V1.Bots
 {
     public class BenBot : ActivityHandler
     {
-        private const string WelcomeSimple = "Hey there! How can I  help?";
-        private const string WelcomeMeeting = "Hey there {0}!, It's nice to meet you. How can I help?";
+        private const string WelcomeSimple = "Hey there!";
+        private const string WelcomeMeeting = "Hey there {0}!, It's nice to meet you.";
         private const string WelcomePersonal = "Hey {0}! Let's get started!";
         private const string WelcomeReturn = "Welcome back {0}! Wasn't sure when we would talk again. What can I help you with today?";
 

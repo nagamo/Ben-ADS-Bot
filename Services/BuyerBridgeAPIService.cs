@@ -35,7 +35,7 @@ namespace ADS.Bot.V1.Services
 
         public void CreateUpdateLead(UserProfile profile, string uniqueID)
         {
-            var bb_lead = BB_Lead.CreateFromProfile(profile, uniqueID, RootCRM.Services);
+            BB_Lead bb_lead = BB_Lead.CreateFromProfile(profile, uniqueID, RootCRM.Services).Result;
 
             var createUpdateQuery = new RestRequest("stored_leads", Method.POST, DataFormat.Json);
 
@@ -197,7 +197,10 @@ namespace ADS.Bot.V1.Services
                 }
             }
 
-            bbLead.Data.field_data = fields.ToArray();
+            if (fields.Count > 0)
+            {
+                bbLead.Data.field_data = fields.ToArray();
+            }
 
             return bbLead;
         }
