@@ -75,7 +75,7 @@ namespace ADS.Bot.V1.Services
                     ZohoService.WriteVehicleProfileNote(profile);
                     break;
                 case CRMStage.ValueTradeInCompleted:
-                    Services.AI_Event("Finished_Tradin", profile, "Writing to zoho");
+                    Services.AI_Event("Finished_Tradein", profile, "Writing to zoho");
 
                     ZohoService.CreateUpdateLead(profile);
                     ZohoService.WriteTradeInNote(profile);
