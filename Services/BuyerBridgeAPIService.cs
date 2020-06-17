@@ -82,8 +82,8 @@ namespace ADS.Bot.V1.Services
     {
         [JsonProperty("dealer_id")]
         public string dealer_ID { get; set; }
-        [JsonProperty("lead_platform_id")]
-        public string lead_platform_id { get; set; }
+        [JsonProperty("lead_platform")]
+        public string lead_platform { get; set; }
         [JsonProperty("remote_id")]
         public string remote_id { get; set; }
         [JsonProperty("customer_name")]
@@ -104,7 +104,7 @@ namespace ADS.Bot.V1.Services
             var bbLead = new BB_Lead()
             {
                 dealer_ID = profile.Details.DealerID,
-                lead_platform_id = "API",
+                lead_platform = "API",
                 remote_id = CustomUniqueID,
                 customer_name = profile.Details.Name,
                 customer_email = profile.Details.Email,
