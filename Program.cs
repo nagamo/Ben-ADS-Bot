@@ -39,7 +39,12 @@ namespace ADS.Bot1
                 })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    webBuilder.UseStartup<Startup>();
+                    webBuilder
+                        .UseStartup<Startup>()
+#if RELEASE
+                        .UseApplicationInsights()
+#endif
+                        ;
                 });
         }
     }

@@ -61,10 +61,13 @@ namespace ADS.Bot.V1.Dialogs
                                 Value = "true"
                             },
                             //new CodeAction(SendHelp),
-                            new TextInput()
+                            new ChoiceInput()
                             {
                                 Property = "conversation.interest",
-                                Prompt = new StaticActivityTemplate(MessageFactory.SuggestedActions(Constants.HelpOptions) as Activity)
+                                AlwaysPrompt = true,
+
+                                Prompt = new ActivityTemplate("How can I help?"),
+                                Choices = new ChoiceSet(Constants.HelpOptions.Select(o => new Choice(o)).ToList())
                             },
                             new SetProperty()
                             {

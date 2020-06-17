@@ -73,10 +73,15 @@ namespace ADS.Bot.V1.Services
                 {
                     DealerConfig[DealerID] = dealerConfig;
                 }
+                else
+                {
+                    //Need to init to something...
+                    DealerConfig[DealerID] = new JObject();
+                }
             }
             catch
             {
-
+                DealerConfig[DealerID] = new JObject();
             }
         }
 

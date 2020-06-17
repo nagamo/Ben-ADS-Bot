@@ -23,6 +23,10 @@ using ADS.Bot.V1;
 using System.Data.Common;
 using Microsoft.Bot.Builder.Azure;
 using AzureBlobStorage = ADS.Bot.V1.Services.AzureBlobStorage;
+using Microsoft.ApplicationInsights.AspNetCore.Extensions;
+using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.ApplicationInsights.AspNetCore;
 
 namespace ADS.Bot1
 {
@@ -105,6 +109,11 @@ namespace ADS.Bot1
 
             //Add the actual bot implementation to use.
             services.AddTransient<IBot, BenBot>();
+
+            services.AddWebEncoders();
+            services.AddSingleton<TelemetryConfiguration>();
+            services.AddSingleton<JavaScriptSnippet>();
+            services.AddApplicationInsightsTelemetry();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

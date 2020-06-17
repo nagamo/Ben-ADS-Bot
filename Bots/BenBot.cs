@@ -68,17 +68,25 @@ namespace ADS.Bot.V1.Bots
                         New = true
                     };
                 }
+
+                Services.AI_Event("Chat_New_User", userProfile, $"Chatting via {turnContext.Activity.ChannelId}");
             }
 
             //Handle user coming from facebook page, set their DealerID
             if (string.IsNullOrEmpty(userProfile.Details.DealerID))
             {
-                var pageID = turnContext.Activity.ChannelId;
+                var pageID = turnContext.Activity.Recipient.Id;
                 var dealerData = Services.DataService.GetDealerByFacebookPageID(pageID);
-
+                
                 if (dealerData != null)
                 {
                     userProfile.Details.DealerID = dealerData.RowKey;
+                    Services.AI_Event("Dealer", userProfile, dealerData.Name);
+                }
+                else
+                {
+                    //Doesn't actually throw, just used to be error-level
+                    Services.AI_Exception(new Exception($"Unable to find dealer for page ID {pageID}"), userProfile, pageID);
                 }
             }
 
@@ -106,6 +114,8 @@ namespace ADS.Bot.V1.Bots
                 if (member.Id != turnContext.Activity.Recipient.Id)
                 {
                     await HandleUserData(member, turnContext, cancellationToken);
+
+
 
                     //Print a personalized hello when we have their information already
                     //And even more "friendly" when we have already converted them as a lead before
@@ -174,6 +184,7 @@ namespace ADS.Bot.V1.Bots
             {
                 //Function modifies incomming message, which should go to LUIS
                 //VIN is also stored which is used later.
+                Services.AI_Event("FB_Marketplace_Source", userProfile, turnContext.Activity.Text);
 
                 if (turnContext.Activity.Text.Contains(Constants.FB_STILL_AVAILABLE))
                 {
@@ -203,6 +214,7 @@ namespace ADS.Bot.V1.Bots
                 //Set it null so LUIS doesn' interpret the text.
                 turnContext.Activity.Text = null;
             }
+            Services.AI_Event("Chat_Message", userProfile);
 
             //Let the manager handle passing our message to the one-and-only dialog
             var dialogResult = await DialogManager.OnTurnAsync(turnContext, cancellationToken);

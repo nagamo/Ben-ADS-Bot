@@ -33,28 +33,9 @@ namespace ADS.Bot.V1.Services
             apiClient.Timeout = -1;
         }
 
-        public void CreateUpdateLead(UserProfile profile)
+        public void CreateUpdateLead(UserProfile profile, string uniqueID)
         {
-            if (string.IsNullOrEmpty(profile.Details.DealerID))
-                throw new ArgumentNullException("UserProfile.Details.DealerID cannot be empty");
-
-            bool allowResubmit = DealerConfig.Get<bool>(profile, "repeat_lead", false);
-
-            string userUniqueID = profile.Details.UniqueID;
-
-            if (!string.IsNullOrEmpty(profile.BB_CRM_ID))
-            {
-                if (allowResubmit)
-                {
-                    userUniqueID = $"{userUniqueID}_{DateTime.Now:s}";
-                }
-                else
-                {
-                    return;
-                }
-            }
-
-            var bb_lead = BB_Lead.CreateFromProfile(profile, userUniqueID, RootCRM.Services);
+            var bb_lead = BB_Lead.CreateFromProfile(profile, uniqueID, RootCRM.Services);
 
             var createUpdateQuery = new RestRequest("stored_leads", Method.MERGE, DataFormat.Json);
 

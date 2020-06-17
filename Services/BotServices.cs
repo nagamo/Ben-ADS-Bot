@@ -4,6 +4,7 @@
 using ADS.Bot.V1;
 using ADS.Bot.V1.Models;
 using ADS.Bot.V1.Services;
+using Microsoft.ApplicationInsights;
 using Microsoft.Azure.Cosmos.Table;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.AI.Luis;
@@ -27,8 +28,9 @@ namespace ADS.Bot1
     public class ADSBotServices
     {
         public ADSBotServices(IConfiguration configuration, ConversationState conversationState, 
-            UserState userState, CRMService crmService, DataService dataService, DealerConfigService dealerConfig)
+            UserState userState, CRMService crmService, DataService dataService, DealerConfigService dealerConfig, TelemetryClient telemetryClient)
         {
+            AppInsights = telemetryClient;
             ConversationState = conversationState;
             Configuration = configuration;
             DataService = dataService;
@@ -89,6 +91,7 @@ namespace ADS.Bot1
         public DataService DataService { get; }
         public DealerConfigService DealerConfig { get; }
 
+        private TelemetryClient AppInsights { get; set; }
 
 
         public LuisRecognizer LuisRecognizer { get; private set; }
@@ -115,6 +118,29 @@ namespace ADS.Bot1
             //Also update the dialog contexts state
             await UserProfileAccessor.SetAsync(dialogContext.Context, profile, cancellationToken);
             dialogContext.GetState().SetValue("user.UserProfile", profile);
+        }
+
+        private Dictionary<string, string> ProfileProperties(UserProfile user, string message = null)
+        {
+            var props = new Dictionary<string, string>()
+            {
+                { "user" , user.Name },
+                { "ads_id", $"{user.ADS_CRM_ID}" },
+                { "bb_id", user.BB_CRM_ID }
+            };
+            if (message != null) props.Add("message", message);
+
+            return props;
+        }
+
+        public void AI_Exception(Exception ex, UserProfile user, string message = null)
+        {
+            AppInsights.TrackException(ex, ProfileProperties(user, message));
+        }
+
+        public void AI_Event(string eventName, UserProfile user, string message = null)
+        {
+            AppInsights.TrackEvent(eventName, ProfileProperties(user, message));
         }
     }
 }
