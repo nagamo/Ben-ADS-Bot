@@ -161,10 +161,14 @@ namespace ADS.Bot.V1.Bots
         {
             var userProfile = await Services.GetUserProfileAsync(turnContext);
 
+            Services.AI_Event("Chat_Timeout", userProfile);
+
             if (Services.CRM.IsActive)
             {
                 Services.CRM.WriteCRMDetails(CRMStage.Fnalize, userProfile);
             }
+
+            await Services.SaveUserProfileAsync(userProfile, turnContext);
         }
 
         //Handles incomming messages from users.

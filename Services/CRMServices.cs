@@ -59,29 +59,29 @@ namespace ADS.Bot.V1.Services
                     break;
                 case CRMStage.BasicDetails:
                     ZohoService.CreateUpdateLead(profile);
-                    Services.AI_Event("Profile_Completed", profile, "Writing to zoho");
+                    Services.AI_Event("Profile_Completed", profile);
 
                     break;
                 case CRMStage.FinancingCompleted:
-                    Services.AI_Event("Finished_Financing", profile, "Writing to zoho");
+                    Services.AI_Event("Finished_Financing", profile);
 
                     ZohoService.CreateUpdateLead(profile);
                     ZohoService.WriteFinancingNote(profile);
                     break;
                 case CRMStage.VehicleProfileCompleted:
-                    Services.AI_Event("Finished_Vehicle_Profile", profile, "Writing to zoho");
+                    Services.AI_Event("Finished_Vehicle_Profile", profile);
 
                     ZohoService.CreateUpdateLead(profile);
                     ZohoService.WriteVehicleProfileNote(profile);
                     break;
                 case CRMStage.ValueTradeInCompleted:
-                    Services.AI_Event("Finished_Tradein", profile, "Writing to zoho");
+                    Services.AI_Event("Finished_Tradein", profile);
 
                     ZohoService.CreateUpdateLead(profile);
                     ZohoService.WriteTradeInNote(profile);
                     break;
                 case CRMStage.SimpleInventoryCompleted:
-                    Services.AI_Event("Finished_Inventory", profile, "Writing to zoho");
+                    Services.AI_Event("Finished_Inventory", profile);
 
                     ZohoService.CreateUpdateLead(profile);
                     ZohoService.WriteInventoryNote(profile);
@@ -108,22 +108,24 @@ namespace ADS.Bot.V1.Services
                             {
                                 userUniqueID = $"{userUniqueID}_{DateTime.Now:s}";
 
-                                Services.AI_Event("BB_Resubmit", profile, "Writing to zoho");
+                                Services.AI_Event("BB_Resubmit", profile);
                             }
                             else
                             {
+                                Services.AI_Event("BB_Skipping", profile);
                                 return;
                             }
                         }
                         else
                         {
-                            Services.AI_Event("BB_Submit", profile, "Writing to zoho");
+                            Services.AI_Event("BB_Submit", profile);
                         }
 
                         BBService.CreateUpdateLead(profile, userUniqueID);
                     }
                     catch (Exception ex)
                     {
+                        Services.AI_Event("BB_Failed", profile);
                         Services.AI_Exception(ex, profile, "Error while finalizing.");
                     }
                     break;

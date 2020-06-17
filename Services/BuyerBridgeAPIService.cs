@@ -81,19 +81,19 @@ namespace ADS.Bot.V1.Services
     public class BB_Lead
     {
         [JsonProperty("dealer_id")]
-        public string Dealer_ID { get; set; }
-        [JsonProperty("lead_platform")]
-        public string Lead_Platform { get; set; }
+        public string dealer_ID { get; set; }
+        [JsonProperty("lead_platform_id")]
+        public string lead_platform_id { get; set; }
         [JsonProperty("remote_id")]
-        public string Remote_ID { get; set; }
+        public string remote_id { get; set; }
         [JsonProperty("customer_name")]
-        public string Name { get; set; }
+        public string customer_name { get; set; }
 
         
         [JsonProperty("customer_email", NullValueHandling = NullValueHandling.Ignore)]
-        public string Email { get; set; }
+        public string customer_email { get; set; }
         [JsonProperty("customer_phone_number", NullValueHandling = NullValueHandling.Ignore)]
-        public string Phone { get; set; }
+        public string customer_phone_number { get; set; }
 
 
         [JsonProperty("data")]
@@ -103,18 +103,18 @@ namespace ADS.Bot.V1.Services
         {
             var bbLead = new BB_Lead()
             {
-                Dealer_ID = profile.Details.DealerID,
-                Lead_Platform = "API",
-                Remote_ID = CustomUniqueID,
-                Name = profile.Details.Name,
-                Email = profile.Details.Email,
-                Phone = profile.Details.Phone,
+                dealer_ID = profile.Details.DealerID,
+                lead_platform_id = "API",
+                remote_id = CustomUniqueID,
+                customer_name = profile.Details.Name,
+                customer_email = profile.Details.Email,
+                customer_phone_number = profile.Details.Phone,
                 Data = new BB_AdditionalDetails()
                 {
-                    Field_Data = new List<BB_Field>()
                 }
             };
 
+            List<BB_Field> fields = new List<BB_Field>();
 
             if(profile.Financing != null)
             {
@@ -128,10 +128,10 @@ namespace ADS.Bot.V1.Services
                         $"Employment History: {profile.Financing.Employment}",
                         };
 
-                    bbLead.Data.Field_Data.Add(new BB_Field()
+                    fields.Add(new BB_Field()
                     {
-                        Name = "Financing",
-                        Values = new List<string>(lines)
+                        name = "Financing",
+                        values = lines
                     });
                 }
             }
@@ -140,25 +140,25 @@ namespace ADS.Bot.V1.Services
             {
                 var inventory = profile.SimpleInventory;
 
-                bbLead.Data.Purchase_Vehicle = new BB_PurchaseDetails()
+                bbLead.Data.purchase_vehicle = new BB_PurchaseDetails()
                 {
-                    Make = inventory.Make,
-                    Model = inventory.Model,
-                    Year = inventory.Year,
-                    Used = inventory.Used,
-                    Condition = inventory.Used ? "Used" : "New",
+                    make_name = inventory.Make,
+                    model_name = inventory.Model,
+                    source = inventory.Year,
+                    used = inventory.Used,
+                    condition = inventory.Used ? "Used" : "New",
                 };
 
                 if (!string.IsNullOrEmpty(inventory.VIN))
                 {
-                    bbLead.Data.Field_Data.Add(new BB_Field()
-                    {
-                        Name = "VIN",
-                        Values = new List<string>()
+                    fields.Add(new BB_Field()
                         {
-                            inventory.VIN
-                        }
-                    });
+                            name = "VIN",
+                            values = new string[]
+                            {
+                                inventory.VIN
+                            }
+                        });
                 }
             }
             else if (profile.Inventory?.IsCompleted ?? false)
@@ -167,13 +167,12 @@ namespace ADS.Bot.V1.Services
 
                 var used = inventory.NewUsed == "Used";
 
-                bbLead.Data.Purchase_Vehicle = new BB_PurchaseDetails()
+                bbLead.Data.purchase_vehicle = new BB_PurchaseDetails()
                 {
-                    Used = used,
-                    Make = inventory.Make,
-                    Model = inventory.Model,
-                    //Year = inventory.Year,
-                    Condition = used ? "Used" : "New",
+                    used = used,
+                    make_name = inventory.Make,
+                    model_name = inventory.Model,
+                    condition = used ? "Used" : "New",
                 };
             }
 
@@ -182,21 +181,23 @@ namespace ADS.Bot.V1.Services
             {
                 var tradein = profile.TradeDetails;
 
-                bbLead.Data.TradeIn_Vehicle = new BB_VehicleDetails()
+                bbLead.Data.trade_in_vehicle = new BB_VehicleDetails()
                 {
                     //TODO: Need to expand vehicle details into make/model/year
-                    Make = tradein.Vehicle,
-                    Condition = tradein.Condition
+                    make_name = tradein.Vehicle,
+                    condition = tradein.Condition
                 };
 
                 if (!string.IsNullOrEmpty(tradein.Mileage))
                 {
-                    bbLead.Data.TradeIn_Vehicle.Odometer = new BB_Odometer()
+                    bbLead.Data.trade_in_vehicle.odometer = new BB_Odometer()
                     {
-                        Value = tradein.Mileage
+                        value = tradein.Mileage
                     };
                 }
             }
+
+            bbLead.Data.field_data = fields.ToArray();
 
             return bbLead;
         }
@@ -205,63 +206,63 @@ namespace ADS.Bot.V1.Services
     public class BB_AdditionalDetails
     {
         [JsonProperty("email", NullValueHandling = NullValueHandling.Ignore)]
-        public BB_EmailDetails Email { get; set; }
+        public BB_EmailDetails email { get; set; }
 
         [JsonProperty("purchase_vehicle", NullValueHandling = NullValueHandling.Ignore)]
-        public BB_PurchaseDetails Purchase_Vehicle { get; set; }
+        public BB_PurchaseDetails purchase_vehicle { get; set; }
 
         [JsonProperty("trade_in_vehicle", NullValueHandling = NullValueHandling.Ignore)]
-        public BB_VehicleDetails TradeIn_Vehicle { get; set; }
+        public BB_VehicleDetails trade_in_vehicle { get; set; }
 
         [JsonProperty("field_data", NullValueHandling = NullValueHandling.Ignore)]
-        public List<BB_Field> Field_Data { get; set; }
+        public BB_Field[] field_data { get; set; }
     }
 
     public class BB_EmailDetails
     {
         [JsonProperty("subject")]
-        public string Subject { get; set; }
+        public string subject { get; set; }
         [JsonProperty("source")]
-        public string Source { get; set; }
+        public string source { get; set; }
         [JsonProperty("interest_type")]
-        public string InterestType { get; set; }
+        public string interest_type { get; set; }
     }
 
     public class BB_VehicleDetails
     {
         [JsonProperty("source")]
-        public string Year { get; set; }
+        public string source { get; set; }
         [JsonProperty("make_name")]
-        public string Make { get; set; }
+        public string make_name { get; set; }
         [JsonProperty("model_name")]
-        public string Model { get; set; }
+        public string model_name { get; set; }
         [JsonProperty("odometer", NullValueHandling = NullValueHandling.Ignore)]
-        public BB_Odometer Odometer { get; set; }
+        public BB_Odometer odometer { get; set; }
         [JsonProperty("condition")]
-        public string Condition { get; set; }
+        public string condition { get; set; }
     }
 
     public class BB_Odometer
     {
         [JsonProperty("status", NullValueHandling = NullValueHandling.Ignore)]
-        public string Status { get; set; }
+        public string status { get; set; }
         [JsonProperty("value", NullValueHandling = NullValueHandling.Ignore)]
-        public string Value { get; set; }
+        public string value { get; set; }
         [JsonProperty("units", NullValueHandling = NullValueHandling.Ignore)]
-        public string Units { get; set; }
+        public string units { get; set; }
     }
 
     public class BB_PurchaseDetails : BB_VehicleDetails
     {
         [JsonProperty("used")]
-        public bool Used { get; set; }
+        public bool used { get; set; }
     }
 
     public class BB_Field
     {
         [JsonProperty("name")]
-        public string Name { get; set; }
+        public string name { get; set; }
         [JsonProperty("values")]
-        public List<string> Values { get; set; }
+        public string[] values { get; set; }
     }
 }
