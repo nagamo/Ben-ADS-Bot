@@ -37,7 +37,7 @@ namespace ADS.Bot.V1.Services
         {
             var bb_lead = BB_Lead.CreateFromProfile(profile, uniqueID, RootCRM.Services);
 
-            var createUpdateQuery = new RestRequest("stored_leads", Method.MERGE, DataFormat.Json);
+            var createUpdateQuery = new RestRequest("stored_leads", Method.POST, DataFormat.Json);
 
             var bodyJSON = JsonConvert.SerializeObject(bb_lead);
 

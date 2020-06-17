@@ -89,6 +89,15 @@ namespace ADS.Bot.V1.Services
                 case CRMStage.Fnalize:
                     try
                     {
+                        bool financeValid = profile.Financing?.IsValidForSubmit(profile, Services).Result ?? false;
+                        bool tradeinValid = profile.TradeDetails?.IsCompleted ?? false;
+                        bool inventoryValid = profile.SimpleInventory?.IsCompleted ?? false;
+
+                        //If user hasn't completed any forms yet (they stopped chatting after initial questions)
+                        //Don't write them out to BB
+                        if (!financeValid && !tradeinValid && !inventoryValid)
+                            return;
+
                         bool allowResubmit = DealerConfig.Get<bool>(profile, "repeat_lead", false);
 
                         string userUniqueID = profile.Details.UniqueID;
