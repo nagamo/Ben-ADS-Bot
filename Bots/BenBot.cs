@@ -45,18 +45,17 @@ namespace ADS.Bot.V1.Bots
             };
         }
 
-        //Handle first-time user state, before the update is delegate to any other methods.
-        protected override async Task OnConversationUpdateActivityAsync(ITurnContext<IConversationUpdateActivity> turnContext, CancellationToken cancellationToken)
+        private async Task HandleUserData(ChannelAccount user, ITurnContext turnContext, CancellationToken cancellationToken)
         {
             var userProfile = await Services.GetUserProfileAsync(turnContext, cancellationToken);
             if (userProfile.Details == null)
             {
-                if (!string.IsNullOrWhiteSpace(turnContext.Activity.From.Name))// && turnContext.Activity.From.Name != "User")
+                if (!string.IsNullOrWhiteSpace(user.Name))// && turnContext.Activity.From.Name != "User")
                 {
                     userProfile.Details = new Models.BasicDetails()
                     {
-                        Name = turnContext.Activity.From.Name,
-                        UniqueID = turnContext.Activity.From.Id,
+                        Name = user.Name,
+                        UniqueID = user.Id,
                         New = true
                     };
                 }
@@ -65,7 +64,7 @@ namespace ADS.Bot.V1.Bots
                     userProfile.Details = new Models.BasicDetails()
                     {
                         Name = "Chat User",
-                        UniqueID = turnContext.Activity.From.Id,
+                        UniqueID = user.Id,
                         New = true
                     };
                 }
@@ -93,10 +92,7 @@ namespace ADS.Bot.V1.Bots
                 userProfile.Details.DealerID = Services.Configuration.GetValue<string>("bb:test_dealer");
             }
 
-
             CRMCommit.UpdateUserResponseTimeout(OnUserConversationExpired, userProfile, turnContext, cancellationToken);
-
-            await base.OnConversationUpdateActivityAsync(turnContext, cancellationToken);
         }
 
         // This is called when a user is added to the conversation. This occurs BEFORE they've typed something in, so it's a good way to
@@ -109,6 +105,8 @@ namespace ADS.Bot.V1.Bots
             {
                 if (member.Id != turnContext.Activity.Recipient.Id)
                 {
+                    await HandleUserData(member, turnContext, cancellationToken);
+
                     //Print a personalized hello when we have their information already
                     //And even more "friendly" when we have already converted them as a lead before
                     if(userProfile.ADS_CRM_ID.HasValue)
@@ -167,10 +165,10 @@ namespace ADS.Bot.V1.Bots
                 await turnContext.SendActivityAsync(JsonConvert.SerializeObject(turnContext.Activity));
             }
 
+            await HandleUserData(turnContext.Activity.From, turnContext, cancellationToken);
+
             //Get the latest version
             var userProfile = await Services.GetUserProfileAsync(turnContext, cancellationToken);
-
-
 
             if (CheckForFacebookMarketplace(turnContext, userProfile))
             {

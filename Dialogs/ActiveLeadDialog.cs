@@ -60,7 +60,12 @@ namespace ADS.Bot.V1.Dialogs
                                 Property = "conversation.seen_help",
                                 Value = "true"
                             },
-                            new CodeAction(SendHelp),
+                            //new CodeAction(SendHelp),
+                            new TextInput()
+                            {
+                                Property = "conversation.interest",
+                                Prompt = new StaticActivityTemplate(MessageFactory.SuggestedActions(Constants.HelpOptions) as Activity)
+                            },
                             new SetProperty()
                             {
                                 Property = "conversation.interest",
@@ -357,7 +362,7 @@ namespace ADS.Bot.V1.Dialogs
 
         public async Task<DialogTurnResult> ProcessDefaultResponse(DialogContext context, object data, bool isBusy)
         {
-            if(context.Context.Activity.Text == null)
+            if(!isBusy && context.Context.Activity.Text == null)
             {
                 //This is set null when we want to ignore LUIS.
                 //Waiting because its sent as a prompt.
@@ -377,6 +382,7 @@ namespace ADS.Bot.V1.Dialogs
                 {
                     //emit arbitrary events based on an "event" metadata record
                     await context.EmitEventAsync(resultTags["event"]);
+                    isBusy = true;
                 }
                 else if(resultTags.ContainsKey("card"))
                 {
@@ -387,6 +393,7 @@ namespace ADS.Bot.V1.Dialogs
                         //Remap the card event value from it's shorthand form, so we can reuse the residual interest logic
                         //eg. ('financing') to full name ('Explore Financing')
                         await SendInterest(context, Constants.DialogEventTriggers[resultTags["card"]]);
+                        isBusy = true;
                     }
                 }
 
@@ -414,31 +421,21 @@ namespace ADS.Bot.V1.Dialogs
                 else
                 {
                     //Otherwise a user entered an invalid root-level
-
-
                     if (topResult != null)
                     {
                         Console.WriteLine($"Rejected low-confidence response to text '{context.Context.Activity.Text}' - [{topResult.Score}] {topResult.Source}:'{topResult.Answer}'");
                     }
-
                 }
             }
 
             await context.Context.SendActivityAsync(MessageFactory.Text("I'm not quite sure what you meant..."));
-            return new DialogTurnResult(DialogTurnStatus.Waiting);
+            await context.EmitEventAsync(Constants.Event_Help);
+            return new DialogTurnResult(DialogTurnStatus.Complete);
         }
 
         public async Task<DialogTurnResult> Test(DialogContext context, object something)
         {
             return new DialogTurnResult(DialogTurnStatus.Complete);
-        }
-
-
-        public async Task<DialogTurnResult> SendHelp(DialogContext context, object something)
-        {
-            var helpOptions = Utilities.CreateOptions(Constants.HelpOptions, (string)null, null, ListStyle.SuggestedAction);
-
-            return await context.PromptAsync(nameof(ChoicePrompt), helpOptions);
         }
 
 
