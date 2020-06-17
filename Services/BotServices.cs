@@ -125,6 +125,7 @@ namespace ADS.Bot1
             var props = new Dictionary<string, string>()
             {
                 { "user" , user.Name },
+                { "user_id", user.Details?.UniqueID },
                 { "ads_id", $"{user.ADS_CRM_ID}" },
                 { "bb_id", user.BB_CRM_ID }
             };
