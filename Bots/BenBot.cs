@@ -45,7 +45,7 @@ namespace ADS.Bot.V1.Bots
             };
         }
 
-        private async Task HandleUserData(ChannelAccount user, ITurnContext turnContext, CancellationToken cancellationToken)
+        private async Task HandleUserData(ChannelAccount user, ITurnContext turnContext, bool forceSend, CancellationToken cancellationToken = default)
         {
             var userProfile = await Services.GetUserProfileAsync(turnContext, cancellationToken);
             if (userProfile.Details == null)
@@ -100,11 +100,30 @@ namespace ADS.Bot.V1.Bots
                 userProfile.Details.DealerID = Services.Configuration.GetValue<string>("bb:test_dealer");
             }
 
+            if (userProfile.Details.New)
+            {
+                //Print a personalized hello when we have their information already
+                await turnContext.SendActivityAsync(string.Format(WelcomeMeeting, userProfile.FirstName), cancellationToken: cancellationToken);
+
+                userProfile.Details.New = false;
+            }
+            else if(userProfile.ADS_CRM_ID.HasValue)
+            {
+                await turnContext.SendActivityAsync(string.Format(WelcomeReturn, userProfile.FirstName), cancellationToken: cancellationToken);
+            }
+            else if(forceSend)
+            {
+                await turnContext.SendActivityAsync(string.Format(WelcomePersonal, userProfile.FirstName), cancellationToken: cancellationToken);
+            }
+
+
+            await Services.SaveUserProfileAsync(userProfile, turnContext, cancellationToken);
             CRMCommit.UpdateUserResponseTimeout(OnUserConversationExpired, userProfile, turnContext, cancellationToken);
         }
 
         // This is called when a user is added to the conversation. This occurs BEFORE they've typed something in, so it's a good way to
         //initiate the conversation from the bot's perspective
+        //NOTE: does not happen on facebook.
         protected override async Task OnMembersAddedAsync(IList<ChannelAccount> membersAdded, ITurnContext<IConversationUpdateActivity> turnContext, CancellationToken cancellationToken)
         {
             var userProfile = await Services.GetUserProfileAsync(turnContext, cancellationToken);
@@ -113,28 +132,10 @@ namespace ADS.Bot.V1.Bots
             {
                 if (member.Id != turnContext.Activity.Recipient.Id)
                 {
-                    await HandleUserData(member, turnContext, cancellationToken);
+                    await HandleUserData(member, turnContext, true, cancellationToken);
 
 
 
-                    //Print a personalized hello when we have their information already
-                    //And even more "friendly" when we have already converted them as a lead before
-                    if(userProfile.ADS_CRM_ID.HasValue)
-                    {
-                        await turnContext.SendActivityAsync(string.Format(WelcomeReturn, userProfile.FirstName), cancellationToken: cancellationToken);
-                    }
-                    else if(userProfile.Details.New)
-                    {
-                        await turnContext.SendActivityAsync(string.Format(WelcomeMeeting, userProfile.FirstName), cancellationToken: cancellationToken);
-                    }
-                    else if(userProfile.FirstName != null)
-                    {
-                        await turnContext.SendActivityAsync(string.Format(WelcomePersonal, userProfile.FirstName), cancellationToken: cancellationToken);
-                    }
-                    else
-                    {
-                        await turnContext.SendActivityAsync(WelcomeSimple, cancellationToken: cancellationToken);
-                    }
                     await DialogManager.OnTurnAsync(turnContext, cancellationToken);
                 }
             }
@@ -179,7 +180,7 @@ namespace ADS.Bot.V1.Bots
                 await turnContext.SendActivityAsync(JsonConvert.SerializeObject(turnContext.Activity));
             }
 
-            await HandleUserData(turnContext.Activity.From, turnContext, cancellationToken);
+            await HandleUserData(turnContext.Activity.From, turnContext, false, cancellationToken);
 
             //Get the latest version
             var userProfile = await Services.GetUserProfileAsync(turnContext, cancellationToken);
@@ -198,7 +199,10 @@ namespace ADS.Bot.V1.Bots
                     {
                         matchingVehicle = Services.DataService.GetCar(userProfile.SimpleInventory.VIN);
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        Services.AI_Exception(ex, userProfile, "Error while checking vehicle availability");
+                    }
 
                     if(matchingVehicle!= null)
                     {
