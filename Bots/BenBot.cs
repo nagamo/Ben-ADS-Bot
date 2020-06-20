@@ -10,6 +10,8 @@ using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -61,6 +63,9 @@ namespace ADS.Bot.V1.Bots
                 }
                 else
                 {
+                    //Facebook apparently doesn't send the user names
+                    //Except maybe the developers? It works as expected for me
+                    //Handled a little bit lower in this function
                     userProfile.Details = new Models.BasicDetails()
                     {
                         Name = "Chat User",
@@ -69,7 +74,6 @@ namespace ADS.Bot.V1.Bots
                     };
                 }
 
-                Services.AI_Event("Chat_New_User", userProfile, $"Chatting via {turnContext.Activity.ChannelId}");
             }
 
             //Handle user coming from facebook page, set their DealerID
@@ -102,18 +106,76 @@ namespace ADS.Bot.V1.Bots
 
             if (userProfile.Details.New)
             {
-                //Print a personalized hello when we have their information already
-                await turnContext.SendActivityAsync(string.Format(WelcomeMeeting, userProfile.FirstName), cancellationToken: cancellationToken);
+                //Here we handle the empty name from facebook, by querying the graph API and asking for full name
+                //We can query additional fields here in the future.....
+                if (turnContext.Activity.ChannelId == "facebook")
+                {
+                    try
+                    {
+                        var fbToken = Services.DealerConfig.Get<string>(userProfile, "fb_token");
+                        if (fbToken != null)
+                        {
+                            var graphClient = new RestClient("https://graph.facebook.com/v7.0");
+                            var profileQuery = new RestRequest(userProfile.Details.UniqueID, Method.GET, DataFormat.Json);
+                            profileQuery.AddParameter("access_token", fbToken);
+                            profileQuery.AddParameter("fields", "name");
 
+                            var profileResult = await graphClient.ExecuteAsync(profileQuery, cancellationToken);
+                            var profileObj = JObject.Parse(profileResult.Content);
+
+                            var fullName = profileObj.Value<string>("name");
+                            if (string.IsNullOrEmpty(fullName))
+                            {
+                                Services.AI_Event("FB_Lookup_Fail", userProfile, $"Got invalid/empty response from graph API: {profileResult.Content}");
+                            }
+                            else
+                            {
+                                Services.AI_Event("FB_Lookup", userProfile, $"Got user details: {profileResult.Content}");
+                                userProfile.Details.Name = fullName;
+                            }
+                        }
+                        else
+                        {
+                            Services.AI_Event("FB_Lookup_Fail", userProfile, $"No fb_token defined for dealer. Cannot query actual user name");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Services.AI_Exception(ex, userProfile, "Error while querying FB Graph API");
+                    }
+                }
+
+
+                //Print a personalized hello when we have their information already
+                if (userProfile.Details.Name == "Chat User")
+                {
+                    await turnContext.SendActivityAsync(WelcomeSimple, cancellationToken: cancellationToken);
+                }
+                else
+                {
+                    await turnContext.SendActivityAsync(string.Format(WelcomeMeeting, userProfile.FirstName), cancellationToken: cancellationToken);
+                }
+
+                Services.AI_Event("Chat_New_User", userProfile, $"Chatting via {turnContext.Activity.ChannelId}");
                 userProfile.Details.New = false;
             }
-            else if(userProfile.ADS_CRM_ID.HasValue)
+            else if (forceSend)
             {
-                await turnContext.SendActivityAsync(string.Format(WelcomeReturn, userProfile.FirstName), cancellationToken: cancellationToken);
-            }
-            else if(forceSend)
-            {
-                await turnContext.SendActivityAsync(string.Format(WelcomePersonal, userProfile.FirstName), cancellationToken: cancellationToken);
+                if (userProfile.ADS_CRM_ID.HasValue)
+                {
+                    await turnContext.SendActivityAsync(string.Format(WelcomeReturn, userProfile.FirstName), cancellationToken: cancellationToken);
+                }
+                else
+                {
+                    if (userProfile.Details.Name == "Chat User")
+                    {
+                        await turnContext.SendActivityAsync(WelcomeSimple, cancellationToken: cancellationToken);
+                    }
+                    else
+                    {
+                        await turnContext.SendActivityAsync(string.Format(WelcomePersonal, userProfile.FirstName), cancellationToken: cancellationToken);
+                    }
+                }
             }
 
 
